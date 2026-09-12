@@ -10,6 +10,10 @@ dashboard for workspaces, tabs, panes, terminals, agents, files, and diffs.
 
 ## Documentation
 
+The experimental SHPRD Rust host and Dioxus shell are source-only alternatives;
+the Bun bridge remains the default. See [native component boundaries](./docs/ARCHITECTURE.md#experimental-native-components)
+and [native development commands](./docs/DEPLOYMENT.md#experimental-native-development).
+
 - [Project website](https://Nebuless.github.io/herdr-studio/)
 - [Hands-on tutorial](https://Nebuless.github.io/herdr-studio/tutorial/)
   ([Markdown](./docs/TUTORIAL.md)): first steps, review workflows, mobile, and

@@ -5,6 +5,29 @@ user services, and standalone builds. For a guided private-access walkthrough
 with Tailscale Serve, SSH forwarding, or experimental Tailcat port forwarding,
 see the [hands-on tutorial](./TUTORIAL.md#networking).
 
+## Experimental native development
+
+Native components are source-only and do not replace release installation below.
+From the repository root, with Rust and the existing Bun dependencies installed:
+
+```sh
+bun run build:web
+cargo test --workspace
+cargo run -p shprd-host -- --public-dir server/public
+```
+
+The native host defaults to loopback port 8787. Pass `--socket-path` for an
+isolated Herdr control socket and `--port` for another port. It serves only the
+[experimental native surface](./ARCHITECTURE.md#experimental-native-components),
+not full terminal/workspace parity. Existing installation and update commands
+still install the Bun-based binary.
+
+Build the shell with `dx build --package shprd-shell --platform web
+--no-default-features --features web`. Configure its host in the shell form;
+the retained React entry point must install the trusted-origin bridge described
+in the [shell guide](../crates/shprd-shell/README.md). Native Android builds need
+the SDK/NDK described there; a browser-width check is not device verification.
+
 ## Requirements
 
 - A running Herdr server.

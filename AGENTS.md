@@ -10,6 +10,10 @@ Generated build output belongs in `web/dist`, `server/public`,
 `server/src/public-files.gen.ts`, `server/herdr-gui*`, and `dist/`; these paths
 are ignored and should not be committed.
 
+Experimental Rust components live in `crates/`, with native runtime extension
+glue in `integrations/pi/`. Keep Bun as the default until browser/API parity is
+verified. See docs/ARCHITECTURE.md for current native boundaries.
+
 ## Build, Test, and Development Commands
 
 - `bun run dev:web`: start the Vite frontend on port 5173.
@@ -31,6 +35,10 @@ are ignored and should not be committed.
 - `mise run ci`: run the reproducible local CI gate, including pinned language and hook checks.
 
 ## Coding Style & Naming Conventions
+
+Herdr-pane subagents use the smallest capable model. Prefer Luna or Terra for
+bounded tasks they can handle; reserve Astra for work whose complexity warrants
+it. Verify the available model identifier and task fit before each launch.
 
 Use TypeScript, React function components, and the existing CSS class naming
 style. Commit messages must follow Conventional Commits, except automated
@@ -60,7 +68,16 @@ Unit tests live beside their modules as `*.test.ts` and use `bun:test`. Run
 `bun run build:web`. Release work must package and inspect every supported
 platform archive and checksum.
 
+Pre-commit preserves Git's staged index for prek, then clears repository-local
+Git environment variables before Bun tests so temporary repositories stay isolated.
+
 ## Commit & Pull Request Guidelines
+
+For this refactor, gather worker implementation into shprd-refactor while preserving
+coordinator fixes, validate and code-review the combined changes, then commit and
+push to origin/shprd-refactor. Treat this branch as work in progress until full
+parity is verified. Do not create PRs, modify main, rewrite worker history, or
+remove worker worktrees as part of this workflow.
 
 Git history uses concise imperative messages, for example `Use built-in CLI
 argument parser` or `Add command palette and release 0.0.3`. Keep commits

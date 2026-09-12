@@ -26,6 +26,34 @@ operations, terminal and clipboard relay, authentication, health, and updates.
 React owns presentation and browser-local preferences. xterm displays Herdr's
 server-rendered output rather than reconstructing a PTY in the bridge.
 
+## Experimental native components
+
+The Cargo workspace contains an experimental SHPRD host, Dioxus shell and native
+service libraries. The default Bun bridge remains the supported application host.
+These components do not yet provide its complete browser-facing API:
+
+- `shprd-host` serves static React assets, login, health and WebSocket control RPC.
+  Its terminal codecs and socket clients are separate modules; browser terminal
+  forwarding and full connection lifecycle routing are not wired into this server.
+- `shprd-agent` connects to authenticated attachments inside existing Senpi and
+  Atomic runtimes. `integrations/pi` retains the TypeScript extension glue required
+  by their native APIs; it does not launch engines or write session history.
+- `shprd-workspace`, `shprd-connections`, `shprd-settings` and `shprd-history` own
+  native file/Git operations, connection services, settings persistence and read-only
+  history projection. Library coverage does not imply host-route integration.
+- `shprd-shell` owns connection settings and an iframe containing the retained
+  React document. React owns terminal, editor and composer DOM. See the
+  [shell contract](../crates/shprd-shell/README.md) for bridge integration.
+
+The native agent surface is experimental. Refresh explicitly reattaches after a
+native connection loss; it does not automatically resume streams. Command replies
+acknowledge admission, not run completion. Events update busy state. Subscription
+events and command replies use separate channels; concurrent commands have no
+wire-order guarantee. Attachment events have no restart-generation identity or
+replay/deduplication protocol, and request-channel events are not forwarded when
+the subscription is absent. Live-engine continuity, Android device behavior and
+full OpenChamber-style parity are not supported guarantees of this host.
+
 ## Terminal endpoints
 
 Backend selection uses the verified protocol allowlist, not browser version

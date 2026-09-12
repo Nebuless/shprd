@@ -42,7 +42,10 @@ let settingsMutationQueue: Promise<void> = Promise.resolve();
 let temporaryFileSequence = 0;
 
 export function guiSettingsPath(): string {
-  return join(homedir(), ".config", "herdr-gui", "settings.json");
+  return join(
+    process.env.SHPRD_CONFIG_DIR || join(homedir(), ".config", "herdr-gui"),
+    "settings.json",
+  );
 }
 
 function defaultGuiSettings(): GuiSettings {

@@ -374,6 +374,21 @@ installs the verified binary, and exits. It never starts a replacement process.
 A subsequent `service install` preserves a custom `ExecStart` from a managed
 unit when it still invokes the same Herdr Studio binary.
 
+### Separate SHPRD installation
+
+Set `SHPRD_CONFIG_DIR` to an absolute private directory for a parallel SHPRD
+instance. Its generated `auth-token`, `settings.json`, and `connections.json`
+live there; `HERDR_GUI_CONNECTIONS_PATH` still overrides the registry file.
+The instance uses a separate `shprd_auth` cookie so another Herdr Studio port
+on the same hostname keeps its login. Herdr sockets, SSH configuration, and
+agent history remain under the real user home.
+
+Use a separate binary, port, and systemd user unit, for example
+`~/.local/share/shprd/studio/shprd-studio`, `~/.config/shprd/studio`, and
+`shprd-studio.service`. Do not run the legacy `service install` command for
+this instance: it manages `herdr-gui.service`. Disable release update checks
+with `HERDR_GUI_DISABLE_UPDATE_CHECK=1` for a source-built refactor snapshot.
+
 ## Build a standalone executable
 
 The build embeds the frontend and Bun runtime in a self-contained executable:

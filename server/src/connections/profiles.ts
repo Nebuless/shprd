@@ -63,7 +63,10 @@ export type PublicConnectionProfile = ConnectionProfile & {
 export function defaultConnectionProfilesPath(): string {
   return (
     process.env.HERDR_GUI_CONNECTIONS_PATH ??
-    join(homedir(), ".config", "herdr-gui", "connections.json")
+    join(
+      process.env.SHPRD_CONFIG_DIR || join(homedir(), ".config", "herdr-gui"),
+      "connections.json",
+    )
   );
 }
 

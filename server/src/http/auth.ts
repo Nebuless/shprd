@@ -32,7 +32,6 @@ const LOGIN_HTML = `<!doctype html>
   btn.onclick=go; pw.onkeydown=e=>{if(e.key==='Enter')go()};
 </script></body></html>`;
 
-const AUTH_COOKIE = "herdr_auth";
 const AUTH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 function base64UrlEncode(value: string) {
@@ -56,6 +55,7 @@ export function createAuthHandlers(args: {
   password: string;
   urlLoginToken?: string;
 }) {
+  const cookieName = process.env.SHPRD_CONFIG_DIR ? "shprd_auth" : "herdr_auth";
   if (args.authRequired && !args.password) {
     throw new Error("authentication requires a non-empty signing secret");
   }
@@ -91,7 +91,7 @@ export function createAuthHandlers(args: {
   }
 
   function authCookie(): string {
-    return `${AUTH_COOKIE}=${signedToken()}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${AUTH_TOKEN_TTL_SECONDS}`;
+    return `${cookieName}=${signedToken()}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${AUTH_TOKEN_TTL_SECONDS}`;
   }
 
   function secretsEqual(actual: string, expected: string): boolean {
@@ -124,7 +124,7 @@ export function createAuthHandlers(args: {
 
   function isAuthed(req: Request): boolean {
     if (!args.authRequired) return true;
-    const token = parseCookie(req.headers.get("cookie"), AUTH_COOKIE);
+    const token = parseCookie(req.headers.get("cookie"), cookieName);
     return token !== null && isValidSignedToken(token);
   }
 

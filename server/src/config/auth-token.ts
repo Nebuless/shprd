@@ -20,7 +20,10 @@ export function defaultAuthTokenPath(
     platform === "win32"
       ? (appDataDir ?? join(homeDir, "AppData", "Roaming"))
       : join(homeDir, ".config");
-  return join(base, "herdr-gui", "auth-token");
+  return join(
+    process.env.SHPRD_CONFIG_DIR || join(base, "herdr-gui"),
+    "auth-token",
+  );
 }
 
 function readAuthToken(path: string): string {

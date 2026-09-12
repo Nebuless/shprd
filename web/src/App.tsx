@@ -9,6 +9,7 @@ import {
   Info,
   LoaderCircle,
   MoreHorizontal,
+  MessageSquare,
   PanelTop,
   SquarePen,
   SquareStack,
@@ -26,6 +27,7 @@ import {
 } from "react";
 import type { ITheme } from "@xterm/xterm";
 import packageJson from "../package.json";
+import { bridge } from "./api";
 import {
   type AccentColor,
   normalizeAccentColor,
@@ -149,6 +151,12 @@ import {
 const WorkspaceInspectorHost = lazyWithReload("workspace-inspector", () =>
   import("./components/WorkspaceInspectorHost").then((module) => ({
     default: module.WorkspaceInspectorHost,
+  })),
+);
+
+const AgentWorkspace = lazyWithReload("agent-workspace", () =>
+  import("./components/AgentWorkspace").then((module) => ({
+    default: module.ConnectedAgentWorkspace,
   })),
 );
 
@@ -1076,6 +1084,7 @@ export default function App() {
     shallowEqual,
   );
   const connectionClient = useConnectionClient();
+  const [agentWorkspaceOpen, setAgentWorkspaceOpen] = useState(false);
   const mobile = useMobileLayout();
   useEffect(() => {
     activateTerminalComposerDraftScope(
@@ -1276,6 +1285,7 @@ export default function App() {
     [],
   );
   const activateTerminalSurface = useCallback(() => {
+    setAgentWorkspaceOpen(false);
     updateInspectorState((current) =>
       current ? { ...current, open: false, expanded: false } : current,
     );
@@ -2586,7 +2596,7 @@ export default function App() {
   };
   return (
     <div
-      className={`app ${sidebarHidden ? "sidebar-hidden" : ""} ${
+      className={`app ${agentWorkspaceOpen ? "agent-workspace-open" : ""} ${sidebarHidden ? "sidebar-hidden" : ""} ${
         mobileControlsCollapsed ? "mobile-controls-collapsed" : ""
       }`}
     >
@@ -2600,6 +2610,25 @@ export default function App() {
           <ConnectionSwitcher />
         </div>
         <div className="topbar-actions">
+          {bridge.hello?.capabilities.native_agents === true && (
+            <button
+              type="button"
+              className="agent-workspace-toggle"
+              aria-label={
+                agentWorkspaceOpen
+                  ? "Show terminal"
+                  : "Show agent conversations"
+              }
+              aria-pressed={agentWorkspaceOpen}
+              onClick={() => {
+                setMobileView("session");
+                setAgentWorkspaceOpen((open) => !open);
+              }}
+            >
+              <MessageSquare size={16} />
+              <span>Agents</span>
+            </button>
+          )}
           <div className="topbar-command-group">
             <CommandCombobox
               key={`${resourceUiKey}:commands`}
@@ -2938,17 +2967,44 @@ export default function App() {
                 : ""
             } ${inspectorState?.expanded ? "is-inspector-expanded" : ""}`}
           >
-            <div className="workspace-terminal-surface">
-              <TerminalPaneLayout
-                terminalTheme={terminalTheme}
-                mobileShortcuts={mobileTerminalShortcuts}
-                mobileSideShortcuts={mobileTerminalSideShortcuts}
-                composerOpen={terminalComposerOpen}
-                onComposerOpenChange={setTerminalComposerOpen}
-                agentHistoryOpen={agentHistoryOpen}
-                onAgentHistoryOpenChange={setAgentHistoryInspectorOpen}
-                onOpenWorkspaceFile={handleTerminalWorkspaceFile}
-              />
+            <div className="workspace-terminal-surface agent-workspace-stage">
+              <div
+                className="agent-workspace-terminal"
+                ref={(element) => {
+                  if (element) element.inert = agentWorkspaceOpen;
+                }}
+                style={{
+                  visibility: agentWorkspaceOpen ? "hidden" : undefined,
+                }}
+              >
+                <TerminalPaneLayout
+                  terminalTheme={terminalTheme}
+                  mobileShortcuts={mobileTerminalShortcuts}
+                  mobileSideShortcuts={mobileTerminalSideShortcuts}
+                  composerOpen={terminalComposerOpen}
+                  onComposerOpenChange={setTerminalComposerOpen}
+                  agentHistoryOpen={agentHistoryOpen}
+                  onAgentHistoryOpenChange={setAgentHistoryInspectorOpen}
+                  onOpenWorkspaceFile={handleTerminalWorkspaceFile}
+                />
+              </div>
+              <div
+                className="agent-workspace-slot"
+                hidden={!agentWorkspaceOpen}
+              >
+                {bridge.hello?.capabilities.native_agents === true && (
+                  <Suspense
+                    fallback={
+                      <div role="status">Loading agent workspace...</div>
+                    }
+                  >
+                    <AgentWorkspace
+                      client={connectionClient}
+                      onOpenTerminal={activateTerminalSurface}
+                    />
+                  </Suspense>
+                )}
+              </div>
             </div>
             {inspectorState?.open && !inspectorState.expanded ? (
               <div

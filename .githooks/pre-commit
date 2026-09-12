@@ -2,4 +2,9 @@
 set -eu
 
 mise exec -- prek run
+# Keep fixture Git commands from inheriting this worktree's index and repository.
+git_local_env=$(git rev-parse --local-env-vars)
+for variable in $git_local_env; do
+  unset "$variable"
+done
 mise exec -- bun run precommit

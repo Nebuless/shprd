@@ -6,6 +6,7 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
+      ".omo/**",
       ".pages-dist/**",
       "dist/**",
       "node_modules/**",
@@ -18,7 +19,33 @@ export default tseslint.config(
     ],
   },
   js.configs.recommended,
+  {
+    ignores: [
+      "target/**",
+      "crates/*/target/**",
+      "crates/*/dist/**",
+      "crates/*/evidence/**",
+    ],
+  },
   ...tseslint.configs.recommended,
+  {
+    files: ["crates/shprd-shell/assets/*.{js,mjs}"],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
+    files: ["crates/shprd-shell/assets/shell-bridge.js"],
+    languageOptions: { globals: { dioxus: "readonly" } },
+  },
+  {
+    files: ["crates/shprd-shell/tests/*.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.bunBuiltin,
+        ...globals.nodeBuiltin,
+        ...globals.browser,
+      },
+    },
+  },
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {

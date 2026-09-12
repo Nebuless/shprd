@@ -1,0 +1,40 @@
+[package]
+name = "shprd-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Native SHPRD host and Herdr transport"
+
+[[bin]]
+name = "shprd"
+path = "src/main.rs"
+
+[dependencies]
+shprd-agent = { path = "../shprd-agent" }
+shprd-workspace = { path = "../shprd-workspace" }
+shprd-connections = { path = "../shprd-connections" }
+axum = { version = "0.8", features = ["ws"] }
+base64 = "0.22"
+bincode = { version = "2", features = ["derive"] }
+unicode-width = "0.2"
+hmac = "0.12"
+sha2 = "0.10"
+getrandom = "0.4"
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["io-util", "net", "rt-multi-thread", "macros", "sync", "time", "fs", "process", "signal"] }
+tower-http = { version = "0.6", features = ["fs"] }
+futures-util = { version = "0.3", features = ["sink"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+
+[dev-dependencies]
+tokio-tungstenite = "0.29"
+tempfile = "3"
+tower = { version = "0.5", features = ["util"] }
+
+[lints]
+workspace = true

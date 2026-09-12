@@ -43,7 +43,7 @@ id = "biome-format"
 name = "Biome format"
 language = "system"
 entry = "mise exec -- bunx biome format --write"
-files = "\\.(css|html|js|json|md|mjs|ts|tsx|xml|ya?ml)$"
+files = "\\.(css|html|js|json|mjs|ts|tsx)$"
 stages = ["pre-commit"]
 
 [[repos.hooks]]

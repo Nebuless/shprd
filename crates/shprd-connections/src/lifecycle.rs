@@ -1,0 +1,111 @@
+use crate::{ConnectionId, Error, Manager, Result, error::invalid, runtime::*};
+use std::sync::Arc;
+impl Manager {
+    pub async fn connect(&self, id: &ConnectionId) -> Result<()> {
+        if lock(&self.inner)?.stopping {
+            return Err(invalid("connection manager is stopping"));
+        }
+        let entry = self.entry(id)?;
+        let _operation = entry.operation.lock().await;
+        if lock(&self.inner)?.stopping {
+            return Err(invalid("connection manager is stopping"));
+        }
+        let (retired, before_retirement) = {
+            let mut d = lock(&entry.data)?;
+            if !d.registered {
+                return Err(Error::Stale);
+            }
+            if d.state == State::Ready {
+                return Ok(());
+            }
+            (d.runtime.take(), d.generation)
+        };
+        if let Some(runtime) = retired {
+            runtime.stop().await?;
+        }
+        let (context, factory) = {
+            let mut d = lock(&entry.data)?;
+            if !d.registered || d.generation != before_retirement {
+                return Err(Error::Stale);
+            }
+            advance(&mut d)?;
+            d.state = State::Connecting;
+            d.error = None;
+            (
+                RuntimeContext {
+                    entry: Arc::downgrade(&entry),
+                    generation: d.generation,
+                },
+                d.factory.clone(),
+            )
+        };
+        let runtime = match factory(context.clone()) {
+            Ok(runtime) => runtime,
+            Err(error) => {
+                context.report_error(&error.to_string(), false)?;
+                return Err(error);
+            }
+        };
+        lock(&entry.data)?.runtime = Some(runtime.clone());
+        let result = tokio::select! { biased; _ = context.cancelled() => Err(Error::Stale), result = runtime.start(&context) => result };
+        match result {
+            Ok(paths) => {
+                let accepted = {
+                    let mut d = lock(&entry.data)?;
+                    if d.registered && d.generation == context.generation {
+                        d.paths = Some(paths);
+                        d.state = State::Ready;
+                        true
+                    } else {
+                        false
+                    }
+                };
+                if accepted {
+                    return Ok(());
+                }
+                runtime.stop().await?;
+                lock(&entry.data)?.runtime = None;
+                Err(Error::Stale)
+            }
+            Err(error) => {
+                context.report_error(&error.to_string(), false)?;
+                let cleanup = runtime.stop().await;
+                lock(&entry.data)?.runtime = None;
+                cleanup?;
+                Err(error)
+            }
+        }
+    }
+    /// Invalidates before awaiting startup or process cleanup.
+    pub async fn disconnect(&self, id: &ConnectionId) -> Result<()> {
+        let entry = self.entry(id)?;
+        {
+            let mut d = lock(&entry.data)?;
+            advance(&mut d)?;
+            d.state = State::Stopping;
+            d.paths = None;
+            d.error = None;
+            entry.cancel.send_replace(d.generation);
+        }
+        let _operation = entry.operation.lock().await;
+        let runtime = lock(&entry.data)?.runtime.take();
+        let result = match runtime {
+            Some(runtime) => runtime.stop().await,
+            None => Ok(()),
+        };
+        let mut d = lock(&entry.data)?;
+        match &result {
+            Ok(()) => {
+                d.state = State::Disconnected;
+                d.error = None;
+            }
+            Err(e) => {
+                d.state = State::Error;
+                d.error = Some(StatusError {
+                    message: sanitize_error(&e.to_string()),
+                });
+            }
+        }
+        result
+    }
+}

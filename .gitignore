@@ -17,6 +17,7 @@ dist
 !.qlty/qlty.toml
 
 # Generated build artifacts
+/target/
 .pages-dist
 web/dist
 web/vite.config.d.ts

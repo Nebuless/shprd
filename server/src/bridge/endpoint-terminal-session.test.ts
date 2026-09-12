@@ -13,16 +13,14 @@ import { createTerminalBridge } from "./terminal-bridge";
 import { silentLogger } from "../utils/logger";
 import { EndpointCreationDeadline } from "./endpoint-creation";
 
-const servers: net.Server[] = [];
+const servers: Array<{ server: net.Server; sockets: Set<net.Socket> }> = [];
 
 afterEach(async () => {
   await Promise.all(
-    servers
-      .splice(0)
-      .map(
-        (server) =>
-          new Promise<void>((resolve) => server.close(() => resolve())),
-      ),
+    servers.splice(0).map(({ server, sockets }) => {
+      for (const socket of sockets) socket.destroy();
+      return new Promise<void>((resolve) => server.close(() => resolve()));
+    }),
   );
 });
 
@@ -190,7 +188,10 @@ async function startSessionServer(handlers: {
     hyperlinks: [],
   };
   let connectionSeq = 0;
+  const sockets = new Set<net.Socket>();
   const server = net.createServer((socket) => {
+    sockets.add(socket);
+    socket.once("close", () => sockets.delete(socket));
     socket.on("error", (error: NodeJS.ErrnoException) => {
       expect(["EPIPE", "ECONNRESET"]).toContain(error.code ?? "");
     });
@@ -303,7 +304,7 @@ async function startSessionServer(handlers: {
       }
     });
   });
-  servers.push(server);
+  servers.push({ server, sockets });
   await new Promise<void>((resolve, reject) => {
     server.once("error", reject);
     server.listen(socketPath, resolve);

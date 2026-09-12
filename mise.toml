@@ -1,0 +1,108 @@
+[tools]
+bun = "1.4.1"
+node = "24.18.0"
+"aqua:artempyanykh/marksman" = "2026-02-08"
+"aqua:j178/prek" = "0.5.2"
+"aqua:koalaman/shellcheck" = "0.11.0"
+"aqua:max-sixty/worktrunk" = "0.77.0"
+"aqua:mvdan/sh" = "3.14.1"
+"aqua:rhysd/actionlint" = "1.7.12"
+"aqua:tamasfe/taplo" = "0.10.0"
+"github:qltysh/qlty" = "0.644.0"
+"npm:@commitlint/cli" = "21.2.2"
+"npm:@commitlint/config-conventional" = "21.2.2"
+"npm:bash-language-server" = "5.6.0"
+"npm:conventional-changelog" = "8.1.3"
+"npm:conventional-changelog-conventionalcommits" = "10.4.0"
+"npm:conventional-recommended-bump" = "12.1.0"
+"npm:typescript" = "6.0.3"
+"npm:typescript-language-server" = "6.0.0"
+"npm:vscode-langservers-extracted" = "4.10.0"
+"npm:yaml-language-server" = "1.24.0"
+
+[tasks.install]
+description = "Install locked root, web, and server dependencies"
+run = """
+bun install --frozen-lockfile
+(cd web && bun install --frozen-lockfile)
+(cd server && bun install --frozen-lockfile)
+"""
+
+[tasks.format]
+description = "Check repository formatting"
+run = "bun run format:check"
+
+[tasks.lint]
+description = "Run ESLint"
+run = "bun run lint"
+
+[tasks.typecheck]
+description = "Run root, web, and server TypeScript checks"
+run = "bun run typecheck"
+
+[tasks.test]
+description = "Run Bun test suite"
+run = "bun run test"
+
+[tasks.site]
+description = "Build and validate GitHub Pages content"
+run = "bun run build:site"
+
+[tasks."format:shell"]
+description = "Check shell formatting"
+run = "shfmt -d -i 2 -ci .githooks/pre-commit .githooks/commit-msg scripts/*.sh"
+
+[tasks."lint:shell"]
+description = "Run ShellCheck"
+run = "shellcheck .githooks/pre-commit .githooks/commit-msg scripts/*.sh"
+
+[tasks."lint:workflows"]
+description = "Lint GitHub Actions workflows"
+run = "actionlint"
+
+[tasks."format:toml"]
+description = "Check TOML formatting"
+run = "taplo format --check herdr-plugin.toml mise.toml prek.toml .config/wt.toml"
+
+[tasks."check:languages"]
+description = "Run shell, workflow, and TOML checks"
+run = """
+mise run format:shell
+mise run lint:shell
+mise run lint:workflows
+mise run format:toml
+"""
+
+[tasks.hooks]
+description = "Run Prek hooks across tracked files"
+run = "prek run --all-files"
+
+[tasks."lint:commits"]
+description = "Validate Conventional Commit messages in a Git range"
+run = "commitlint --from \"${1:?Pass a starting Git ref}\" --to \"${2:-HEAD}\""
+
+[tasks."release:check-bump"]
+description = "Reject release versions below Conventional Commit recommendation"
+run = "bun run release:check-bump \"${1:?Pass X.Y.Z, patch, minor, or major}\""
+
+[tasks."hooks:install"]
+description = "Enable repository Git hooks"
+run = "bun run install-hooks"
+
+[tasks.quality]
+description = "Report maintainability smells without duplicating lint findings"
+run = "qlty smells --all --no-snippets"
+
+[tasks.ci]
+description = "Run local CI equivalent"
+depends = ["install"]
+run = """
+mise run format
+mise run lint
+mise run typecheck
+mise run site
+mise run test
+mise run check:languages
+mise run hooks
+mise run quality
+"""

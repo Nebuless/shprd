@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!server/src/public-files.gen.ts"]
+    "includes": ["**", "!.omo", "!server/src/public-files.gen.ts"]
   },
   "formatter": {
     "enabled": true,

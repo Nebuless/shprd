@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 set -eu
 
-bun run precommit
+mise exec -- prek run
+mise exec -- bun run precommit

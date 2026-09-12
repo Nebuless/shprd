@@ -1,5 +1,6 @@
 node_modules
 dist
+.omo/
 *.log
 *.tsbuildinfo
 .DS_Store
@@ -9,6 +10,11 @@ dist
 !.env.example
 *.key
 *.pem
+
+# Tool state
+.mise/
+.qlty/*
+!.qlty/qlty.toml
 
 # Generated build artifacts
 .pages-dist

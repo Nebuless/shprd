@@ -1,0 +1,72 @@
+default_install_hook_types = ["pre-commit", "commit-msg"]
+
+[[repos]]
+repo = "builtin"
+hooks = [
+	{ id = "trailing-whitespace", stages = [
+		"pre-commit",
+	] },
+	{ id = "end-of-file-fixer", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-added-large-files", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-case-conflict", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-illegal-windows-names", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-json", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-toml", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-yaml", stages = [
+		"pre-commit",
+	] },
+	{ id = "check-merge-conflict", stages = [
+		"pre-commit",
+	] },
+	{ id = "detect-private-key", stages = [
+		"pre-commit",
+	] },
+]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "biome-format"
+name = "Biome format"
+language = "system"
+entry = "mise exec -- bunx biome format --write"
+files = "\\.(css|html|js|json|md|mjs|ts|tsx|xml|ya?ml)$"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "eslint"
+name = "ESLint"
+language = "system"
+entry = "mise exec -- bunx eslint"
+files = "\\.(mjs|ts|tsx)$"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "shellcheck"
+name = "ShellCheck"
+language = "system"
+entry = "shellcheck"
+files = "(^|/)[^/]+\\.sh$|^\\.githooks/[^/]+$"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "commitlint"
+name = "Conventional Commit message"
+language = "system"
+entry = "commitlint --edit"
+stages = ["commit-msg"]
+pass_filenames = true
+always_run = true

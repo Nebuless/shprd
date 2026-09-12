@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -eu
+
+mise exec -- prek run --stage commit-msg --commit-msg-filename "$1"
+bun run lint:commit-message -- "$1"

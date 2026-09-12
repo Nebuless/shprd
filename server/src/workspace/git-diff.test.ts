@@ -15,8 +15,16 @@ import {
   type LastStepBaselineStore,
 } from "./git-diff";
 
+const gitEnvironment = Object.fromEntries(
+  Object.entries(process.env).filter(([name]) => !name.startsWith("GIT_")),
+);
+
 const runProcessWithCodeTimeout: RunProcessWithCodeTimeout = async (argv) => {
-  const process = Bun.spawn(argv, { stdout: "pipe", stderr: "pipe" });
+  const process = Bun.spawn(argv, {
+    stdout: "pipe",
+    stderr: "pipe",
+    env: gitEnvironment,
+  });
   const [code, stdout, stderr] = await Promise.all([
     process.exited,
     new Response(process.stdout).text(),

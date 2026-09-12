@@ -2,13 +2,18 @@
 
 ## Development Setup
 
-Install Bun 1.4 or newer, start a local Herdr server, then install dependencies:
+Install [mise](https://mise.jdx.dev/) and provision pinned local tools and dependencies:
 
 ```bash
-bun install
-(cd web && bun install)
-(cd server && bun install)
+mise install
+mise run install
+mise run hooks:install
 ```
+
+Mise supplies Bun, Worktrunk (`wt`), Prek, Qlty, ShellCheck, formatting and
+workflow tools, plus language servers for TypeScript, JSON/CSS/HTML/ESLint,
+YAML, TOML, Markdown, and shell scripts. Editors resolve these from the project
+mise environment.
 
 Run the bridge and frontend in separate terminals:
 
@@ -19,13 +24,16 @@ bun run dev:web
 
 ## Validation
 
-Before submitting a change, run:
+Before submitting a change, run local CI:
 
 ```bash
-bun run lint
-bun run typecheck
-bun run test
+mise run ci
 ```
+
+Use individual `mise run format`, `lint`, `typecheck`, `test`, `site`,
+`check:languages`, `hooks`, or `quality` tasks while iterating. Qlty reports
+maintainability smells in `.qlty/qlty.toml`; Biome and ESLint remain format and
+lint authority.
 
 Use `bun run build` for changes that affect production assets or server
 bundling. Release changes should also validate the relevant
@@ -52,8 +60,10 @@ the tutorial source, renderer, template, or shared website assets change.
 
 ## Pull Requests
 
-Keep commits focused and use short imperative commit messages. Describe the
-user-visible behavior, verification performed, and compatibility impact.
+Keep commits focused and use [Conventional Commits](https://www.conventionalcommits.org/)
+messages such as `feat: add session import` or `fix(server): close stale socket`.
+The `commit-msg` hook checks each message, and CI checks every PR commit range.
+Describe user-visible behavior, verification performed, and compatibility impact.
 Include screenshots for interface changes. Avoid committing generated
 artifacts from `dist/`, `server/public/`, or compiled binaries.
 
@@ -63,6 +73,13 @@ documentation-only changes become `documentation`, dependency updates become
 `enhancement`. Release preparation PRs receive `skip-changelog`. Add one of the
 categories from `.github/release.yml` before merging to override the automatic
 choice.
+
+Use `bun run release:check-bump <X.Y.Z|patch|minor|major>` before preparing a
+release. It rejects a version lower than Conventional Changelog recommends; a
+higher version remains allowed. `bun run changelog:preview` previews generated
+notes only. Keep `CHANGELOG.md` concise and maintained by release preparation.
+
+Worktrunk runs `mise run install` for each new worktree through `.config/wt.toml`.
 
 By contributing, you agree that your contribution is licensed under the MIT
 License.

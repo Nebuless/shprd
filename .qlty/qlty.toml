@@ -1,0 +1,21 @@
+config_version = "0"
+
+exclude_patterns = [
+  "**/.omo/**",
+  "**/dist/**",
+  "**/node_modules/**",
+  "**/server/public/**",
+  "**/web/dist/**",
+]
+
+test_patterns = [
+  "**/*.test.*",
+  "**/*.spec.*",
+]
+
+[smells]
+mode = "comment"
+
+[[source]]
+name = "default"
+default = true

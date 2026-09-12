@@ -28,6 +28,7 @@ import {
 import type { ITheme } from "@xterm/xterm";
 import packageJson from "../package.json";
 import { bridge } from "./api";
+import { mobileViewportGeometry } from "./mobileViewport";
 import {
   type AccentColor,
   normalizeAccentColor,
@@ -422,16 +423,46 @@ function useVisualViewportCssVars(uiScale: number) {
     const geometryScale = uiScale / 100;
     let pollTimer: number | undefined;
     let settleTimers: number[] = [];
+    let baselineHeight = window.innerHeight;
+    let baselineWidth = window.innerWidth;
 
     const measure = () => {
       const viewport = window.visualViewport;
       const height = viewport?.height ?? window.innerHeight;
-      const offsetTop = viewport?.offsetTop ?? 0;
-      const keyboardInset = Math.max(
-        0,
-        window.innerHeight - height - offsetTop,
-      );
-      const keyboardOpen = keyboardInset > 24;
+      const active = document.activeElement;
+      const inputFocused =
+        (active instanceof HTMLTextAreaElement &&
+          !active.readOnly &&
+          !active.disabled &&
+          active.inputMode !== "none") ||
+        (active instanceof HTMLInputElement &&
+          !active.readOnly &&
+          !active.disabled &&
+          active.inputMode !== "none" &&
+          [
+            "text",
+            "search",
+            "email",
+            "url",
+            "tel",
+            "password",
+            "number",
+          ].includes(active.type)) ||
+        (active instanceof HTMLElement && active.isContentEditable);
+      if (Math.abs(window.innerWidth - baselineWidth) > 40) {
+        baselineHeight = window.innerHeight;
+        baselineWidth = window.innerWidth;
+      }
+      const { appHeight, offsetTop, keyboardInset, keyboardOpen } =
+        mobileViewportGeometry({
+          layoutHeight: window.innerHeight,
+          viewportHeight: height,
+          offsetTop: viewport?.offsetTop ?? 0,
+          viewportScale: viewport?.scale ?? 1,
+          baselineHeight,
+          inputFocused,
+        });
+      if (!inputFocused && !keyboardOpen) baselineHeight = window.innerHeight;
       root.classList.toggle("keyboard-open", keyboardOpen);
       root.style.setProperty(
         "--app-viewport-height",
@@ -445,7 +476,7 @@ function useVisualViewportCssVars(uiScale: number) {
       // with padding-bottom in the mobile styles.
       root.style.setProperty(
         "--app-height",
-        `calc(${Math.round(window.innerHeight / geometryScale)}px + env(safe-area-inset-bottom, 0px))`,
+        `calc(${Math.round(appHeight / geometryScale)}px + env(safe-area-inset-bottom, 0px))`,
       );
       root.style.setProperty(
         "--app-viewport-offset-top",

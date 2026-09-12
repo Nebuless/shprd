@@ -23,6 +23,11 @@ Use existing 4px spacing steps: 8px control gaps, 12px compact padding,
 application viewport. Session list and conversation each own their scrolling;
 composer and toolbar remain outside message scroll. Flex/grid children need
 min-width:0 and min-height:0. Agent rail becomes horizontal below 650px.
+Terminal wrappers fill the remaining viewport even before agent chat loads.
+Mobile keyboard state requires editable focus and meaningful viewport occlusion;
+browser chrome, hardware-keyboard focus and pinch zoom do not reserve keyboard
+space. The composer stays in flow, with floating controls above its measured
+height; shortcut grids shrink within their available width.
 
 ## 5. Components
 - Topbar controls: native buttons with icon, accessible name, hover, pressed,

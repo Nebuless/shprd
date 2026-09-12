@@ -1669,8 +1669,27 @@ textarea:focus {
 }
 .workspace-terminal-surface > .terminal-shell,
 .workspace-terminal-surface > .pane-layout,
-.workspace-terminal-surface > .pane-switcher-layout {
+.workspace-terminal-surface > .pane-switcher-layout,
+.agent-workspace-terminal > .terminal-shell,
+.agent-workspace-terminal > .pane-layout,
+.agent-workspace-terminal > .pane-switcher-layout {
   flex: 1 1 auto;
+}
+.agent-workspace-stage {
+  position: relative;
+}
+.agent-workspace-terminal {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+}
+.agent-workspace-slot {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
 }
 .workspace-inspector-slot {
   position: relative;
@@ -8887,16 +8906,15 @@ textarea:focus {
     max-height: 126px;
   }
 
-  /* Keep the floating control stack at one stable screen position across
-     Composer, tab, and workspace transitions. */
+  /* Dock controls above the actual composer, not a guessed keyboard height. */
   .app {
-    --mobile-floating-controls-lift: 112px;
+    --mobile-floating-controls-lift: var(--mobile-composer-height, 0px);
   }
   .mobile-nav {
     position: fixed;
     right: calc(10px + env(safe-area-inset-right, 0px));
     bottom: calc(
-      58px +
+      10px +
       var(--mobile-floating-controls-lift, 0px) +
       env(safe-area-inset-bottom, 0px)
     );
@@ -8921,7 +8939,7 @@ textarea:focus {
     position: fixed;
     right: calc(10px + env(safe-area-inset-right, 0px));
     bottom: calc(
-      106px +
+      58px +
       var(--mobile-floating-controls-lift, 0px) +
       env(safe-area-inset-bottom, 0px)
     );
@@ -9121,7 +9139,7 @@ textarea:focus {
     position: fixed;
     right: calc(10px + env(safe-area-inset-right, 0px));
     bottom: calc(
-      156px +
+      108px +
       var(--mobile-floating-controls-lift, 0px) +
       env(safe-area-inset-bottom, 0px)
     );
@@ -9168,25 +9186,17 @@ textarea:focus {
   .mobile-controls-toggle {
     color: var(--text-strong);
   }
-  /* While the on-screen keyboard is open the floating controls cover too
-     much of the terminal, so fade them out until the keyboard closes. Some
-     mobile browsers do not expose Composer keyboard geometry, so its focused
-     textarea is the direct fallback signal. */
+  /* Only measured software-keyboard visibility hides the floating controls. */
   .keyboard-open .mobile-nav:not(.mobile-terminal-tools),
   .keyboard-open .mobile-workspace-shortcut,
-  .keyboard-open .mobile-terminal-controls,
-  .app:has(.terminal-composer-input:focus)
-    .mobile-nav:not(.mobile-terminal-tools),
-  .app:has(.terminal-composer-input:focus) .mobile-workspace-shortcut,
-  .app:has(.terminal-composer-input:focus) .mobile-terminal-controls {
+  .keyboard-open .mobile-terminal-controls {
     opacity: 0;
     pointer-events: none;
     transform: translate3d(0, 12px, 0) scale(0.85);
   }
   .keyboard-open .terminal-mobile-keys,
   .keyboard-open .terminal-mobile-side-shortcuts,
-  .app:has(.terminal-composer-input:focus) .terminal-mobile-keys,
-  .app:has(.terminal-composer-input:focus) .terminal-mobile-side-shortcuts {
+  .terminal-shell:has(.terminal-composer) .terminal-mobile-keys {
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
@@ -9384,12 +9394,13 @@ textarea:focus {
   }
   .terminal-mobile-keys {
     position: absolute;
+    left: calc(8px + env(safe-area-inset-left, 0px));
     top: 10px;
     right: calc(8px + env(safe-area-inset-right, 0px));
     z-index: 7;
     display: flex;
     flex-direction: row-reverse;
-    align-items: center;
+    align-items: flex-start;
     gap: 6px;
     pointer-events: none;
   }
@@ -9510,6 +9521,10 @@ textarea:focus {
     /* In-flow at the bottom of the column shell. The app shell owns the main
        keyboard lift; only iOS gets a small additional form-accessory-bar gap. */
     margin-bottom: var(--keyboard-inset-composer-gap, 0px);
+    flex: 0 0 auto;
+    min-width: 0;
+    max-height: calc(var(--app-viewport-height, 100dvh) - 96px);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -9541,6 +9556,7 @@ textarea:focus {
   }
   .terminal-composer-actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
   }
@@ -9597,6 +9613,7 @@ textarea:focus {
     background: var(--accent-soft);
   }
   .terminal-mobile-keys-toggle {
+    flex: 0 0 36px;
     width: 36px;
     height: 36px;
     display: inline-flex;
@@ -9631,7 +9648,11 @@ textarea:focus {
       );
     gap: 2px;
   }
-  .terminal-composer-shortcut-spacer,
+  .terminal-composer-shortcut-spacer {
+    min-width: 0;
+    height: 28px;
+    pointer-events: none;
+  }
   .terminal-mobile-key-spacer {
     width: 48px;
     height: 28px;
@@ -9639,7 +9660,6 @@ textarea:focus {
   }
   .terminal-composer-shortcuts button {
     width: 100%;
-    max-width: 48px;
     min-width: 0;
     height: 28px;
     display: inline-flex;
@@ -9676,7 +9696,8 @@ textarea:focus {
     background: var(--accent-soft);
   }
   .terminal-mobile-keys-panel {
-    max-width: calc(100vw - 62px - env(safe-area-inset-right, 0px));
+    max-width: 100%;
+    min-width: 0;
     padding: 3px;
     overflow-x: auto;
     /* Anchor overflow at the right edge so the directional and page keys stay

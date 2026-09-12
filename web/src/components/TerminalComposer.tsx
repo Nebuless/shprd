@@ -86,6 +86,7 @@ export function TerminalComposer({
       localStorage.getItem(TERMINAL_COMPOSER_SHORTCUTS_OPEN_STORAGE_KEY) !==
       "false",
   );
+  const composerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const composingRef = useRef(false);
@@ -110,6 +111,25 @@ export function TerminalComposer({
     setUploadCount(terminalComposerUploadCount(draftKey));
     return subscribeTerminalComposerUpload(draftKey, setUploadCount);
   }, [draftKey]);
+
+  useEffect(() => {
+    const composer = composerRef.current;
+    const app = composer?.closest<HTMLElement>(".app");
+    if (!composer || !app) return;
+    const update = () => {
+      app.style.setProperty(
+        "--mobile-composer-height",
+        `${composer.offsetHeight}px`,
+      );
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(composer);
+    update();
+    return () => {
+      observer.disconnect();
+      app.style.removeProperty("--mobile-composer-height");
+    };
+  }, []);
 
   // Autosize within the CSS max-height.
   useEffect(() => {
@@ -228,6 +248,7 @@ export function TerminalComposer({
   return (
     <>
       <div
+        ref={composerRef}
         className="terminal-composer"
         role="dialog"
         aria-label="Terminal composer"

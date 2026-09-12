@@ -10,8 +10,8 @@ dashboard for workspaces, tabs, panes, terminals, agents, files, and diffs.
 
 ## Documentation
 
-- [Project website](https://powerfooI.github.io/herdr-studio/)
-- [Hands-on tutorial](https://powerfooI.github.io/herdr-studio/tutorial/)
+- [Project website](https://Nebuless.github.io/herdr-studio/)
+- [Hands-on tutorial](https://Nebuless.github.io/herdr-studio/tutorial/)
   ([Markdown](./docs/TUTORIAL.md)): first steps, review workflows, mobile, and
   private remote access with Tailscale, SSH, or Tailcat.
 - [Feature tour and keyboard shortcuts](./FEATURES.md)
@@ -92,7 +92,7 @@ Herdr Studio binary with:
 ```bash
 # Leave empty for latest; set HERDR_GUI_VERSION=X.Y.Z for a specific version (no v prefix).
 curl -fsSL \
-  https://github.com/powerfooI/herdr-studio/releases/latest/download/install-herdr-gui.sh \
+  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-herdr-gui.sh \
   | HERDR_GUI_VERSION= sh
 ```
 
@@ -104,7 +104,7 @@ herdr-gui
 
 Open the URL printed by the process. On Windows, download the matching x64 or
 ARM64 archive from the
-[latest release](https://github.com/powerfooI/herdr-studio/releases/latest)
+[latest release](https://github.com/Nebuless/herdr-studio/releases/latest)
 instead of running the script. See the
 [deployment guide](./docs/DEPLOYMENT.md) for checksum verification,
 fixed-version installation, authentication, remote connections, updates, and

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-github_repository="powerfooI/herdr-studio"
+github_repository="Nebuless/herdr-studio"
 custom_release_base="${HERDR_GUI_RELEASE_BASE_URL:-}"
 install_dir="${HERDR_GUI_INSTALL_DIR:-$HOME/.local/bin}"
 requested_version="${HERDR_GUI_VERSION:-}"
@@ -91,8 +91,8 @@ esac
 package_dir="herdr-gui-${platform}"
 mkdir -p "$install_dir"
 target="$install_dir/herdr-gui"
-if { [ -e "$target" ] || [ -L "$target" ]; } && \
-   { [ ! -f "$target" ] || [ -L "$target" ]; }; then
+if { [ -e "$target" ] || [ -L "$target" ]; } &&
+  { [ ! -f "$target" ] || [ -L "$target" ]; }; then
   fail "install target exists but is not a regular file"
 fi
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/herdr-gui-install.XXXXXX")"
@@ -120,12 +120,18 @@ curl --proto "$curl_protocol" --proto-redir "$curl_protocol" \
   --max-filesize 4096 -fsSL \
   "$release_base/$archive_name.sha256" -o "$checksum"
 checksum_line="$(cat "$checksum")" || fail "unable to read package checksum"
-set -f
-set -- $checksum_line
-set +f
-[ "$#" -eq 2 ] || fail "invalid package checksum file"
-expected_checksum="$1"
-checksum_name="$2"
+case "$checksum_line" in
+  *"  "*)
+    expected_checksum="${checksum_line%% *}"
+    checksum_name="${checksum_line#*  }"
+    ;;
+  *) fail "invalid package checksum file" ;;
+esac
+[ -n "$expected_checksum" ] || fail "invalid package checksum file"
+[ -n "$checksum_name" ] || fail "invalid package checksum file"
+case "$checksum_name" in
+  *" "*) fail "invalid package checksum file" ;;
+esac
 [ "${#expected_checksum}" -eq 64 ] || fail "invalid package checksum file"
 case "$expected_checksum" in
   *[!0-9A-Fa-f]*) fail "invalid package checksum file" ;;
@@ -158,7 +164,7 @@ package_version=""
 package_platform=""
 extra_version_field=""
 read -r package_name package_version package_platform extra_version_field \
-  < "$version_file" || fail "invalid package VERSION file"
+  <"$version_file" || fail "invalid package VERSION file"
 [ "$package_name" = "herdr-gui" ] || fail "invalid package VERSION file"
 [ -z "$extra_version_field" ] || fail "invalid package VERSION file"
 [ -n "$package_version" ] || fail "package version is missing"
@@ -171,8 +177,8 @@ binary_version="$("$binary" --version)"
 [ "$binary_version" = "herdr-gui $package_version" ] ||
   fail "binary version does not match package VERSION"
 
-if { [ -e "$target" ] || [ -L "$target" ]; } && \
-   { [ ! -f "$target" ] || [ -L "$target" ]; }; then
+if { [ -e "$target" ] || [ -L "$target" ]; } &&
+  { [ ! -f "$target" ] || [ -L "$target" ]; }; then
   fail "install target changed during installation"
 fi
 target_tmp="$(mktemp "$install_dir/.herdr-gui.new.XXXXXX")"

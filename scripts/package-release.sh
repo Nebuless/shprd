@@ -58,7 +58,7 @@ rm -rf "$package_dir"
 mkdir -p "$package_dir"
 cp "$binary" "$package_dir/$binary_name"
 chmod 755 "$package_dir/$binary_name"
-printf 'herdr-gui %s %s\n' "$version" "$platform" > "$package_dir/VERSION"
+printf 'herdr-gui %s %s\n' "$version" "$platform" >"$package_dir/VERSION"
 
 rm -f \
   "$versioned_archive" \
@@ -96,13 +96,13 @@ digest_for() {
 archive_digest="$(digest_for "$versioned_archive")"
 printf '%s  %s\n' \
   "$archive_digest" \
-  "$(basename "$versioned_archive")" > "$versioned_checksum"
+  "$(basename "$versioned_archive")" >"$versioned_checksum"
 printf '%s  %s\n' \
   "$archive_digest" \
-  "$(basename "$latest_archive")" > "$latest_checksum"
+  "$(basename "$latest_archive")" >"$latest_checksum"
 printf '%s\n' \
   "{\"schema\":1,\"name\":\"herdr-gui\",\"version\":\"$version\",\"platform\":\"$platform\",\"archive\":\"$(basename "$latest_archive")\",\"sha256\":\"$archive_digest\"}" \
-  > "$update_manifest"
+  >"$update_manifest"
 
 cat "$versioned_checksum" "$latest_checksum" "$update_manifest"
 ls -lh \

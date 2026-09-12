@@ -65,7 +65,7 @@
 ## 0.5.1 - 2026-09-03
 
 - Add `Cmd+Ctrl+Arrow` pane focus, `Cmd+D` split right, and `Cmd+Shift+D` split down.
-- Install Studio with `herdr plugin install powerfooI/herdr-studio` on Linux, macOS, and
+- Install Studio with `herdr plugin install Nebuless/herdr-studio` on Linux, macOS, and
   Windows using checksum-verified prebuilt binaries; no source toolchain is needed.
 - Manage the service and login URL through plugin actions or an interactive Herdr popup
   panel.

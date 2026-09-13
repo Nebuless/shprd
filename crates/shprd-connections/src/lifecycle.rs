@@ -2,6 +2,13 @@ use crate::{ConnectionId, Error, Manager, Result, error::invalid, runtime::*};
 use std::sync::Arc;
 impl Manager {
     pub async fn connect(&self, id: &ConnectionId) -> Result<()> {
+        self.connect_if_current(id, None).await
+    }
+    pub(crate) async fn connect_if_current(
+        &self,
+        id: &ConnectionId,
+        disconnect_revision: Option<u64>,
+    ) -> Result<()> {
         if lock(&self.inner)?.stopping {
             return Err(invalid("connection manager is stopping"));
         }
@@ -12,7 +19,9 @@ impl Manager {
         }
         let (retired, before_retirement) = {
             let mut d = lock(&entry.data)?;
-            if !d.registered {
+            if !d.registered
+                || disconnect_revision.is_some_and(|revision| revision != d.disconnect_revision)
+            {
                 return Err(Error::Stale);
             }
             if d.state == State::Ready {
@@ -78,10 +87,16 @@ impl Manager {
     }
     /// Invalidates before awaiting startup or process cleanup.
     pub async fn disconnect(&self, id: &ConnectionId) -> Result<()> {
+        self.retire(id, true).await
+    }
+    pub(crate) async fn retire(&self, id: &ConnectionId, explicit: bool) -> Result<()> {
         let entry = self.entry(id)?;
         {
             let mut d = lock(&entry.data)?;
             advance(&mut d)?;
+            if explicit {
+                d.disconnect_revision = d.generation;
+            }
             d.state = State::Stopping;
             d.paths = None;
             d.error = None;

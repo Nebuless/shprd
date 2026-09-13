@@ -48,6 +48,7 @@ pub struct StatusError {
 pub(crate) struct EntryData {
     pub profile: Profile,
     pub generation: u64,
+    pub disconnect_revision: u64,
     pub state: State,
     pub error: Option<StatusError>,
     pub runtime: Option<Arc<dyn Runtime>>,
@@ -156,6 +157,10 @@ impl Lease {
         } else {
             Err(Error::Stale)
         }
+    }
+    /// Resolves when connection retirement invalidates this lease.
+    pub async fn cancelled(&self) {
+        self.context.cancelled().await;
     }
     /// Call after every awaited body read, before publishing that chunk.
     pub fn checked_chunk<T>(&self, chunk: T) -> Result<T> {

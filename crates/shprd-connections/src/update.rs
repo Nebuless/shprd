@@ -1,4 +1,7 @@
-use crate::{ConnectionId, ProbeResult, Profile, ProfileService, Result, State, error::invalid};
+use crate::{
+    ConnectionId, Error, ProbeResult, Profile, ProfileService, Result, State, error::invalid,
+    runtime::lock,
+};
 impl ProfileService {
     pub async fn update<F, Fut>(
         &mut self,
@@ -14,13 +17,20 @@ impl ProfileService {
         if replacement.id() != id {
             return Err(invalid("connection profile id cannot be changed"));
         }
-        let state = self.manager.status(id)?.state;
+        let entry = self.manager.entry(id)?;
+        let (state, disconnect_revision) = {
+            let data = lock(&entry.data)?;
+            (data.state, data.disconnect_revision)
+        };
         let connected = matches!(
             state,
             State::Ready | State::Connecting | State::Reconnecting
         );
         if state == State::Ready {
             self.test(&replacement, probe).await?;
+        }
+        if lock(&entry.data)?.disconnect_revision != disconnect_revision {
+            return Err(Error::Stale);
         }
         let previous = self
             .registry
@@ -39,7 +49,9 @@ impl ProfileService {
                 .replace(replacement.clone(), (self.factory)(&replacement))
                 .await?;
             if connected || replacement.auto_connect() || self.manager.default_id()? == *id {
-                self.manager.connect(id).await?;
+                self.manager
+                    .connect_if_current(id, Some(disconnect_revision))
+                    .await?;
             }
             Ok::<_, crate::Error>(())
         }
@@ -60,8 +72,10 @@ impl ProfileService {
             self.manager
                 .replace(old.clone(), (self.factory)(&old))
                 .await?;
-            if connected {
-                self.manager.connect(id).await?;
+            if connected && lock(&entry.data)?.disconnect_revision == disconnect_revision {
+                self.manager
+                    .connect_if_current(id, Some(disconnect_revision))
+                    .await?;
             }
             return Err(error);
         }

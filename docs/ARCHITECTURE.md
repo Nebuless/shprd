@@ -33,8 +33,16 @@ service libraries. The default Bun bridge remains the supported application host
 These components do not yet provide its complete browser-facing API:
 
 - `shprd-host` serves static React assets, login, health and WebSocket control RPC.
-  Its terminal codecs and socket clients are separate modules; browser terminal
-  forwarding and full connection lifecycle routing are not wired into this server.
+  Its binary loads persisted connection profiles, probes control/render protocols,
+  and routes profile operations and control RPC through native generation leases.
+  Scoped `herdr-info` HTTP rejects retired generations. Terminal forwarding,
+  automatic reconnect supervision and complete service routing remain unwired.
+  Agent controls access only host-local attachments for local profiles, not SSH
+  profiles. Subscriptions carry connection generation and close on retirement;
+  queued replies and events recheck their lease immediately before socket send.
+  Downstream startup does not delay the HTTP listener. Browser disconnects discard
+  mutation replies but drain durable profile commits or rollbacks; explicit
+  connection disconnect reaches runtime cancellation without the profile lock.
 - `shprd-agent` connects to authenticated attachments inside existing Senpi and
   Atomic runtimes. `integrations/pi` retains the TypeScript extension glue required
   by their native APIs; it does not launch engines or write session history.

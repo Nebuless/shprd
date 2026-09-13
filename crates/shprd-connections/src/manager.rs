@@ -50,6 +50,7 @@ impl Manager {
                 data: Mutex::new(EntryData {
                     profile,
                     generation: 0,
+                    disconnect_revision: 0,
                     state: State::Disconnected,
                     error: None,
                     runtime: None,
@@ -138,7 +139,7 @@ impl Manager {
             d.profile = profile.clone();
             d.factory = factory;
         }
-        self.disconnect(profile.id()).await
+        self.retire(profile.id(), false).await
     }
     pub async fn unregister(&self, id: &ConnectionId) -> Result<()> {
         if *id == self.default_id()? {
@@ -167,6 +168,7 @@ impl Manager {
             let entry = self.entry(id)?;
             let mut d = lock(&entry.data)?;
             advance(&mut d)?;
+            d.disconnect_revision = d.generation;
             d.state = State::Stopping;
             d.paths = None;
             entry.cancel.send_replace(d.generation);

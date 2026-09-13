@@ -2,6 +2,7 @@
 
 pub mod auth;
 pub mod config;
+pub mod connections;
 pub mod endpoint;
 pub mod herdr;
 pub mod host;

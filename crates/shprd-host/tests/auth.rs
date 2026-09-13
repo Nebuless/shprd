@@ -1,6 +1,20 @@
 use shprd_host::auth::Auth;
 
 #[test]
+fn malformed_suffix_beyond_token_read_limit_is_rejected() -> Result<(), Box<dyn std::error::Error>>
+{
+    // Given a valid-looking prefix hiding malformed data beyond the old read limit.
+    let directory = tempfile::tempdir()?;
+    let path = directory.path().join("auth-token");
+    let contents = format!("{}{}invalid", "a".repeat(64), " ".repeat(64));
+    std::fs::write(&path, &contents)?;
+    // When loading the token, then the full malformed file is rejected and preserved.
+    assert!(shprd_host::auth::load_or_create_token(&path).is_err());
+    assert_eq!(std::fs::read_to_string(path)?, contents);
+    Ok(())
+}
+
+#[test]
 fn signed_cookie_authenticates_but_tampered_cookie_does_not()
 -> Result<(), Box<dyn std::error::Error>> {
     // Given an authenticated login.

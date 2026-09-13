@@ -171,9 +171,10 @@ pub fn load_or_create_token(path: &Path) -> Result<String, Error> {
                 file.set_permissions(fs::Permissions::from_mode(0o600))?;
             }
             let mut contents = String::new();
-            file.take(128).read_to_string(&mut contents)?;
+            file.take(129).read_to_string(&mut contents)?;
             let token = contents.trim();
-            if token.len() != 64
+            if contents.len() > 128
+                || token.len() != 64
                 || !token
                     .bytes()
                     .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))

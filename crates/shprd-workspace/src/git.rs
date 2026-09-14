@@ -180,7 +180,12 @@ fn stale(path: &str) -> Error {
         "{path} changed since the last refresh; refresh Changes and try again"
     ))
 }
-async fn file_action(host: &HostConfig, root: &str, params: &Value) -> Result<Value> {
+async fn file_action<F: Fn() -> bool>(
+    host: &HostConfig,
+    root: &str,
+    params: &Value,
+    current: &F,
+) -> Result<Value> {
     let action = string(params, "action");
     if !["stage", "unstage", "discard_unstaged", "delete_untracked"].contains(&action) {
         return Err(Error::Invalid(
@@ -189,6 +194,9 @@ async fn file_action(host: &HostConfig, root: &str, params: &Value) -> Result<Va
     }
     let path = required_path(params, false)?;
     let old = path_value(params, "old_path")?;
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     let output = run(
         host,
         root,
@@ -234,6 +242,9 @@ async fn file_action(host: &HostConfig, root: &str, params: &Value) -> Result<Va
             _ => return Err(stale(&path)),
         }
     }
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     if action == "delete_untracked" {
         let script = format!(
             "set -eu\ncd -- {}\nf={}\nif [ -d \"$f\" ] && [ ! -L \"$f\" ]; then printf '%s\\n' 'delete_untracked supports files only; recursive directory deletion is not supported' >&2; exit 15; fi\nexec git --literal-pathspecs clean -f -- {}",
@@ -244,6 +255,9 @@ async fn file_action(host: &HostConfig, root: &str, params: &Value) -> Result<Va
         process::run(host, &["sh", "-c", &script], None, 10, 16384)
             .await?
             .checked()?;
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
     } else {
         let mut args = match action {
             "stage" => vec!["add"],
@@ -262,7 +276,13 @@ async fn file_action(host: &HostConfig, root: &str, params: &Value) -> Result<Va
             args.push(&old);
         }
         args.push(&path);
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
         run(host, root, &args).await?.checked()?;
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
     }
     let mut result = json!({"action":action,"path":path});
     if !old.is_empty() {
@@ -273,9 +293,17 @@ async fn file_action(host: &HostConfig, root: &str, params: &Value) -> Result<Va
 fn path_value(params: &Value, key: &str) -> Result<String> {
     path(string(params, key), false)
 }
-async fn repo_action(host: &HostConfig, root: &str, params: &Value) -> Result<Value> {
+async fn repo_action<F: Fn() -> bool>(
+    host: &HostConfig,
+    root: &str,
+    params: &Value,
+    current: &F,
+) -> Result<Value> {
     let action = string(params, "action");
     let before = counts(&working(host, root).await?, false);
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     let args = match action {
         "stage_all" => vec!["add", "-A"],
         "unstage_all" => {
@@ -313,6 +341,9 @@ async fn repo_action(host: &HostConfig, root: &str, params: &Value) -> Result<Va
             ));
         }
     };
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     run(host, root, &args).await?.checked()?;
     Ok(json!({"action":action,"counts":counts(&working(host,root).await?,false)}))
 }
@@ -746,12 +777,16 @@ async fn status(host: &HostConfig, root: &str) -> Result<Value> {
     );
     Ok(value)
 }
-pub(crate) async fn dispatch(
+pub(crate) async fn dispatch<F: Fn() -> bool>(
     service: &WorkspaceService,
     checkout: &Checkout,
     method: &str,
     params: &Value,
+    current: &F,
 ) -> Result<Value> {
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     if method == "git.status" {
         return status(&service.host, &checkout.path).await;
     }
@@ -759,8 +794,13 @@ pub(crate) async fn dispatch(
     let mut result = match method {
         "git.diff_summary" => return summary(service, checkout, &root, params).await,
         "git.diff_file" => return diff_file(service, checkout, &root, params).await,
-        "git.file_action" => file_action(&service.host, &root, params).await?,
-        "git.repo_action" => repo_action(&service.host, &root, params).await?,
+        "git.file_action" => file_action(&service.host, &root, params, current).await?,
+        "git.repo_action" => {
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
+            repo_action(&service.host, &root, params, current).await?
+        }
         "git.pull" => {
             let out = process::run(
                 &service.host,
@@ -781,6 +821,9 @@ pub(crate) async fn dispatch(
             )
             .await?
             .checked()?;
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
             json!({"stdout":out.text().trim(),"stderr":out.stderr.trim()})
         }
         _ => return Err(Error::Invalid("unknown git method".into())),

@@ -72,10 +72,27 @@ impl WorkspaceService {
         method: &str,
         params: &Value,
     ) -> Result<Value> {
+        self.dispatch_if_current(checkout, method, params, || true)
+            .await
+    }
+    pub async fn dispatch_if_current<F>(
+        &self,
+        checkout: &Checkout,
+        method: &str,
+        params: &Value,
+        current: F,
+    ) -> Result<Value>
+    where
+        F: Fn() -> bool + Send + Sync,
+    {
         validate_request(checkout, params)?;
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
         match method {
-            "file.list" | "file.resolve" | "file.read" | "file.delete" => {
-                let mut value = files::dispatch(&self.host, checkout, method, params).await?;
+            "file.list" | "file.resolve" | "file.read" => {
+                let mut value =
+                    files::dispatch(&self.host, checkout, method, params, &current).await?;
                 value["workspace_id"] = json!(checkout.workspace_id);
                 if method == "file.list" || method == "file.read" {
                     value["repo_name"] = json!(checkout.repo_name);
@@ -83,10 +100,23 @@ impl WorkspaceService {
                 }
                 Ok(value)
             }
+            "file.delete" => {
+                let _guard = self.mutation.lock().await;
+                if !current() {
+                    return Err(Error::Stale("connection generation changed".into()));
+                }
+                let mut value =
+                    files::dispatch(&self.host, checkout, method, params, &current).await?;
+                value["workspace_id"] = json!(checkout.workspace_id);
+                Ok(value)
+            }
             "git.diff_summary" | "git.diff_file" | "git.file_action" | "git.repo_action"
             | "git.pull" | "git.status" => {
                 let _guard = self.mutation.lock().await;
-                git::dispatch(self, checkout, method, params).await
+                if !current() {
+                    return Err(Error::Stale("connection generation changed".into()));
+                }
+                git::dispatch(self, checkout, method, params, &current).await
             }
             _ => Err(Error::Invalid(format!(
                 "unsupported workspace method: {method}"
@@ -105,9 +135,29 @@ impl WorkspaceService {
         params: &Value,
         body: &mut R,
     ) -> Result<Value> {
+        self.upload_if_current(checkout, params, body, || true)
+            .await
+    }
+    pub async fn upload_if_current<R, F>(
+        &self,
+        checkout: &Checkout,
+        params: &Value,
+        body: &mut R,
+        current: F,
+    ) -> Result<Value>
+    where
+        R: AsyncRead + Unpin,
+        F: Fn() -> bool + Send + Sync,
+    {
         validate_request(checkout, params)?;
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
         let _guard = self.mutation.lock().await;
-        files::upload(&self.host, checkout, params, body).await
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
+        files::upload(&self.host, checkout, params, body, &current).await
     }
     /// Call at activity start, before the engine can edit files.
     pub async fn capture_workspace(&self, checkout: &Checkout) -> Result<String> {
@@ -200,4 +250,311 @@ fn required_path(params: &Value, preview: bool) -> Result<String> {
         return Err(Error::Invalid("operation requires path".into()));
     }
     Ok(path)
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+mod safety_tests {
+    use super::*;
+    use std::{
+        future::Future,
+        process::Command,
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+        task::{Context, Poll, Waker},
+    };
+
+    fn checkout(root: &std::path::Path) -> Checkout {
+        Checkout {
+            workspace_id: "safety-workspace".into(),
+            path: root.to_string_lossy().into_owned(),
+            repo_name: "safety-repo".into(),
+        }
+    }
+
+    fn git(root: &std::path::Path, args: &[&str]) -> String {
+        let mut command = Command::new("git");
+        command.arg("-C").arg(root).args(args);
+        for (variable, _) in std::env::vars().filter(|(key, _)| key.starts_with("GIT_")) {
+            command.env_remove(variable);
+        }
+        let output = command
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+            .expect("git process");
+        assert!(
+            output.status.success(),
+            "git failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        String::from_utf8(output.stdout).expect("git output")
+    }
+
+    fn repository() -> tempfile::TempDir {
+        let dir = tempfile::tempdir().expect("repository fixture");
+        git(dir.path(), &["init", "-b", "main"]);
+        git(dir.path(), &["config", "user.email", "test@example.com"]);
+        git(dir.path(), &["config", "user.name", "SHPRD Test"]);
+        std::fs::write(dir.path().join("tracked.txt"), "base\n").expect("tracked fixture");
+        git(dir.path(), &["add", "."]);
+        git(dir.path(), &["commit", "-m", "initial"]);
+        dir
+    }
+
+    #[tokio::test]
+    async fn stale_generation_cannot_admit_queued_git_mutation() {
+        let dir = repository();
+        std::fs::write(dir.path().join("new.txt"), "new\n").expect("new fixture");
+        let checkout = checkout(dir.path());
+        let service = WorkspaceService::default();
+        let holder = service.mutation.lock().await;
+        let current = Arc::new(AtomicBool::new(true));
+        let contender_current = Arc::clone(&current);
+        let params = json!({"action":"stage_all"});
+        let mut contender = Box::pin(service.dispatch_if_current(
+            &checkout,
+            "git.repo_action",
+            &params,
+            move || contender_current.load(Ordering::Acquire),
+        ));
+        let waker = Waker::noop();
+        let mut context = Context::from_waker(waker);
+        assert!(matches!(
+            contender.as_mut().poll(&mut context),
+            Poll::Pending
+        ));
+        current.store(false, Ordering::Release);
+        drop(holder);
+        let error = contender.await.expect_err("stale queued Git action");
+        assert!(matches!(error, Error::Stale(_)));
+        assert!(!git(dir.path(), &["status", "--porcelain"]).contains("A  new.txt"));
+    }
+
+    #[tokio::test]
+    async fn current_generation_admits_git_mutation() {
+        let dir = repository();
+        std::fs::write(dir.path().join("new.txt"), "new\n").expect("new fixture");
+        let checkout = checkout(dir.path());
+        let service = WorkspaceService::default();
+        service
+            .dispatch_if_current(
+                &checkout,
+                "git.repo_action",
+                &json!({"action":"stage_all"}),
+                || true,
+            )
+            .await
+            .expect("current Git action");
+        assert!(git(dir.path(), &["status", "--porcelain"]).contains("A  new.txt"));
+    }
+
+    #[tokio::test]
+    async fn stale_generation_cannot_admit_queued_delete() {
+        let dir = tempfile::tempdir().expect("delete fixture");
+        let target = dir.path().join("delete-me.txt");
+        std::fs::write(&target, "keep").expect("delete target");
+        let checkout = checkout(dir.path());
+        let service = WorkspaceService::default();
+        let holder = service.mutation.lock().await;
+        let current = Arc::new(AtomicBool::new(true));
+        let contender_current = Arc::clone(&current);
+        let params = json!({"path":"delete-me.txt"});
+        let mut contender = Box::pin(service.dispatch_if_current(
+            &checkout,
+            "file.delete",
+            &params,
+            move || contender_current.load(Ordering::Acquire),
+        ));
+        let waker = Waker::noop();
+        let mut context = Context::from_waker(waker);
+        assert!(matches!(
+            contender.as_mut().poll(&mut context),
+            Poll::Pending
+        ));
+        current.store(false, Ordering::Release);
+        drop(holder);
+        let error = contender.await.expect_err("stale queued delete");
+        assert!(matches!(error, Error::Stale(_)));
+        assert!(target.exists());
+    }
+
+    #[tokio::test]
+    async fn current_generation_deletes_file() {
+        let dir = tempfile::tempdir().expect("delete fixture");
+        let target = dir.path().join("delete-me.txt");
+        std::fs::write(&target, "remove").expect("delete target");
+        let checkout = checkout(dir.path());
+        WorkspaceService::default()
+            .dispatch_if_current(
+                &checkout,
+                "file.delete",
+                &json!({"path":"delete-me.txt"}),
+                || true,
+            )
+            .await
+            .expect("current delete");
+        assert!(!target.exists());
+    }
+
+    #[cfg(unix)]
+    fn fake_ssh() -> (tempfile::TempDir, HostConfig) {
+        use std::{fs::File, io::Write, os::unix::fs::PermissionsExt};
+        let dir = tempfile::tempdir().expect("fake SSH fixture");
+        let path = dir.path().join("ssh");
+        let mut file = File::create(&path).expect("fake SSH program");
+        writeln!(
+            file,
+            "#!/bin/sh\ncommand=''\nfor arg in \"$@\"; do command=\"$arg\"; done\n/bin/bash -c \"$command\"\nstatus=$?\n: > \"$0.stage\"\nexit \"$status\""
+        )
+        .expect("fake SSH source");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))
+            .expect("fake SSH permissions");
+        let host = HostConfig::test_ssh("test-host", path);
+        (dir, host)
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn stale_generation_cannot_publish_queued_remote_upload() {
+        let (fake_dir, host) = fake_ssh();
+        let fake_program = fake_dir.path().join("ssh");
+        let checkout_dir = tempfile::tempdir().expect("remote checkout fixture");
+        let checkout = checkout(checkout_dir.path());
+        let service = WorkspaceService::new(host).expect("workspace service");
+        let holder = service.mutation.lock().await;
+        let current = Arc::new(AtomicBool::new(true));
+        let contender_current = Arc::clone(&current);
+        let params = json!({"directory":"","filename":"remote.txt"});
+        let mut body = std::io::Cursor::new(b"must-not-publish".to_vec());
+        let mut contender = Box::pin(service.upload_if_current(
+            &checkout,
+            &params,
+            &mut body,
+            move || contender_current.load(Ordering::Acquire),
+        ));
+        let waker = Waker::noop();
+        let mut context = Context::from_waker(waker);
+        assert!(matches!(
+            contender.as_mut().poll(&mut context),
+            Poll::Pending
+        ));
+        current.store(false, Ordering::Release);
+        drop(holder);
+        let error = contender.await.expect_err("stale queued remote upload");
+        assert!(matches!(error, Error::Stale(_)));
+        assert!(!checkout_dir.path().join("remote.txt").exists());
+        drop(fake_dir);
+        assert!(!fake_program.exists());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn current_generation_publishes_remote_upload() {
+        let (fake_dir, host) = fake_ssh();
+        let fake_program = fake_dir.path().join("ssh");
+        let checkout_dir = tempfile::tempdir().expect("remote checkout fixture");
+        let checkout = checkout(checkout_dir.path());
+        let service = WorkspaceService::new(host).expect("workspace service");
+        let mut body = std::io::Cursor::new(b"published".to_vec());
+        service
+            .upload_if_current(
+                &checkout,
+                &json!({"directory":"","filename":"remote.txt"}),
+                &mut body,
+                || true,
+            )
+            .await
+            .expect("current remote upload");
+        assert_eq!(
+            std::fs::read(checkout_dir.path().join("remote.txt")).expect("remote target"),
+            b"published"
+        );
+        drop(fake_dir);
+        assert!(!fake_program.exists());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn stale_generation_cannot_commit_remote_upload_after_staging() {
+        let (fake_dir, host) = fake_ssh();
+        let fake_program = fake_dir.path().join("ssh");
+        let checkout_dir = tempfile::tempdir().expect("remote checkout fixture");
+        let target = checkout_dir.path().join("remote.txt");
+        std::fs::write(&target, "original").expect("remote target");
+        let checkout = checkout(checkout_dir.path());
+        let retired = Arc::new(AtomicBool::new(false));
+        let current_retired = Arc::clone(&retired);
+        let stage_marker = fake_program.with_extension("stage");
+        let stage_marker_check = stage_marker.clone();
+        let mut body = std::io::Cursor::new(b"committed-too-early".to_vec());
+        let error = remote::upload(&host, &checkout, "", "remote.txt", &mut body, &move || {
+            if stage_marker_check.exists() {
+                current_retired.store(true, Ordering::Release);
+            }
+            !current_retired.load(Ordering::Acquire)
+        })
+        .await
+        .expect_err("retirement before final commit admission");
+        assert!(matches!(error, Error::Stale(_)));
+        assert!(stage_marker.exists());
+        assert_eq!(std::fs::read(&target).unwrap(), b"original");
+        assert_eq!(
+            std::fs::read_dir(checkout_dir.path())
+                .unwrap()
+                .filter_map(std::result::Result::ok)
+                .filter(|entry| {
+                    entry
+                        .file_name()
+                        .to_string_lossy()
+                        .starts_with(".shprd-upload.")
+                })
+                .count(),
+            0
+        );
+        drop(fake_dir);
+        assert!(!fake_program.exists());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn admitted_remote_commit_can_return_stale_without_rollback_claim() {
+        let (fake_dir, host) = fake_ssh();
+        let fake_program = fake_dir.path().join("ssh");
+        let checkout_dir = tempfile::tempdir().expect("remote checkout fixture");
+        let checkout = checkout(checkout_dir.path());
+        let retired = Arc::new(AtomicBool::new(false));
+        let observed_target = checkout_dir.path().join("remote.txt");
+        let guard_target = observed_target.clone();
+        let current_retired = Arc::clone(&retired);
+        let mut body = std::io::Cursor::new(b"admitted-remote-commit".to_vec());
+        let result = remote::upload(&host, &checkout, "", "remote.txt", &mut body, &move || {
+            if guard_target.exists() {
+                current_retired.store(true, Ordering::Release);
+            }
+            !current_retired.load(Ordering::Acquire)
+        })
+        .await;
+        assert!(matches!(result, Err(Error::Stale(_))));
+        assert_eq!(
+            std::fs::read(&observed_target).unwrap(),
+            b"admitted-remote-commit"
+        );
+        assert_eq!(
+            std::fs::read_dir(checkout_dir.path())
+                .unwrap()
+                .filter_map(std::result::Result::ok)
+                .filter(|entry| {
+                    entry
+                        .file_name()
+                        .to_string_lossy()
+                        .starts_with(".shprd-upload.")
+                })
+                .count(),
+            0
+        );
+        drop(fake_dir);
+        assert!(!fake_program.exists());
+    }
 }

@@ -101,17 +101,18 @@ pub(crate) fn decode(bytes: &[u8], truncated: bool, path: &str) -> Value {
     }
     value
 }
-pub(crate) async fn dispatch(
+pub(crate) async fn dispatch<F: Fn() -> bool>(
     host: &HostConfig,
     checkout: &Checkout,
     method: &str,
     params: &Value,
+    current: &F,
 ) -> Result<Value> {
     if method == "file.resolve" {
         return resolve(host, checkout, params).await;
     }
     if matches!(host, HostConfig::Ssh { .. }) {
-        return remote::dispatch(host, checkout, method, params).await;
+        return remote::dispatch(host, checkout, method, params, current).await;
     }
     match method {
         "file.list" => {
@@ -176,6 +177,9 @@ pub(crate) async fn dispatch(
             Ok(value)
         }
         "file.delete" => {
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
             let requested = required_path(params, false)?;
             let root = fs::canonicalize(&checkout.path).await?;
             let target = root.join(&requested);
@@ -187,6 +191,9 @@ pub(crate) async fn dispatch(
             .await?;
             inside(&root, &parent)?;
             let meta = fs::symlink_metadata(&target).await?;
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
             if meta.is_dir() {
                 fs::remove_dir_all(&target).await?;
             } else {
@@ -293,16 +300,17 @@ pub(crate) fn filename(params: &Value) -> Result<String> {
     }
     Ok(name.to_owned())
 }
-pub(crate) async fn upload<R: AsyncRead + Unpin>(
+pub(crate) async fn upload<R: AsyncRead + Unpin, F: Fn() -> bool + Sync>(
     host: &HostConfig,
     checkout: &Checkout,
     params: &Value,
     body: &mut R,
+    current: &F,
 ) -> Result<Value> {
     let directory = path(string(params, "directory"), false)?;
     let name = filename(params)?;
     if matches!(host, HostConfig::Ssh { .. }) {
-        return remote::upload(host, checkout, &directory, &name, body).await;
+        return remote::upload(host, checkout, &directory, &name, body, current).await;
     }
     let (root, dir) = target(&checkout.path, &directory, false).await?;
     if !fs::metadata(&dir).await?.is_dir() {
@@ -323,15 +331,39 @@ pub(crate) async fn upload<R: AsyncRead + Unpin>(
     };
     let temp = tempfile::NamedTempFile::new_in(&dir)?;
     let mut writer = fs::File::from_std(temp.reopen()?);
-    let size = tokio::time::timeout(Duration::from_secs(120), tokio::io::copy(body, &mut writer))
-        .await
-        .map_err(|_| Error::Timeout)??;
+    let size = tokio::time::timeout(Duration::from_secs(120), async {
+        let mut buffer = [0u8; 64 * 1024];
+        let mut size = 0u64;
+        loop {
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
+            let count = body.read(&mut buffer).await?;
+            if count == 0 {
+                break;
+            }
+            tokio::io::AsyncWriteExt::write_all(&mut writer, &buffer[..count]).await?;
+            size = size.saturating_add(count as u64);
+        }
+        Ok::<u64, Error>(size)
+    })
+    .await
+    .map_err(|_| Error::Timeout)??;
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     writer.sync_all().await?;
     if let Some(meta) = existing.as_ref() {
         fs::set_permissions(temp.path(), meta.permissions()).await?;
     }
-    let current = fs::symlink_metadata(&destination).await;
-    match (&existing, current) {
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
+    let destination_state = fs::symlink_metadata(&destination).await;
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
+    match (&existing, destination_state) {
         (Some(old), Ok(now))
             if now.is_file()
                 && !now.is_symlink()

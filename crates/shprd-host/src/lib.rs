@@ -8,5 +8,6 @@ pub mod herdr;
 pub mod host;
 pub mod input;
 pub mod render;
+pub mod services;
 pub mod surface;
 pub mod terminal;

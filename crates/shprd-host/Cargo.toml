@@ -15,7 +15,9 @@ path = "src/main.rs"
 shprd-agent = { path = "../shprd-agent" }
 shprd-workspace = { path = "../shprd-workspace" }
 shprd-connections = { path = "../shprd-connections" }
-axum = { version = "0.8", features = ["ws"] }
+shprd-settings = { path = "../shprd-settings" }
+shprd-history = { path = "../shprd-history" }
+axum = { version = "0.8", features = ["ws", "macros"] }
 base64 = "0.22"
 bincode = { version = "2", features = ["derive"] }
 unicode-width = "0.2"
@@ -29,11 +31,12 @@ thiserror = "2"
 tokio = { version = "1", features = ["io-util", "net", "rt-multi-thread", "macros", "sync", "time", "fs", "process", "signal"] }
 tower-http = { version = "0.6", features = ["fs"] }
 futures-util = { version = "0.3", features = ["sink"] }
-tokio-util = { version = "0.7", features = ["codec"] }
+tokio-util = { version = "0.7", features = ["codec", "io"] }
 
 [dev-dependencies]
 tokio-tungstenite = "0.29"
 tempfile = "3"
+http-body-util = "0.1"
 tower = { version = "0.5", features = ["util"] }
 
 [lints]

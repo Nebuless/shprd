@@ -1,4 +1,4 @@
-use crate::{ConnectionId, Error, Profile, Result, error::invalid};
+use crate::{ConnectionId, Error, Profile, Result, RetryPolicy, error::invalid};
 use serde::Serialize;
 use std::{
     future::Future,
@@ -6,7 +6,7 @@ use std::{
     pin::Pin,
     sync::{Arc, Mutex, MutexGuard, Weak},
 };
-use tokio::sync::watch;
+use tokio::{sync::watch, task::JoinHandle};
 
 pub type RuntimeFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T>> + Send + 'a>>;
 pub type RuntimeFactory = Arc<dyn Fn(RuntimeContext) -> Result<Arc<dyn Runtime>> + Send + Sync>;
@@ -54,12 +54,23 @@ pub(crate) struct EntryData {
     pub runtime: Option<Arc<dyn Runtime>>,
     pub paths: Option<SocketPaths>,
     pub factory: RuntimeFactory,
+    pub retry: RetryPolicy,
     pub registered: bool,
 }
 pub(crate) struct Entry {
     pub data: Mutex<EntryData>,
     pub operation: tokio::sync::Mutex<()>,
     pub cancel: watch::Sender<u64>,
+    pub retry_task: Mutex<Option<JoinHandle<()>>>,
+    #[cfg(test)]
+    pub retry_task_observation: Arc<RetryTaskObservation>,
+}
+#[cfg(test)]
+pub(crate) struct RetryTaskObservation {
+    pub armed: tokio::sync::Notify,
+    pub completed: tokio::sync::Notify,
+    pub ready: tokio::sync::Notify,
+    pub completion_count: std::sync::atomic::AtomicUsize,
 }
 pub(crate) fn lock<T>(m: &Mutex<T>) -> Result<MutexGuard<'_, T>> {
     m.lock()
@@ -76,6 +87,7 @@ pub(crate) fn advance(data: &mut EntryData) -> Result<()> {
 #[derive(Clone)]
 pub struct RuntimeContext {
     pub(crate) entry: Weak<Entry>,
+    pub(crate) manager: Weak<Mutex<crate::manager::Entries>>,
     pub(crate) generation: u64,
 }
 impl RuntimeContext {
@@ -125,6 +137,15 @@ impl RuntimeContext {
             message: sanitize_error(message),
         });
         entry.cancel.send_replace(data.generation);
+        let retry_context = RuntimeContext {
+            entry: Arc::downgrade(&entry),
+            manager: self.manager.clone(),
+            generation: data.generation,
+        };
+        drop(data);
+        if reconnecting && let Some(inner) = self.manager.upgrade() {
+            crate::Manager { inner }.schedule_retry(retry_context)?;
+        }
         Ok(true)
     }
 }

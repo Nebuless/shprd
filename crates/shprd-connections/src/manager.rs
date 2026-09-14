@@ -1,25 +1,28 @@
-use crate::{ConnectionId, Error, Profile, Result, error::invalid, runtime::*};
+use crate::{ConnectionId, Error, Profile, Result, RetryPolicy, error::invalid, runtime::*};
 use std::{
     collections::BTreeMap,
     sync::{Arc, Mutex},
 };
+#[cfg(test)]
+use tokio::sync::Notify;
 
 pub(crate) struct Entries {
     entries: BTreeMap<String, Arc<Entry>>,
     default: ConnectionId,
     pub(crate) stopping: bool,
 }
+#[derive(Clone)]
 pub struct Manager {
-    pub(crate) inner: Mutex<Entries>,
+    pub(crate) inner: Arc<Mutex<Entries>>,
 }
 impl Manager {
     pub fn new(default: ConnectionId) -> Self {
         Self {
-            inner: Mutex::new(Entries {
+            inner: Arc::new(Mutex::new(Entries {
                 entries: BTreeMap::new(),
                 default,
                 stopping: false,
-            }),
+            })),
         }
     }
     pub fn default_id(&self) -> Result<ConnectionId> {
@@ -56,10 +59,19 @@ impl Manager {
                     runtime: None,
                     paths: None,
                     factory,
+                    retry: RetryPolicy::default(),
                     registered: true,
                 }),
                 operation: tokio::sync::Mutex::new(()),
                 cancel,
+                retry_task: Mutex::new(None),
+                #[cfg(test)]
+                retry_task_observation: Arc::new(RetryTaskObservation {
+                    armed: Notify::new(),
+                    completed: Notify::new(),
+                    ready: Notify::new(),
+                    completion_count: std::sync::atomic::AtomicUsize::new(0),
+                }),
             }),
         );
         Ok(())
@@ -114,6 +126,7 @@ impl Manager {
                 .ok_or_else(|| invalid("ready connection has no socket paths"))?,
             context: RuntimeContext {
                 entry: Arc::downgrade(&entry),
+                manager: Arc::downgrade(&self.inner),
                 generation: d.generation,
             },
         })
@@ -132,6 +145,97 @@ impl Manager {
         }
         Ok(lease)
     }
+    pub(crate) fn schedule_retry(&self, context: RuntimeContext) -> Result<()> {
+        let entry = context.entry.upgrade().ok_or(Error::Stale)?;
+        let id = {
+            let mut d = lock(&entry.data)?;
+            if !d.registered || d.generation != context.generation || d.state != State::Reconnecting
+            {
+                return Ok(());
+            }
+            d.retry.enable_retry();
+            d.profile.id().clone()
+        };
+        if let Some(task) = lock(&entry.retry_task)?.take() {
+            task.abort();
+        }
+        let manager = self.clone();
+        let retry_entry = Arc::clone(&entry);
+        #[cfg(test)]
+        let retry_task_observation = Arc::clone(&entry.retry_task_observation);
+        let task = tokio::spawn(async move {
+            #[cfg(test)]
+            let _completion = RetryTaskCompletion {
+                observation: Arc::clone(&retry_task_observation),
+            };
+            for _ in 0..6 {
+                let ticket = {
+                    let mut d = match lock(&retry_entry.data) {
+                        Ok(d) => d,
+                        Err(_) => return,
+                    };
+                    d.retry.schedule(true, 0.5)
+                };
+                let Some(ticket) = ticket else { return };
+                let mut cancel = retry_entry.cancel.subscribe();
+                #[cfg(test)]
+                retry_task_observation.armed.notify_one();
+                tokio::select! {
+                    _ = tokio::time::sleep(ticket.delay) => {}
+                    _ = cancel.changed() => return,
+                }
+                let current = match lock(&retry_entry.data) {
+                    Ok(d) => {
+                        d.registered
+                            && d.retry.is_current(&ticket)
+                            && d.state == State::Reconnecting
+                    }
+                    Err(_) => false,
+                };
+                if !current {
+                    return;
+                }
+                let generation = match lock(&retry_entry.data) {
+                    Ok(d) => d.generation,
+                    Err(_) => return,
+                };
+                match manager
+                    .connect_if_current(&id, None, Some(generation))
+                    .await
+                {
+                    Ok(()) => return,
+                    Err(Error::Runtime {
+                        retryable: false, ..
+                    }) => return,
+                    Err(_) => {}
+                }
+                let should_continue = match lock(&retry_entry.data) {
+                    Ok(mut d) => {
+                        if d.registered && d.state == State::Error {
+                            d.state = State::Reconnecting;
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    Err(_) => false,
+                };
+                if !should_continue {
+                    return;
+                }
+            }
+        });
+        *lock(&entry.retry_task)? = Some(task);
+        Ok(())
+    }
+    #[cfg(test)]
+    pub(crate) fn retry_task_observation(
+        &self,
+        id: &ConnectionId,
+    ) -> Result<Arc<RetryTaskObservation>> {
+        let entry = self.entry(id)?;
+        Ok(Arc::clone(&entry.retry_task_observation))
+    }
     pub async fn replace(&self, profile: Profile, factory: RuntimeFactory) -> Result<()> {
         let entry = self.entry(profile.id())?;
         {
@@ -146,12 +250,11 @@ impl Manager {
             return Err(invalid("cannot remove the default connection"));
         }
         let entry = self.entry(id)?;
-        {
-            let mut d = lock(&entry.data)?;
-            d.registered = false;
-        }
         let cleanup = self.disconnect(id).await;
-        lock(&self.inner)?.entries.remove(id.as_str());
+        if cleanup.is_ok() {
+            lock(&entry.data)?.registered = false;
+            lock(&self.inner)?.entries.remove(id.as_str());
+        }
         cleanup
     }
     pub async fn stop_all(&self) -> Result<()> {
@@ -183,5 +286,20 @@ impl Manager {
             Some(e) => Err(e),
             None => Ok(()),
         }
+    }
+}
+
+#[cfg(test)]
+struct RetryTaskCompletion {
+    observation: Arc<RetryTaskObservation>,
+}
+
+#[cfg(test)]
+impl Drop for RetryTaskCompletion {
+    fn drop(&mut self) {
+        self.observation
+            .completion_count
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.observation.completed.notify_one();
     }
 }

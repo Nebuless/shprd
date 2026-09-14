@@ -26,6 +26,10 @@ impl Store {
         match std::env::var_os("HERDR_GUI_CONNECTIONS_PATH") {
             Some(path) => Self::new(path.into()),
             None => {
+                if let Some(config) = std::env::var_os("SHPRD_CONFIG_DIR").filter(|p| !p.is_empty())
+                {
+                    return Self::new(PathBuf::from(config).join("connections.json"));
+                }
                 let mut store = Self::new(home.join(".config/herdr-gui/connections.json"))?;
                 store.harden = true;
                 Ok(store)

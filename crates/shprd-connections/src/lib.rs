@@ -13,6 +13,8 @@ mod runtime;
 mod service;
 mod ssh;
 mod store;
+#[cfg(test)]
+mod supervision_tests;
 mod tunnel;
 mod update;
 pub use error::{Error, Result};

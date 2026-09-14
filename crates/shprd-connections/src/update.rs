@@ -50,7 +50,7 @@ impl ProfileService {
                 .await?;
             if connected || replacement.auto_connect() || self.manager.default_id()? == *id {
                 self.manager
-                    .connect_if_current(id, Some(disconnect_revision))
+                    .connect_if_current(id, Some(disconnect_revision), None)
                     .await?;
             }
             Ok::<_, crate::Error>(())
@@ -74,7 +74,7 @@ impl ProfileService {
                 .await?;
             if connected && lock(&entry.data)?.disconnect_revision == disconnect_revision {
                 self.manager
-                    .connect_if_current(id, Some(disconnect_revision))
+                    .connect_if_current(id, Some(disconnect_revision), None)
                     .await?;
             }
             return Err(error);

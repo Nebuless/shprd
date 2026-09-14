@@ -171,7 +171,7 @@ impl ProfileService {
             self.manager.status(id)?.state,
             State::Ready | State::Connecting | State::Reconnecting
         );
-        let _cleanup = self.manager.unregister(id).await;
+        self.manager.unregister(id).await?;
         let save = if next.profiles.is_empty() {
             self.store.clear()
         } else {

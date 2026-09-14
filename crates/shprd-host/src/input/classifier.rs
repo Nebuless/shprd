@@ -2,7 +2,7 @@
 
 use super::{Error, Event, Key};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Classifier {
     pending: Vec<u8>,
 }

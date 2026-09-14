@@ -4,6 +4,7 @@ use crate::{herdr, render};
 use bincode::{Decode, Encode};
 use futures_util::{SinkExt, StreamExt};
 use std::{path::Path, time::Duration};
+use tokio::sync::{mpsc, oneshot};
 use tokio_util::codec::{Framed, LengthDelimitedCodec};
 
 #[derive(Debug, thiserror::Error)]
@@ -35,6 +36,7 @@ pub enum Output {
         width: u16,
         height: u16,
         full: bool,
+        mouse_reporting: Option<bool>,
         bytes: Vec<u8>,
     },
     Frame(render::Frame),
@@ -48,6 +50,24 @@ pub enum Output {
         modify_other_keys: u8,
     },
     Closed(Option<String>),
+}
+
+#[derive(Debug)]
+pub enum Command {
+    Input(Vec<u8>),
+    Resize(u16, u16),
+    Scroll {
+        direction: String,
+        lines: u16,
+        column: Option<u16>,
+        row: Option<u16>,
+        source: String,
+    },
+}
+
+pub(crate) struct WriteCommand {
+    pub command: Command,
+    pub reply: oneshot::Sender<Result<(), String>>,
 }
 
 #[derive(Debug)]
@@ -109,11 +129,60 @@ impl Terminal {
         self.send((1_u32, bytes)).await
     }
 
+    pub async fn scroll(
+        &mut self,
+        direction: &str,
+        lines: u16,
+        column: Option<u16>,
+        row: Option<u16>,
+        source: &str,
+    ) -> Result<(), Error> {
+        let source = if source == "page-key" { 1_u32 } else { 0_u32 };
+        let direction = if direction == "up" { 0_u32 } else { 1_u32 };
+        self.send((6_u32, source, direction, lines, column, row, 0_u8))
+            .await
+    }
+
     pub async fn resize(&mut self, cols: u16, rows: u16) -> Result<(), Error> {
         if self.protocol == 22 {
             self.send((3_u32, cols, rows, 0_u16, 0_u16, false)).await
         } else {
             self.send((3_u32, cols, rows, 0_u16, 0_u16)).await
+        }
+    }
+
+    pub(crate) async fn run(
+        mut self,
+        mut commands: mpsc::Receiver<WriteCommand>,
+        outputs: mpsc::UnboundedSender<Output>,
+    ) -> Result<(), Error> {
+        let mut mouse_reporting = None;
+        loop {
+            tokio::select! {
+                command = commands.recv() => {
+                    let Some(WriteCommand { command, reply }) = command else { return Ok(()); };
+                    let result = tokio::time::timeout(Duration::from_secs(8), async {
+                        match command {
+                            Command::Input(bytes) => self.input(&bytes).await,
+                            Command::Resize(cols, rows) => self.resize(cols, rows).await,
+                            Command::Scroll { direction, lines, column, row, source } =>
+                                self.scroll(&direction, lines, column, row, &source).await,
+                        }
+                    }).await.unwrap_or(Err(Error::Timeout));
+                    let _ = reply.send(result.as_ref().map_err(ToString::to_string).copied());
+                    result?;
+                }
+                output = self.next() => {
+                    let mut output = output?;
+                    match &mut output {
+                        Output::Mouse { enabled, .. } => mouse_reporting = Some(*enabled),
+                        Output::Terminal { mouse_reporting: mode, .. } => *mode = mouse_reporting,
+                        _ => {}
+                    }
+                    let closed = matches!(output, Output::Closed(_));
+                    if outputs.send(output).is_err() || closed { return Ok(()); }
+                }
+            }
         }
     }
 
@@ -132,6 +201,7 @@ impl Terminal {
                     width,
                     height,
                     full,
+                    mouse_reporting: None,
                     bytes,
                 });
             }

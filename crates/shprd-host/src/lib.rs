@@ -10,3 +10,4 @@ pub mod input;
 pub mod render;
 pub mod surface;
 pub mod terminal;
+pub mod terminal_bridge;

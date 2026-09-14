@@ -1,6 +1,6 @@
 //! Stable generation-one Herdr endpoint transport.
 
-use crate::{herdr, surface::Surface, terminal};
+use crate::{herdr, input, render, surface::Surface, terminal};
 use bincode::{Decode, Encode};
 use futures_util::{SinkExt, StreamExt};
 use serde::Deserialize;
@@ -18,9 +18,11 @@ pub enum Error {
     Json(#[from] serde_json::Error),
     #[error("invalid endpoint contract: {0}")]
     Contract(&'static str),
+    #[error(transparent)]
+    Input(#[from] input::Error),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, serde::Serialize)]
 pub struct Welcome {
     pub generation: u32,
     pub server_version: String,
@@ -44,12 +46,14 @@ pub enum Event {
     Control,
 }
 
+#[derive(Debug)]
 pub struct Endpoint {
     wire: Framed<herdr::Socket, LengthDelimitedCodec>,
     welcome: Welcome,
     boot_id: String,
     pending: HashMap<String, Vec<u8>>,
     surface: Option<Surface>,
+    input_classifier: input::Classifier,
 }
 
 impl Endpoint {
@@ -83,12 +87,21 @@ impl Endpoint {
                     _ => {}
                 }
             }
-            Ok(Self {wire, welcome:welcome.ok_or(Error::Contract("missing welcome"))?, boot_id, pending:HashMap::new(),surface:None})
+            Ok(Self {wire, welcome:welcome.ok_or(Error::Contract("missing welcome"))?, boot_id, pending:HashMap::new(),surface:None,input_classifier:input::Classifier::default()})
         }).await.map_err(|_| terminal::Error::Timeout)?
     }
 
     pub const fn negotiation(&self) -> &Welcome {
         &self.welcome
+    }
+
+    pub fn negotiation_value(&self) -> Value {
+        json!({
+            "generation": self.welcome.generation,
+            "serverVersion": self.welcome.server_version,
+            "methods": self.welcome.methods,
+            "capabilities": self.welcome.capabilities,
+        })
     }
 
     pub const fn surface(&self) -> Option<&Surface> {
@@ -98,11 +111,113 @@ impl Endpoint {
     async fn send(&mut self, value: impl Encode) -> Result<(), Error> {
         let bytes = bincode::encode_to_vec(value, bincode::config::standard())
             .map_err(terminal::Error::from)?;
+        self.send_bytes(bytes).await
+    }
+
+    async fn send_bytes(&mut self, bytes: Vec<u8>) -> Result<(), Error> {
         self.wire
             .send(bytes.into())
             .await
             .map_err(terminal::Error::from)?;
         Ok(())
+    }
+
+    pub async fn pane_input(&mut self, pane_id: &str, bytes: &[u8]) -> Result<(), Error> {
+        let events = self.input_classifier.feed(bytes)?;
+        if !events.is_empty() {
+            self.send_bytes(input::encode(pane_id, &events)?).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn focus_and_wait(&mut self, pane_id: &str) -> Result<(), Error> {
+        let id = "focus-1";
+        self.request(id, "pane.focus", &json!({"pane_id": pane_id}))
+            .await?;
+        let mut replied = false;
+        loop {
+            match self.next().await? {
+                Event::Reply {
+                    id: reply_id,
+                    value,
+                } if reply_id == id => {
+                    if value.get("error").is_some() {
+                        return Err(Error::Contract("pane.focus failed"));
+                    }
+                    replied = true;
+                }
+                Event::Surface => {}
+                _ => {}
+            }
+            if replied
+                && self
+                    .surface
+                    .as_ref()
+                    .is_some_and(|surface| surface.panes.iter().any(|pane| pane.id == pane_id))
+            {
+                return Ok(());
+            }
+        }
+    }
+
+    pub fn pane_frame(&self, pane_id: &str) -> Result<Option<(render::Frame, bool)>, Error> {
+        let Some(surface) = &self.surface else {
+            return Ok(None);
+        };
+        let Some(pane) = surface.panes.iter().find(|pane| pane.id == pane_id) else {
+            return Err(Error::Contract("pane absent from surface"));
+        };
+        Ok(Some((surface.crop(pane_id)?, pane.mouse_reporting)))
+    }
+
+    pub fn pane_id_exists(&self, pane_id: &str) -> bool {
+        self.surface
+            .as_ref()
+            .is_some_and(|surface| surface.panes.iter().any(|pane| pane.id == pane_id))
+    }
+
+    pub fn pane_size(&self, pane_id: &str) -> Result<Option<(u16, u16)>, Error> {
+        let Some(surface) = &self.surface else {
+            return Ok(None);
+        };
+        let Some(pane) = surface.panes.iter().find(|pane| pane.id == pane_id) else {
+            return Err(Error::Contract("pane absent from surface"));
+        };
+        Ok(Some((pane.inner.width, pane.inner.height)))
+    }
+
+    pub async fn pane_scroll(
+        &mut self,
+        pane_id: &str,
+        direction: &str,
+        lines: u16,
+    ) -> Result<(), Error> {
+        let Some(surface) = &self.surface else {
+            return Ok(());
+        };
+        let Some(pane) = surface.panes.iter().find(|pane| pane.id == pane_id) else {
+            return Err(Error::Contract("pane absent from surface"));
+        };
+        let Some(scroll) = &pane.scroll else {
+            return Ok(());
+        };
+        let delta = if direction == "up" {
+            i64::from(lines)
+        } else {
+            -i64::from(lines)
+        };
+        let offset = (i128::from(scroll.offset) + i128::from(delta))
+            .clamp(0, i128::from(scroll.maximum)) as u64;
+        if offset == scroll.offset {
+            return Ok(());
+        }
+        let id = format!("scroll-{}", scroll.offset);
+        self.request(
+            &id,
+            "pane.scroll",
+            &json!({"pane_id":pane_id,"offset_from_bottom":offset}),
+        )
+        .await
     }
 
     pub async fn resize(&mut self, cols: u16, rows: u16) -> Result<(), Error> {

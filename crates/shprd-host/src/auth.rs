@@ -34,6 +34,7 @@ pub enum Error {
 pub struct Auth {
     required: bool,
     secret: String,
+    cookie_name: &'static str,
 }
 
 impl Auth {
@@ -42,10 +43,22 @@ impl Auth {
     }
 
     pub fn new(required: bool, secret: String) -> Result<Self, Error> {
+        Self::new_with_cookie(required, secret, "herdr_auth")
+    }
+
+    pub fn new_with_cookie(
+        required: bool,
+        secret: String,
+        cookie_name: &'static str,
+    ) -> Result<Self, Error> {
         if required && secret.is_empty() {
             return Err(Error::EmptySecret);
         }
-        Ok(Self { required, secret })
+        Ok(Self {
+            required,
+            secret,
+            cookie_name,
+        })
     }
 
     fn signer(&self) -> Result<Signature, Error> {
@@ -74,7 +87,8 @@ impl Auth {
         let mut signer = self.signer()?;
         signer.update(payload.as_bytes());
         Ok(Some(format!(
-            "herdr_auth={payload}.{}; HttpOnly; SameSite=Lax; Path=/; Max-Age={TTL_SECONDS}",
+            "{}={payload}.{}; HttpOnly; SameSite=Lax; Path=/; Max-Age={TTL_SECONDS}",
+            self.cookie_name,
             hex(&signer.finalize().into_bytes())
         )))
     }
@@ -86,7 +100,7 @@ impl Auth {
         let Some(token) = cookie.and_then(|header| {
             header
                 .split(';')
-                .find_map(|part| part.trim().strip_prefix("herdr_auth="))
+                .find_map(|part| part.trim().strip_prefix(&format!("{}=", self.cookie_name)))
         }) else {
             return false;
         };

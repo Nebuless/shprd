@@ -10,6 +10,69 @@ fn rejects_invalid_ports_and_parent_session_paths() {
 }
 
 #[test]
+fn shprd_config_dir_owns_native_durable_paths() -> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let isolated = directory.path().join("shprd/studio");
+    let args = Args {
+        host: "127.0.0.1".to_owned(),
+        port: 8787,
+        password: None,
+        socket_path: None,
+        client_socket_path: None,
+        config_dir: Some(isolated.clone()),
+        connection_registry_path: None,
+        session: None,
+        public_dir: "web/dist".into(),
+        open: false,
+    };
+    assert_eq!(
+        args.auth_token_path(directory.path()),
+        isolated.join("auth-token")
+    );
+    assert_eq!(
+        args.settings_path(directory.path()),
+        isolated.join("settings.json")
+    );
+    assert_eq!(
+        args.connection_registry_path(directory.path()),
+        isolated.join("connections.json")
+    );
+    assert_eq!(
+        args.control_socket(directory.path()),
+        shprd_host::config::config_dir(directory.path())
+            .join("herdr")
+            .join("herdr.sock"),
+        "control socket must remain on legacy Herdr root"
+    );
+    Ok(())
+}
+
+#[test]
+fn explicit_connection_registry_override_wins_over_shprd_config_dir()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempfile::tempdir()?;
+    let isolated = directory.path().join("shprd/studio");
+    let override_path = directory.path().join("override/connections.json");
+    let args = Args {
+        host: "127.0.0.1".to_owned(),
+        port: 8787,
+        password: None,
+        socket_path: None,
+        client_socket_path: None,
+        config_dir: Some(isolated),
+        connection_registry_path: Some(override_path.clone()),
+        session: None,
+        public_dir: "web/dist".into(),
+        open: false,
+    };
+    assert_eq!(
+        args.connection_registry_path(directory.path()),
+        override_path
+    );
+    Ok(())
+}
+
+#[test]
 fn explicit_socket_overrides_named_session() -> Result<(), Box<dyn std::error::Error>> {
     // Given both an explicit socket and a named session.
     let args = Args::try_parse_from([

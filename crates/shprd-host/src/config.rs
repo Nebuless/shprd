@@ -16,6 +16,14 @@ pub struct Args {
     pub socket_path: Option<PathBuf>,
     #[arg(long, env = "HERDR_CLIENT_SOCKET_PATH")]
     pub client_socket_path: Option<PathBuf>,
+    #[arg(long, env = "SHPRD_CONFIG_DIR", hide_env_values = true)]
+    pub config_dir: Option<PathBuf>,
+    #[arg(
+        long = "connection-registry-path",
+        env = "HERDR_GUI_CONNECTIONS_PATH",
+        hide_env_values = true
+    )]
+    pub connection_registry_path: Option<PathBuf>,
     #[arg(long, env = "HERDR_SESSION", value_parser = session_name)]
     pub session: Option<String>,
     #[arg(long, env = "PUBLIC_DIR", default_value = "web/dist")]
@@ -32,6 +40,26 @@ fn session_name(value: &str) -> Result<String, String> {
 }
 
 impl Args {
+    pub fn app_config_dir(&self, home: &Path) -> PathBuf {
+        self.config_dir
+            .clone()
+            .unwrap_or_else(|| config_dir(home).join("herdr-gui"))
+    }
+
+    pub fn connection_registry_path(&self, home: &Path) -> PathBuf {
+        self.connection_registry_path
+            .clone()
+            .unwrap_or_else(|| self.app_config_dir(home).join("connections.json"))
+    }
+
+    pub fn auth_token_path(&self, home: &Path) -> PathBuf {
+        self.app_config_dir(home).join("auth-token")
+    }
+
+    pub fn settings_path(&self, home: &Path) -> PathBuf {
+        self.app_config_dir(home).join("settings.json")
+    }
+
     pub fn control_socket(&self, home: &Path) -> PathBuf {
         let path = self
             .socket_path

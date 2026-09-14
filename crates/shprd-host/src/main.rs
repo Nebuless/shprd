@@ -25,8 +25,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let explicit_legacy =
         args.socket_path.is_some() || args.client_socket_path.is_some() || args.session.is_some();
     let manager = Arc::new(Manager::new(ConnectionId::parse(LEGACY_ID)?));
+    let isolated_config = args.config_dir.is_some();
+    let custom_registry = args.connection_registry_path.is_some();
+    let store = if isolated_config || custom_registry {
+        Store::new(args.connection_registry_path(&home))?
+    } else {
+        Store::default_path(&home)?
+    };
     let profiles = ProfileService::load(
-        Store::default_path(&home)?,
+        store,
         Profile::legacy(
             control.to_str().ok_or("invalid control socket path")?,
             render.to_str().ok_or("invalid render socket path")?,
@@ -46,10 +53,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .map(|_| status.id)
         })
         .collect::<Vec<_>>();
-    let secret = match args.password.filter(|value| !value.is_empty()) {
-        Some(secret) => secret,
+    let secret = match args.password.as_ref().filter(|value| !value.is_empty()) {
+        Some(secret) => secret.clone(),
         None if required => {
-            let path = shprd_host::config::config_dir(&home).join("herdr-gui/auth-token");
+            let path = args.auth_token_path(&home);
             let token = load_or_create_token(&path)?;
             eprintln!("Authentication token file: {}", path.display());
             token
@@ -59,7 +66,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = host::configured_router_with_profiles(
         control,
         args.public_dir,
-        Auth::new(required, secret)?,
+        Auth::new_with_cookie(
+            required,
+            secret,
+            if isolated_config {
+                "shprd_auth"
+            } else {
+                "herdr_auth"
+            },
+        )?,
         shprd_agent::default_directory().ok(),
         profiles,
         Arc::clone(&manager),

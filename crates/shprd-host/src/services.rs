@@ -761,7 +761,10 @@ async fn http_delete(
     state.check_current()?;
     let result = state
         .workspace
-        .dispatch(&state.checkout, "file.delete", &params)
+        .dispatch_if_current(&state.checkout, "file.delete", &params, {
+            let state = Arc::clone(&state);
+            move || state.is_current()
+        })
         .await
         .map_err(ServiceError::workspace)?;
     state.check_current()?;
@@ -1230,6 +1233,77 @@ mod tests {
             .expect("response");
         assert_eq!(response.status(), StatusCode::CONFLICT);
         assert!(!target.exists(), "stale upload reached filesystem mutation");
+    }
+
+    #[tokio::test]
+    async fn queued_http_delete_rejects_retired_generation_before_mutation() {
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use tokio::sync::oneshot;
+
+        tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            let current = Arc::new(AtomicBool::new(true));
+            let guard = Arc::clone(&current);
+            let (dir, state) = state_with_guard(move || guard.load(Ordering::Acquire));
+            let target = dir.path().join("keep.txt");
+            std::fs::write(&target, "keep").expect("delete target");
+            let (entered_tx, entered_rx) = oneshot::channel();
+            let (release_tx, release_rx) = oneshot::channel();
+            let workspace = Arc::clone(&state.workspace);
+            let checkout = state.checkout.clone();
+            let holder = tokio::spawn(async move {
+                let stream = Box::pin(futures_util::stream::once(async move {
+                    // Upload reads its body only after acquiring the mutation lock.
+                    entered_tx.send(()).expect("signal lock held");
+                    release_rx.await.expect("release upload");
+                    Ok::<_, std::io::Error>(axum::body::Bytes::new())
+                }));
+                let mut body = tokio_util::io::StreamReader::new(stream);
+                workspace
+                    .upload(
+                        &checkout,
+                        &json!({"directory":"","filename":"holder.txt"}),
+                        &mut body,
+                    )
+                    .await
+                    .expect("holding upload");
+            });
+            entered_rx.await.expect("upload holds mutation lock");
+
+            let mut delete = Box::pin(
+                service_router(state).oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/api/file/delete?path=keep.txt&connection_generation=7")
+                        .body(Body::empty())
+                        .expect("delete request"),
+                ),
+            );
+            let (queued_tx, queued_rx) = oneshot::channel();
+            let mut queued_tx = Some(queued_tx);
+            let delete = tokio::spawn(std::future::poll_fn(move |cx| {
+                let result = delete.as_mut().poll(cx);
+                // Delete's first suspension is admission to the held mutation lock.
+                if result.is_pending()
+                    && let Some(queued_tx) = queued_tx.take()
+                {
+                    queued_tx.send(()).expect("signal queued delete");
+                }
+                result
+            }));
+            queued_rx.await.expect("delete queued behind upload");
+            current.store(false, Ordering::Release);
+            release_tx.send(()).expect("release mutation lock");
+            holder.await.expect("upload task");
+            let response = delete.await.expect("delete task").expect("delete response");
+            assert_eq!(response.status(), StatusCode::CONFLICT);
+            assert_eq!(
+                std::fs::read_to_string(&target).ok().as_deref(),
+                Some("keep"),
+                "retired queued delete mutated target"
+            );
+        })
+        .await
+        .expect("queued delete regression timed out");
     }
 
     #[tokio::test]

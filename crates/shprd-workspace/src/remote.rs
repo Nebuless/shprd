@@ -73,11 +73,12 @@ pub(crate) async fn regular_file(host: &HostConfig, root: &str, path: &str) -> R
         Err(output.error())
     }
 }
-pub(crate) async fn dispatch(
+pub(crate) async fn dispatch<F: Fn() -> bool>(
     host: &HostConfig,
     checkout: &Checkout,
     method: &str,
     params: &Value,
+    current: &F,
 ) -> Result<Value> {
     match method {
         "file.list" => {
@@ -192,6 +193,9 @@ head -c "$((limit+1))" -- "$target_real" | base64 | tr -d '\n'
             Ok(value)
         }
         "file.delete" => {
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
             let requested = required_path(params, false)?;
             let command=r#"set -euo pipefail
 root_real=$(cd -- "$1" && pwd -P)
@@ -211,18 +215,25 @@ printf '%s' "$type"
             )
             .await?
             .checked()?;
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
             Ok(json!({"path":requested,"type":output.text()}))
         }
         _ => Err(Error::Invalid("unknown remote file operation".into())),
     }
 }
-pub(crate) async fn upload<R: AsyncRead + Unpin>(
+pub(crate) async fn upload<R: AsyncRead + Unpin, F: Fn() -> bool + Sync>(
     host: &HostConfig,
     checkout: &Checkout,
     directory: &str,
     name: &str,
     body: &mut R,
+    current: &F,
 ) -> Result<Value> {
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     let spool = tempfile::NamedTempFile::new()?;
     let mut writer = fs::File::from_std(spool.reopen()?);
     let size = tokio::time::timeout(
@@ -232,6 +243,9 @@ pub(crate) async fn upload<R: AsyncRead + Unpin>(
     .await
     .map_err(|_| Error::Timeout)??;
     writer.sync_all().await?;
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     let body = r#"dir_real="$target_real"
 [ -d "$dir_real" ] || { echo 'upload target is not a directory' >&2; exit 14; }
 target="$dir_real/$4"
@@ -243,16 +257,12 @@ tmp=$(mktemp "$dir_real/.shprd-upload.XXXXXX")
 trap 'rm -f -- "$tmp"' EXIT HUP INT TERM
 cat > "$tmp"
 [ "$(size_of "$tmp")" = "$5" ] || { echo 'incomplete upload' >&2; exit 16; }
-if [ -L "$target" ] || [ -d "$target" ]; then echo 'upload target changed during upload' >&2; exit 17; fi
-if [ "$overwritten" = 1 ]; then
- [ -f "$target" ] && [ "$before" = "$(size_of "$target") $(mtime_of "$target")" ] || exit 17
- chmod --reference="$target" "$tmp" 2>/dev/null || chmod "$(stat -f %Lp "$target")" "$tmp"
- mv -f -- "$tmp" "$target"
-else
- ln -- "$tmp" "$target"
-fi
-printf 'META\t%s\t%s\n' "$(enc "${target#"$root_real"/}")" "$overwritten"
+trap - EXIT HUP INT TERM
+printf 'STAGED\t%s\t%s\t%s\n' "$(enc "${tmp#"$root_real/"}")" "$overwritten" "$(enc "$before")"
 "#;
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
     let mut reader = fs::File::from_std(spool.reopen()?);
     let output = process::stream_input(
         host,
@@ -268,17 +278,127 @@ printf 'META\t%s\t%s\n' "$(enc "${target#"$root_real"/}")" "$overwritten"
             &size.to_string(),
         ],
         &mut reader,
+        current,
     )
     .await?
     .checked()?;
     let text = output.text();
-    let fields: Vec<_> = text.trim().split('\t').collect();
-    let ["META", path, overwritten] = fields.as_slice() else {
-        return Err(Error::Process("invalid file upload response".into()));
+    let fields: Vec<_> = text.lines().next().unwrap_or("").split('\t').collect();
+    let temporary_encoded = match fields.get(1).filter(|_| fields.first() == Some(&"STAGED")) {
+        Some(value) => *value,
+        None => return Err(Error::Process("invalid file upload response".into())),
     };
-    Ok(
-        json!({"workspace_id":checkout.workspace_id,"directory":directory,"filename":name,"path":decode(path)?,"size":size,"overwritten":*overwritten=="1"}),
+    let temporary = match decode(temporary_encoded) {
+        Ok(value) => value,
+        Err(error) => {
+            let cleanup = cleanup_staged_encoded(host, checkout, temporary_encoded).await;
+            return Err(match cleanup {
+                Ok(()) => error,
+                Err(cleanup) => {
+                    Error::Process(format!("{error}; staged upload cleanup failed: {cleanup}"))
+                }
+            });
+        }
+    };
+    let ["STAGED", _, overwritten, before] = fields.as_slice() else {
+        let cleanup = cleanup_staged(host, checkout, &temporary).await;
+        return Err(match cleanup {
+            Ok(()) => Error::Process("invalid file upload response".into()),
+            Err(cleanup) => Error::Process(format!(
+                "invalid file upload response; staged upload cleanup failed: {cleanup}"
+            )),
+        });
+    };
+    let staged_result = async {
+        let before = decode(before)?;
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
+        let commit = r#"target="$target_real/$4"
+if [ -L "$target" ] || [ -d "$target" ]; then echo 'upload target changed during upload' >&2; exit 17; fi
+tmp="$root_real/$5"
+case "$tmp" in "$root_real/"*) ;; *) echo 'invalid staged upload path' >&2; exit 13;; esac
+trap 'rm -f -- "$tmp"' EXIT HUP INT TERM
+if [ "$6" = 1 ]; then
+ [ -f "$target" ] && [ "$7" = "$(size_of "$target") $(mtime_of "$target")" ] || exit 17
+ chmod --reference="$target" "$tmp" 2>/dev/null || chmod "$(stat -f %Lp "$target")" "$tmp"
+ mv -f -- "$tmp" "$target"
+else
+ ln -- "$tmp" "$target"
+ rm -f -- "$tmp"
+fi
+trap - EXIT HUP INT TERM
+printf 'META\t%s\t%s\n' "$(enc "${target#"$root_real/"}")" "$6"
+"#;
+        let committed = process::run(
+        host,
+        &[
+            "bash",
+            "-c",
+            &script(commit),
+            "shprd",
+            &checkout.path,
+            directory,
+            "explorer",
+            name,
+            &temporary,
+            overwritten,
+            &before,
+        ],
+        None,
+        120,
+        1024,
     )
+        .await?
+        .checked()?;
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
+        let committed_text = committed.text();
+        let fields: Vec<_> = committed_text.trim().split('\t').collect();
+        let ["META", path, overwritten] = fields.as_slice() else {
+            return Err(Error::Process("invalid file upload response".into()));
+        };
+        Ok(
+            json!({"workspace_id":checkout.workspace_id,"directory":directory,"filename":name,"path":decode(path)?,"size":size,"overwritten":*overwritten=="1"}),
+        )
+    }
+    .await;
+    match staged_result {
+        Ok(value) => Ok(value),
+        Err(error) => match cleanup_staged(host, checkout, &temporary).await {
+            Ok(()) => Err(error),
+            Err(cleanup) => Err(Error::Process(format!(
+                "{error}; staged upload cleanup failed: {cleanup}"
+            ))),
+        },
+    }
+}
+async fn cleanup_staged(host: &HostConfig, checkout: &Checkout, temporary: &str) -> Result<()> {
+    let command = r#"set -euo pipefail
+root_real=$(cd -- "$1" && pwd -P)
+tmp="$root_real/$2"
+case "$tmp" in "$root_real/"*) ;; *) exit 13 ;; esac
+rm -f -- "$tmp"
+"#;
+    process::run(
+        host,
+        &["bash", "-c", command, "shprd", &checkout.path, temporary],
+        None,
+        120,
+        1024,
+    )
+    .await?
+    .checked()?;
+    Ok(())
+}
+async fn cleanup_staged_encoded(
+    host: &HostConfig,
+    checkout: &Checkout,
+    temporary: &str,
+) -> Result<()> {
+    let temporary = decode(temporary)?;
+    cleanup_staged(host, checkout, &temporary).await
 }
 pub(crate) async fn download(
     host: &HostConfig,
@@ -347,13 +467,19 @@ mod tests {
         fs::write(dir.path().join(name), "remote text\n")
             .await
             .unwrap();
-        let listing = dispatch(&host, &checkout, "file.list", &json!({}))
+        let listing = dispatch(&host, &checkout, "file.list", &json!({}), &|| true)
             .await
             .unwrap();
         assert_eq!(listing["entries"][0]["name"], name);
-        let preview = dispatch(&host, &checkout, "file.read", &json!({"path":name}))
-            .await
-            .unwrap();
+        let preview = dispatch(
+            &host,
+            &checkout,
+            "file.read",
+            &json!({"path":name}),
+            &|| true,
+        )
+        .await
+        .unwrap();
         assert_eq!(preview["text"], "remote text\n");
         assert!(regular_file(&host, &checkout.path, name).await.unwrap());
         assert!(
@@ -361,13 +487,27 @@ mod tests {
                 .await
                 .unwrap()
         );
-        let result = upload(&host, &checkout, "", "upload.txt", &mut &b"upload"[..])
-            .await
-            .unwrap();
+        let result = upload(
+            &host,
+            &checkout,
+            "",
+            "upload.txt",
+            &mut &b"upload"[..],
+            &|| true,
+        )
+        .await
+        .unwrap();
         assert_eq!(result["overwritten"], false);
-        let result = upload(&host, &checkout, "", "upload.txt", &mut &b"replaced"[..])
-            .await
-            .unwrap();
+        let result = upload(
+            &host,
+            &checkout,
+            "",
+            "upload.txt",
+            &mut &b"replaced"[..],
+            &|| true,
+        )
+        .await
+        .unwrap();
         assert_eq!(result["overwritten"], true);
         assert_eq!(
             fs::read(dir.path().join("upload.txt")).await.unwrap(),
@@ -392,6 +532,7 @@ mod tests {
             &checkout,
             "file.delete",
             &json!({"path":"upload.txt"}),
+            &|| true,
         )
         .await
         .unwrap();
@@ -408,29 +549,44 @@ mod tests {
                     &host,
                     &checkout,
                     "file.read",
-                    &json!({"path":"escape/secret"})
+                    &json!({"path":"escape/secret"}),
+                    &|| true,
                 )
                 .await
                 .is_err()
             );
             assert!(
-                upload(&host, &checkout, "escape", "secret", &mut &b"bad"[..])
-                    .await
-                    .is_err()
+                upload(
+                    &host,
+                    &checkout,
+                    "escape",
+                    "secret",
+                    &mut &b"bad"[..],
+                    &|| true
+                )
+                .await
+                .is_err()
             );
             assert!(
                 dispatch(
                     &host,
                     &checkout,
                     "file.delete",
-                    &json!({"path":"escape/secret"})
+                    &json!({"path":"escape/secret"}),
+                    &|| true,
                 )
                 .await
                 .is_err()
             );
-            dispatch(&host, &checkout, "file.delete", &json!({"path":"escape"}))
-                .await
-                .unwrap();
+            dispatch(
+                &host,
+                &checkout,
+                "file.delete",
+                &json!({"path":"escape"}),
+                &|| true,
+            )
+            .await
+            .unwrap();
             assert!(outside.path().join("secret").exists());
         }
     }

@@ -15,6 +15,7 @@ Rust file and Git services for checkouts resolved by the connection host.
   summary fingerprints or the existing missing-file exception.
 - Invoke capture_workspace before agent edits and complete_workspace at cycle end.
 - Keep Download alive while streaming its body; it owns temporary archive cleanup.
+- Process caller cancellation retains cleanup ownership until process-group/direct-child termination and awaited direct-child reap complete.
 
 ## Verification
 - cargo test --manifest-path crates/shprd-workspace/Cargo.toml

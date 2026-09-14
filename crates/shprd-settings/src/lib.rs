@@ -36,6 +36,8 @@ pub enum Error {
     UnknownAutoSync(String),
     #[error("settings update cancelled")]
     Cancelled,
+    #[error("connection generation changed")]
+    Stale,
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
@@ -213,18 +215,32 @@ impl SettingsService {
     }
 
     pub async fn update_repo(&self, key: &str, patch: RepoSettingsPatch) -> Result<GuiSettings> {
+        self.update_repo_if_current(key, patch, || true).await
+    }
+    pub async fn update_repo_if_current<F>(
+        &self,
+        key: &str,
+        patch: RepoSettingsPatch,
+        current: F,
+    ) -> Result<GuiSettings>
+    where
+        F: Fn() -> bool + Send + Sync,
+    {
         self.assert_owned(key)?;
-        self.mutate(|mut settings| {
-            let existing = settings.repositories.entry(key.to_owned()).or_default();
-            if let Some(enabled) = patch.worktree_hooks_enabled {
-                existing.worktree_hooks_enabled = Some(enabled);
-            }
-            if let Some(custom) = patch.custom {
-                let target = existing.custom.get_or_insert_with(Map::new);
-                target.extend(custom);
-            }
-            Ok(settings)
-        })
+        self.mutate_if_current(
+            |mut settings| {
+                let existing = settings.repositories.entry(key.to_owned()).or_default();
+                if let Some(enabled) = patch.worktree_hooks_enabled {
+                    existing.worktree_hooks_enabled = Some(enabled);
+                }
+                if let Some(custom) = patch.custom {
+                    let target = existing.custom.get_or_insert_with(Map::new);
+                    target.extend(custom);
+                }
+                Ok(settings)
+            },
+            &current,
+        )
         .await
     }
     pub async fn repo_worktree_hooks_enabled(&self, key: Option<&str>) -> Result<bool> {
@@ -266,10 +282,10 @@ impl SettingsService {
             error,
         })
     }
-    pub async fn list_workspace_auto_sync(
-        &self,
-        running: &dyn Fn(&str) -> bool,
-    ) -> Result<Vec<Value>> {
+    pub async fn list_workspace_auto_sync<F>(&self, running: &F) -> Result<Vec<Value>>
+    where
+        F: Fn(&str) -> bool + Sync,
+    {
         let settings = self.load().await?;
         Ok(settings
             .workspace_auto_sync
@@ -288,16 +304,31 @@ impl SettingsService {
         key: &str,
         enabled: bool,
     ) -> Result<GuiWorkspaceAutoSyncSettings> {
+        self.update_auto_sync_key_if_current(key, enabled, || true)
+            .await
+    }
+    pub async fn update_auto_sync_key_if_current<F>(
+        &self,
+        key: &str,
+        enabled: bool,
+        current: F,
+    ) -> Result<GuiWorkspaceAutoSyncSettings>
+    where
+        F: Fn() -> bool + Send + Sync,
+    {
         self.assert_owned(key)?;
         let settings = self
-            .mutate(|mut settings| {
-                let entry = settings
-                    .workspace_auto_sync
-                    .get_mut(key)
-                    .ok_or_else(|| Error::UnknownAutoSync(key.to_owned()))?;
-                entry.enabled = enabled;
-                Ok(settings)
-            })
+            .mutate_if_current(
+                |mut settings| {
+                    let entry = settings
+                        .workspace_auto_sync
+                        .get_mut(key)
+                        .ok_or_else(|| Error::UnknownAutoSync(key.to_owned()))?;
+                    entry.enabled = enabled;
+                    Ok(settings)
+                },
+                &current,
+            )
             .await?;
         settings
             .workspace_auto_sync
@@ -344,6 +375,19 @@ impl SettingsService {
         enabled: bool,
         running: bool,
     ) -> Result<WorkspaceAutoSyncView> {
+        self.update_workspace_auto_sync_if_current(workspace, enabled, running, || true)
+            .await
+    }
+    pub async fn update_workspace_auto_sync_if_current<F>(
+        &self,
+        workspace: &WorkspaceMetadata,
+        enabled: bool,
+        running: bool,
+        current: F,
+    ) -> Result<WorkspaceAutoSyncView>
+    where
+        F: Fn() -> bool + Send + Sync,
+    {
         let checkout = workspace
             .checkout_path
             .clone()
@@ -351,27 +395,30 @@ impl SettingsService {
             .unwrap_or_default();
         let key = workspace_auto_sync_settings_key(&checkout, self.identity())?;
         let settings = self
-            .mutate(|mut settings| {
-                let old = settings.workspace_auto_sync.get(&key).cloned();
-                settings.workspace_auto_sync.insert(
-                    key.clone(),
-                    GuiWorkspaceAutoSyncSettings {
-                        enabled,
-                        interval_minutes: old
-                            .as_ref()
-                            .map_or(DEFAULT_WORKSPACE_AUTO_SYNC_INTERVAL_MINUTES, |v| {
-                                v.interval_minutes
-                            }),
-                        checkout_path: Some(checkout.clone()),
-                        host: self.inner.identity.host.clone(),
-                        last_run_at: old.as_ref().and_then(|v| v.last_run_at.clone()),
-                        last_status: old.as_ref().and_then(|v| v.last_status.clone()),
-                        last_message: old.as_ref().and_then(|v| v.last_message.clone()),
-                        last_branch: old.and_then(|v| v.last_branch),
-                    },
-                );
-                Ok(settings)
-            })
+            .mutate_if_current(
+                |mut settings| {
+                    let old = settings.workspace_auto_sync.get(&key).cloned();
+                    settings.workspace_auto_sync.insert(
+                        key.clone(),
+                        GuiWorkspaceAutoSyncSettings {
+                            enabled,
+                            interval_minutes: old
+                                .as_ref()
+                                .map_or(DEFAULT_WORKSPACE_AUTO_SYNC_INTERVAL_MINUTES, |v| {
+                                    v.interval_minutes
+                                }),
+                            checkout_path: Some(checkout.clone()),
+                            host: self.inner.identity.host.clone(),
+                            last_run_at: old.as_ref().and_then(|v| v.last_run_at.clone()),
+                            last_status: old.as_ref().and_then(|v| v.last_status.clone()),
+                            last_message: old.as_ref().and_then(|v| v.last_message.clone()),
+                            last_branch: old.and_then(|v| v.last_branch),
+                        },
+                    );
+                    Ok(settings)
+                },
+                &current,
+            )
             .await?;
         let entry = settings.workspace_auto_sync.get(&key).cloned();
         Ok(auto_sync_view(workspace, checkout, key, entry, running))
@@ -392,10 +439,29 @@ impl SettingsService {
     where
         F: FnOnce(GuiSettings) -> Result<GuiSettings>,
     {
+        self.mutate_if_current(update, &|| true).await
+    }
+    async fn mutate_if_current<F, C>(&self, update: F, current: &C) -> Result<GuiSettings>
+    where
+        F: FnOnce(GuiSettings) -> Result<GuiSettings>,
+        C: Fn() -> bool + Sync,
+    {
+        if !current() {
+            return Err(Error::Stale);
+        }
         let queue = SETTINGS_MUTATION_QUEUE.get_or_init(|| Mutex::new(()));
         let guard = queue.lock().await;
-        let current = self.load().await?;
-        let next = update(current)?;
+        if !current() {
+            return Err(Error::Stale);
+        }
+        let current_settings = self.load().await?;
+        if !current() {
+            return Err(Error::Stale);
+        }
+        let next = update(current_settings)?;
+        if !current() {
+            return Err(Error::Stale);
+        }
         self.persist(&next, guard).await
     }
     async fn persist(
@@ -567,6 +633,79 @@ fn validate_settings_path(path: &Path) -> Result<()> {
         _ => Ok(()),
     }
 }
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+mod safety_tests {
+    use super::*;
+    use std::{
+        future::Future,
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+        task::{Context, Poll, Waker},
+    };
+
+    fn identity() -> SettingsIdentity {
+        SettingsIdentity {
+            connection_id: Some("safety".into()),
+            host: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn stale_generation_cannot_persist_queued_mutation() {
+        let directory = tempfile::tempdir().expect("settings fixture");
+        let path = directory.path().join("settings.json");
+        let service = SettingsService::new(&path, identity()).expect("settings service");
+        std::fs::write(&path, "{\"custom\":{\"keep\":true}}\n").expect("seed settings");
+        let before = std::fs::read(&path).expect("seed bytes");
+        let queue = SETTINGS_MUTATION_QUEUE.get_or_init(|| Mutex::new(()));
+        let holder = queue.lock().await;
+        let current = Arc::new(AtomicBool::new(true));
+        let contender_current = Arc::clone(&current);
+        let mut contender = Box::pin(service.update_repo_if_current(
+            "connection:safety:local:repo",
+            RepoSettingsPatch::default(),
+            move || contender_current.load(Ordering::Acquire),
+        ));
+        let waker = Waker::noop();
+        let mut context = Context::from_waker(waker);
+        assert!(matches!(
+            contender.as_mut().poll(&mut context),
+            Poll::Pending
+        ));
+        current.store(false, Ordering::Release);
+        drop(holder);
+        let error = contender.await.expect_err("stale queued settings mutation");
+        assert!(matches!(error, Error::Stale));
+        assert_eq!(std::fs::read(&path).expect("settings bytes"), before);
+    }
+
+    #[tokio::test]
+    async fn current_generation_persists_settings_mutation() {
+        let directory = tempfile::tempdir().expect("settings fixture");
+        let path = directory.path().join("settings.json");
+        let service = SettingsService::new(&path, identity()).expect("settings service");
+        service
+            .update_repo_if_current(
+                "connection:safety:local:repo",
+                RepoSettingsPatch {
+                    worktree_hooks_enabled: Some(false),
+                    custom: None,
+                },
+                || true,
+            )
+            .await
+            .expect("current settings mutation");
+        let settings = service.read().await.expect("settings read");
+        assert_eq!(
+            settings.repositories["connection:safety:local:repo"].worktree_hooks_enabled,
+            Some(false)
+        );
+    }
+}
+
 fn normalize(raw: Value) -> GuiSettings {
     let Some(object) = raw.as_object() else {
         return GuiSettings::default();

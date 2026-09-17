@@ -26,9 +26,11 @@ agent sessions, test logs, generated assets, or transient `.omo` evidence.
 - `shprd` becomes the standalone Rust CLI and host. It serves packaged React
   assets, owns authentication, connection profiles, HTTP, WebSocket, terminal,
   workspace, settings, and agent transports.
-- `shprd-shell` remains a Dioxus WebView launcher. Desktop and Android clients
-  load React from a configured HTTPS SHPRD host; Herdr engines never run inside
-  the Android application.
+- `shprd-shell` remains a Dioxus WebView launcher. Web builds default to the
+  loopback native host at `http://127.0.0.1:8787`, which serves retained React
+  and owns `~/.config/herdr/herdr.sock`; browsers never open Herdr sockets.
+  Desktop and Android clients require a configured reachable HTTPS SHPRD host;
+  Herdr engines never run inside the Android application.
 - The installed host command is `shprd serve --open`. It must require no Bun or
   source checkout and must locate its packaged React assets without a caller
   supplied `--public-dir`.

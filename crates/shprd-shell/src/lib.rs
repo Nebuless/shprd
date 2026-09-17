@@ -43,6 +43,22 @@ impl HostUrl {
     }
 }
 
+/// Resolve the React host before rendering the shell.
+///
+/// Browser builds use the loopback native host, which owns the Herdr socket.
+/// Native shells require an explicit reachable host because their loopback is
+/// the device, not necessarily the host running Herdr.
+pub fn initial_host_url(
+    configured: Option<&str>,
+    is_web: bool,
+) -> Result<Option<HostUrl>, InvalidHost> {
+    match configured.filter(|value| !value.is_empty()) {
+        Some(value) => HostUrl::parse(value).map(Some),
+        None if is_web => HostUrl::parse("http://127.0.0.1:8787").map(Some),
+        None => Ok(None),
+    }
+}
+
 #[derive(Debug, Deserialize)]
 enum Protocol {
     #[serde(rename = "shprd.shell.v1")]
@@ -120,6 +136,28 @@ mod tests {
         let mut wrong = value;
         wrong["protocol"] = "other".into();
         assert!(serde_json::from_value::<BridgeAck>(wrong).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn local_web_shell_defaults_to_the_native_herdr_host() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let host = initial_host_url(None, true)?.ok_or("missing local host")?;
+        assert_eq!(host.as_str(), "http://127.0.0.1:8787/");
+        Ok(())
+    }
+
+    #[test]
+    fn explicit_host_overrides_the_local_web_default() -> Result<(), Box<dyn std::error::Error>> {
+        let host = initial_host_url(Some("https://shprd.example"), true)?
+            .ok_or("missing configured host")?;
+        assert_eq!(host.as_str(), "https://shprd.example/");
+        Ok(())
+    }
+
+    #[test]
+    fn native_shell_requires_an_explicit_host() -> Result<(), Box<dyn std::error::Error>> {
+        assert_eq!(initial_host_url(None, false)?, None);
         Ok(())
     }
 }

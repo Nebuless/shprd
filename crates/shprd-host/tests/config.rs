@@ -10,6 +10,30 @@ fn rejects_invalid_ports_and_parent_session_paths() {
 }
 
 #[test]
+fn defaults_to_herdr_socket_and_react_build_directory() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::try_parse_from(["shprd"])?;
+    assert_eq!(args.public_dir, std::path::PathBuf::from("server/public"));
+
+    let local = Args {
+        host: "127.0.0.1".to_owned(),
+        port: 8787,
+        password: None,
+        socket_path: None,
+        client_socket_path: None,
+        config_dir: None,
+        connection_registry_path: None,
+        session: None,
+        public_dir: "server/public".into(),
+        open: false,
+    };
+    assert_eq!(
+        local.control_socket(std::path::Path::new("/home/tester")),
+        std::path::PathBuf::from("/home/tester/.config/herdr/herdr.sock")
+    );
+    Ok(())
+}
+
+#[test]
 fn shprd_config_dir_owns_native_durable_paths() -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempfile::tempdir()?;
     let isolated = directory.path().join("shprd/studio");

@@ -26,7 +26,7 @@ pub struct Args {
     pub connection_registry_path: Option<PathBuf>,
     #[arg(long, env = "HERDR_SESSION", value_parser = session_name)]
     pub session: Option<String>,
-    #[arg(long, env = "PUBLIC_DIR", default_value = "web/dist")]
+    #[arg(long, env = "PUBLIC_DIR", default_value = "server/public")]
     pub public_dir: PathBuf,
     #[arg(long, env = "OPEN_BROWSER", action = clap::ArgAction::SetTrue)]
     pub open: bool,

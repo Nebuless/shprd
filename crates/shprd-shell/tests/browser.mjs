@@ -81,22 +81,26 @@ const bundled = await Bun.build({
 });
 assert.equal(bundled.success, true, String(bundled.logs));
 let shellOrigin;
-const fixture = Bun.serve({
-  hostname: "127.0.0.1",
-  port: 0,
-  async fetch(request) {
-    const path = new URL(request.url).pathname;
-    if (path === "/fixture.js") return new Response(bundled.outputs[0]);
-    if (path === "/")
-      return new Response(
-        '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>React bridge fixture</title></head><body><div id="root"></div><script>window.shellOrigin=' +
-          JSON.stringify(shellOrigin) +
-          '</script><script type="module" src="/fixture.js"></script></body></html>',
-        { headers: { "content-type": "text/html" } },
-      );
-    return new Response("Missing", { status: 404 });
-  },
-});
+function serveFixture(port) {
+  return Bun.serve({
+    hostname: "127.0.0.1",
+    port,
+    async fetch(request) {
+      const path = new URL(request.url).pathname;
+      if (path === "/fixture.js") return new Response(bundled.outputs[0]);
+      if (path === "/")
+        return new Response(
+          '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>React bridge fixture</title></head><body><div id="root"></div><script>window.shellOrigin=' +
+            JSON.stringify(shellOrigin) +
+            '</script><script type="module" src="/fixture.js"></script></body></html>',
+          { headers: { "content-type": "text/html" } },
+        );
+      return new Response("Missing", { status: 404 });
+    },
+  });
+}
+const defaultFixture = serveFixture(8787);
+const fixture = serveFixture(0);
 const shell = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
@@ -148,6 +152,15 @@ try {
     await page.evaluate(() => window.bridgeFinished);
   }
   await page.goto(shellOrigin);
+  assert.equal(
+    await page.locator("#shprd-host").inputValue(),
+    defaultFixture.url.href,
+  );
+  await page.locator("#shprd-react").waitFor();
+  await page.frameLocator("#shprd-react").locator("#draft").waitFor();
+  await checkBridge();
+  assert.match(await page.locator("#shprd-status").innerText(), /connected/);
+
   let requested;
   let release;
   const navigation = new Promise((resolve) => {
@@ -162,6 +175,7 @@ try {
     await route.continue();
   });
   await page.locator("#shprd-host").fill(fixtureOrigin);
+  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Open host", exact: true }).click();
   try {
     await navigation;
@@ -267,5 +281,6 @@ try {
   await browser.close();
   shell.stop(true);
   fixture.stop(true);
+  defaultFixture.stop(true);
   retained?.stop(true);
 }

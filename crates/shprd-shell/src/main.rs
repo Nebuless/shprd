@@ -1,22 +1,27 @@
 //! Remote-client shell. Engines, workspaces and live terminals remain on the host.
 use dioxus::prelude::*;
-use shprd_shell::{BridgeAck, HostUrl};
+use shprd_shell::{BridgeAck, HostUrl, initial_host_url};
 
 fn main() {
     dioxus::launch(app);
 }
 
 fn app() -> Element {
-    let configured = option_env!("SHPRD_HOST_URL").unwrap_or("");
-    let mut input = use_signal(|| configured.to_owned());
-    let mut host = use_signal(|| HostUrl::parse(configured).ok());
-    let mut error = use_signal(|| {
-        if !configured.is_empty() && HostUrl::parse(configured).is_err() {
-            String::from("Configured SHPRD_HOST_URL is invalid.")
-        } else {
-            String::new()
-        }
+    let configured = option_env!("SHPRD_HOST_URL");
+    let initial = initial_host_url(configured, cfg!(feature = "web"));
+    let initial_host = initial.as_ref().ok().and_then(Clone::clone);
+    let initial_error = match initial {
+        Err(_) => String::from("Configured SHPRD_HOST_URL is invalid."),
+        Ok(_) => String::new(),
+    };
+    let mut input = use_signal(|| {
+        initial_host
+            .as_ref()
+            .map(|host| host.as_str().to_owned())
+            .unwrap_or_default()
     });
+    let mut host = use_signal(|| initial_host);
+    let mut error = use_signal(|| initial_error);
     let mut status = use_signal(|| String::from("Engines and terminals run on your host."));
     let mut busy = use_signal(|| false);
     let mut ready = use_signal(|| false);

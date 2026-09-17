@@ -1,4 +1,10 @@
 [tools]
+rust = { version = "1.98.1", profile = "default", targets = [
+  "wasm32-unknown-unknown",
+  "aarch64-linux-android",
+  "x86_64-linux-android",
+] }
+"cargo:dioxus-cli" = "0.7.10"
 bun = "1.4.1"
 node = "24.18.0"
 "aqua:artempyanykh/marksman" = "2026-02-08"
@@ -21,11 +27,27 @@ node = "24.18.0"
 "npm:yaml-language-server" = "1.24.0"
 
 [tasks.install]
-description = "Install locked root, web, and server dependencies"
+description = "Install locked Rust, DX, root, web, and server dependencies"
 run = """
+mise install
 bun install --frozen-lockfile
 (cd web && bun install --frozen-lockfile)
 (cd server && bun install --frozen-lockfile)
+"""
+
+[tasks."rust:check"]
+description = "Check Rust workspace with Mise-managed Cargo"
+run = "cargo check --workspace"
+
+[tasks."shell:web"]
+description = "Build SHPRD Dioxus Web shell"
+run = "dx build --package shprd-shell --platform web --no-default-features --features web"
+
+[tasks."shell:android"]
+description = "Build SHPRD Dioxus Android shell"
+run = """
+. crates/shprd-shell/android-env.sh
+dx build --package shprd-shell --platform android --no-default-features --features mobile
 """
 
 [tasks.format]

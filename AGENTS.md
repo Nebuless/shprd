@@ -11,11 +11,19 @@ Generated build output belongs in `web/dist`, `server/public`,
 are ignored and should not be committed.
 
 Experimental Rust components live in `crates/`, with native runtime extension
-glue in `integrations/pi/`. Keep Bun as the default until browser/API parity is
-verified. See docs/ARCHITECTURE.md for current native boundaries.
+glue in `integrations/pi/`. Target shape: Rust owns CLI and host backend, React
+remains workspace UI, and Dioxus provides optional desktop/Android launchers.
+Keep Bun as the default until browser/API parity is verified. See
+docs/ARCHITECTURE.md for current native boundaries.
 
 ## Build, Test, and Development Commands
 
+Mise owns Rust, Cargo targets, and Dioxus CLI. Use its task entrypoints rather
+than package-manager Cargo or global DX binaries.
+
+- `mise run rust:check`: check the Rust workspace.
+- `mise run shell:web`: build the Dioxus Web shell.
+- `mise run shell:android`: build the Dioxus Android shell.
 - `bun run dev:web`: start the Vite frontend on port 5173.
 - `bun run dev:server`: start the Bun bridge with hot reload.
 - `bun run build`: build frontend assets and the default standalone server binary.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.7.0 - 2026-09-18
+
 - Rename public app, repository, installer, Pages site, and release assets to SHPRD.
 - Add `shprd auth token show` and `shprd auth token path` for local token inspection.
 - Add `service install --tailscale` and `--tailscale-no-auth` for explicit Tailnet access modes.

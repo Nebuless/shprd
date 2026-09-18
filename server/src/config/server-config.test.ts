@@ -4,6 +4,8 @@ import { join } from "node:path";
 import {
   herdrConfigDir,
   isTailnetIPv4,
+  legacyConfigDirForRuntime,
+  loadServerConfig,
   nativeSocketPath,
   resolveAuthRequired,
   resolveServerLogLevel,
@@ -24,6 +26,39 @@ describe("herdrConfigDir", () => {
   test("uses the XDG-style config dir on other platforms", () => {
     expect(herdrConfigDir("darwin")).toBe(join(homedir(), ".config", "herdr"));
     expect(herdrConfigDir("linux")).toBe(join(homedir(), ".config", "herdr"));
+  });
+});
+
+describe("legacyConfigDirForRuntime", () => {
+  test("only selects legacy config for herdr-gui executables", () => {
+    expect(
+      legacyConfigDirForRuntime("/opt/shprd/shprd", "/home/shprd-user"),
+    ).toBeUndefined();
+    expect(
+      legacyConfigDirForRuntime("/opt/herdr-gui/herdr-gui", "/home/legacy"),
+    ).toBe("/home/legacy/.config/herdr-gui");
+  });
+});
+
+describe("loadServerConfig", () => {
+  test("keeps SHPRD config directory unset for normal executable", () => {
+    const previousConfigDir = process.env.SHPRD_CONFIG_DIR;
+    const previousArgv = process.argv;
+    try {
+      delete process.env.SHPRD_CONFIG_DIR;
+      process.argv = [process.execPath, "shprd"];
+
+      loadServerConfig("0.7.0-test");
+
+      expect(process.env.SHPRD_CONFIG_DIR).toBeUndefined();
+    } finally {
+      process.argv = previousArgv;
+      if (previousConfigDir === undefined) {
+        delete process.env.SHPRD_CONFIG_DIR;
+      } else {
+        process.env.SHPRD_CONFIG_DIR = previousConfigDir;
+      }
+    }
   });
 });
 

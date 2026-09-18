@@ -74,7 +74,10 @@ export function legacyConfigDirForRuntime(
 }
 
 export function loadServerConfig(appVersion: string): ServerConfig {
-  process.env.SHPRD_CONFIG_DIR ??= legacyConfigDirForRuntime();
+  const legacyConfigDir = legacyConfigDirForRuntime();
+  if (process.env.SHPRD_CONFIG_DIR === undefined && legacyConfigDir) {
+    process.env.SHPRD_CONFIG_DIR = legacyConfigDir;
+  }
   let args: CliArgs;
   try {
     args = parseArgs({

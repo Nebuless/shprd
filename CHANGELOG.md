@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Rename public app, repository, installer, Pages site, and release assets to SHPRD.
+- Add `shprd auth token show` and `shprd auth token path` for local token inspection.
+- Add `service install --tailscale` and `--tailscale-no-auth` for explicit Tailnet access modes.
+
 ## 0.6.2 - 2026-09-11
 
 - Reload open tabs once when an update removes their cached code chunks, instead

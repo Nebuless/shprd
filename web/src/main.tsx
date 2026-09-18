@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { OverlayScrollbarLayer } from "./components/OverlayScrollbarLayer";
+import { installShellBridgeFromReferrer } from "./shellBridge";
 import "./styles.css";
 
 class ErrorBoundary extends React.Component<
@@ -32,6 +33,8 @@ class ErrorBoundary extends React.Component<
     return this.props.children;
   }
 }
+
+installShellBridgeFromReferrer();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

@@ -52,7 +52,11 @@ function sendHello(
       hello: true,
       bridge_protocol_version: 2,
       default_connection_id: defaultConnectionId,
-      capabilities: { connection_id: true, connection_scoped_http: true },
+      capabilities: {
+        connection_id: true,
+        connection_scoped_http: true,
+        image_url_fetch: true,
+      },
     }),
   } as MessageEvent);
 }
@@ -90,6 +94,7 @@ describe("bridge connection lifecycle", () => {
 
     sendHello(OpeningWebSocket.instance);
     expect(bridge.status).toBe("connected");
+    expect(bridge.hello?.capabilities.image_url_fetch).toBe(true);
     await Bun.sleep(60);
     expect(bridge.status).toBe("connected");
   });
@@ -137,6 +142,43 @@ describe("bridge connection lifecycle", () => {
         bridge_protocol_version: 2,
         default_connection_id: "alpha",
         capabilities: { connection_id: "yes" },
+      }),
+    } as MessageEvent);
+    expect(bridge.status).toBe("connecting");
+
+    sendHello(ManualWebSocket.instance, "alpha");
+    expect(bridge.status).toBe("connected");
+  });
+
+  test("rejects a hello with malformed image URL fetch capability", async () => {
+    class ManualWebSocket extends HangingWebSocket {
+      static instance: ManualWebSocket;
+      static openResolver: (() => void) | undefined;
+      static readonly opened = new Promise<void>((resolve) => {
+        ManualWebSocket.openResolver = resolve;
+      });
+
+      constructor() {
+        super();
+        ManualWebSocket.instance = this;
+        queueMicrotask(() => {
+          this.readyState = ManualWebSocket.OPEN;
+          this.onopen?.();
+          ManualWebSocket.openResolver?.();
+        });
+      }
+    }
+    installBrowserGlobals(ManualWebSocket as unknown as typeof WebSocket);
+    const bridge = createTestBridge(50);
+    bridge.connect();
+    await ManualWebSocket.opened;
+
+    ManualWebSocket.instance.onmessage?.({
+      data: JSON.stringify({
+        hello: true,
+        bridge_protocol_version: 2,
+        default_connection_id: "alpha",
+        capabilities: { image_url_fetch: "yes" },
       }),
     } as MessageEvent);
     expect(bridge.status).toBe("connecting");

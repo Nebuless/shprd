@@ -33,25 +33,25 @@ function currentReleasePlatform(): string {
 }
 
 function createInstallerFixture(checksumName?: string) {
-  const root = mkdtempSync(join(tmpdir(), "herdr-gui-installer-test-"));
+  const root = mkdtempSync(join(tmpdir(), "shprd-installer-test-"));
   temporaryRoots.push(root);
   const assets = join(root, "assets");
   const fakeBin = join(root, "bin");
   const installDir = join(root, "install");
   const platform = currentReleasePlatform();
-  const packageDir = `herdr-gui-${platform}`;
+  const packageDir = `shprd-${platform}`;
   const archiveName = `${packageDir}.tar.xz`;
   const packagePath = join(assets, packageDir);
   mkdirSync(packagePath, { recursive: true });
   mkdirSync(fakeBin, { recursive: true });
 
-  const binary = join(packagePath, "herdr-gui");
+  const binary = join(packagePath, "shprd");
   writeFileSync(
     binary,
-    '#!/bin/sh\n[ "${1:-}" = "--version" ] && { echo "herdr-gui 9.8.7"; exit 0; }\nexit 1\n',
+    '#!/bin/sh\n[ "${1:-}" = "--version" ] && { echo "shprd 9.8.7"; exit 0; }\nexit 1\n',
     { mode: 0o755 },
   );
-  writeFileSync(join(packagePath, "VERSION"), `herdr-gui 9.8.7 ${platform}\n`);
+  writeFileSync(join(packagePath, "VERSION"), `shprd 9.8.7 ${platform}\n`);
 
   const archive = join(assets, archiveName);
   const packaged = Bun.spawnSync(
@@ -99,13 +99,13 @@ function runInstaller(
   fixture: ReturnType<typeof createInstallerFixture>,
   releaseBaseUrl = "http://127.0.0.1/releases",
 ) {
-  return Bun.spawnSync(["sh", join(import.meta.dir, "install-herdr-gui.sh")], {
+  return Bun.spawnSync(["sh", join(import.meta.dir, "install-shprd.sh")], {
     env: {
       ...process.env,
       PATH: `${fixture.fakeBin}:${process.env.PATH ?? ""}`,
       FIXTURE_DIR: fixture.assets,
-      HERDR_GUI_RELEASE_BASE_URL: releaseBaseUrl,
-      HERDR_GUI_INSTALL_DIR: fixture.installDir,
+      SHPRD_RELEASE_BASE_URL: releaseBaseUrl,
+      SHPRD_INSTALL_DIR: fixture.installDir,
     },
     stdout: "pipe",
     stderr: "pipe",
@@ -122,7 +122,7 @@ describe("release installer", () => {
   test("verifies, backs up, and installs the expected platform package", () => {
     const fixture = createInstallerFixture();
     mkdirSync(fixture.installDir, { recursive: true });
-    writeFileSync(join(fixture.installDir, "herdr-gui"), "previous binary\n", {
+    writeFileSync(join(fixture.installDir, "shprd"), "previous binary\n", {
       mode: 0o755,
     });
     const result = runInstaller(fixture);
@@ -130,13 +130,13 @@ describe("release installer", () => {
     expect(result.stderr.toString()).toBe("");
 
     const installed = Bun.spawnSync(
-      [join(fixture.installDir, "herdr-gui"), "--version"],
+      [join(fixture.installDir, "shprd"), "--version"],
       { stdout: "pipe" },
     );
     expect(installed.exitCode).toBe(0);
-    expect(installed.stdout.toString().trim()).toBe("herdr-gui 9.8.7");
+    expect(installed.stdout.toString().trim()).toBe("shprd 9.8.7");
     expect(
-      readFileSync(join(fixture.installDir, "herdr-gui.previous"), "utf8"),
+      readFileSync(join(fixture.installDir, "shprd.previous"), "utf8"),
     ).toBe("previous binary\n");
   });
 
@@ -152,7 +152,7 @@ describe("release installer", () => {
     mkdirSync(fixture.installDir, { recursive: true });
     const outside = join(fixture.root, "outside-binary");
     writeFileSync(outside, "outside\n", { mode: 0o755 });
-    symlinkSync(outside, join(fixture.installDir, "herdr-gui"));
+    symlinkSync(outside, join(fixture.installDir, "shprd"));
 
     const result = runInstaller(fixture);
     expect(result.exitCode).not.toBe(0);
@@ -164,10 +164,7 @@ describe("release installer", () => {
 
   test("rejects unauthenticated non-loopback release mirrors", () => {
     const fixture = createInstallerFixture();
-    const result = runInstaller(
-      fixture,
-      "http://downloads.example.com/herdr-gui",
-    );
+    const result = runInstaller(fixture, "http://downloads.example.com/shprd");
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr.toString()).toContain(
       "release base URL must use HTTPS unless the mirror is loopback",

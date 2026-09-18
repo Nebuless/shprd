@@ -6,7 +6,14 @@ import { FitAddon } from "@xterm/addon-fit";
 import { UnicodeGraphemesAddon } from "@xterm/addon-unicode-graphemes";
 import type { IBufferLine, ILink, ITheme } from "@xterm/xterm";
 import { Terminal } from "@xterm/xterm";
-import { Columns2, Keyboard, Maximize2, Rows2, X } from "lucide-react";
+import {
+  Columns2,
+  ImagePlus,
+  Keyboard,
+  Maximize2,
+  Rows2,
+  X,
+} from "lucide-react";
 import {
   type CSSProperties,
   useCallback,
@@ -67,7 +74,10 @@ import {
   terminalPointerShouldFocusInput,
   terminalTouchShouldFocusInput,
 } from "../terminalFocus";
-import { uploadTerminalImage } from "../terminalImageUpload";
+import {
+  uploadTerminalImage,
+  uploadTerminalImageToPane,
+} from "../terminalImageUpload";
 import {
   isTerminalImeCommittedInputType,
   TerminalImeCommitGuard,
@@ -91,6 +101,7 @@ import {
   type TerminalPasteTextareaSnapshot,
   terminalPasteInputText,
   terminalPasteRequest,
+  terminalPasteTargetsTerminal,
 } from "../terminalPaste";
 import {
   readTerminalRecoveryReloadAt,
@@ -102,6 +113,7 @@ import {
   rememberTerminalRelayViewport,
   TerminalAttachFrameWatchdog,
   TerminalResizeSync,
+  terminalAttachRequest,
   terminalAttachWatchdogMs,
   terminalEndpointViewportSize,
   terminalRelayViewportSize,
@@ -510,6 +522,10 @@ export function TerminalView({
   const [localComposerOpen, setLocalComposerOpen] = useState(false);
   const [closePaneRequested, setClosePaneRequested] = useState(false);
   const [localAgentHistoryOpen, setLocalAgentHistoryOpen] = useState(false);
+  const desktopImagePickerRef = useRef<HTMLInputElement | null>(null);
+  const desktopImageUploadRef = useRef<((file: File) => Promise<void>) | null>(
+    null,
+  );
   const containerRef = useCallback(
     (el: HTMLDivElement | null) => setContainer(el),
     [],
@@ -974,7 +990,7 @@ export function TerminalView({
         setTerminalAttachError(
           typeof closed.reason === "string" &&
             closed.reason.includes("taken over")
-            ? "Terminal stream was taken over by another Herdr Studio client"
+            ? "Terminal stream was taken over by another SHPRD client"
             : "Terminal stream closed by the server",
         );
         return;
@@ -1109,6 +1125,19 @@ export function TerminalView({
       const path = await uploadTerminalImage(connectionClient, file);
       await pasteText(path, destinationPaneId);
     };
+    desktopImageUploadRef.current = (file) =>
+      runPasteOperation(async () => {
+        const destinationPaneId = paneIdRef.current;
+        if (destinationPaneId) {
+          await uploadTerminalImageToPane(
+            connectionClient,
+            file,
+            destinationPaneId,
+          );
+          return;
+        }
+        await pasteImage(file, null);
+      });
     let clipboardPasteInFlight = false;
     const pasteFromBrowserClipboard = async () => {
       if (composerOpenRef.current || clipboardPasteInFlight) return;
@@ -1521,11 +1550,11 @@ export function TerminalView({
       const text = img ? "" : (e.clipboardData?.getData("text/plain") ?? "");
       const active = document.activeElement;
       const target = e.target;
-      const isTerminalPaste =
-        target === document ||
-        container.contains(target as Node | null) ||
-        (active ? container.contains(active) : false);
-      if (!isTerminalPaste && isEditableElement(target)) return;
+      const isTerminalPaste = terminalPasteTargetsTerminal(
+        container.contains(target as Node | null),
+        active ? container.contains(active) : false,
+      );
+      if (!isTerminalPaste) return;
       imeCommitGuard.beginIndependentInput();
       const destinationPaneId = paneIdRef.current ?? null;
       if (!img && appleTouchPlatform && isTerminalPaste) {
@@ -1979,6 +2008,7 @@ export function TerminalView({
       cancelNativePasteFallback();
       cancelPasteTextareaClear();
       disposePasteOperations();
+      desktopImageUploadRef.current = null;
       term.textarea?.removeEventListener("keydown", onTerminalKeyDown, {
         capture: true,
       });
@@ -2074,6 +2104,7 @@ export function TerminalView({
     if (!connectionClient.isCurrent()) return;
     const term = termInstance;
     const paneTerminalId = pane?.terminal_id ?? null;
+    const paneId = pane?.pane_id ?? null;
     if (
       desiredTerminalRef.current !== paneTerminalId ||
       s.status !== "connected"
@@ -2089,7 +2120,7 @@ export function TerminalView({
       attachTimeoutTerminalRef.current = null;
       attachWatchdogRef.current?.cancel();
     }
-    if (!paneTerminalId) {
+    if (!paneTerminalId || !paneId) {
       desiredTerminalRef.current = null;
       attachWatchdogRef.current?.cancel();
       setTerminalLoading(false);
@@ -2153,18 +2184,16 @@ export function TerminalView({
     store.setTerminalEndpoint(connectionClient, terminalId, null);
     const attachStartedAt = performance.now();
     connectionClient
-      .call("terminal.attach", {
-        terminal_id: terminalId,
-        cols,
-        rows,
-        ...(surfaceSize
-          ? { surface_cols: surfaceSize.cols, surface_rows: surfaceSize.rows }
-          : {}),
-        relay_active: relaySize !== null,
-        ...(relaySize
-          ? { relay_cols: relaySize.cols, relay_rows: relaySize.rows }
-          : {}),
-      })
+      .call(
+        "terminal.attach",
+        terminalAttachRequest(
+          terminalId,
+          paneId,
+          { cols, rows },
+          surfaceSize,
+          relaySize,
+        ),
+      )
       .then(
         (result) => {
           if (!connectionClient.isCurrent()) return;
@@ -2526,6 +2555,26 @@ export function TerminalView({
             onError={notifyComposerError}
           />
         ) : null}
+        <input
+          ref={desktopImagePickerRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (!file || !desktopImageUploadRef.current) return;
+            void desktopImageUploadRef
+              .current(file)
+              .catch((error: unknown) =>
+                setUploadError(
+                  `Image upload failed: ${
+                    error instanceof Error ? error.message : "unknown error"
+                  }`,
+                ),
+              );
+          }}
+        />
         <div className="terminal-pane-toolbar" aria-label="Pane actions">
           {s.endpointAvailability[pane.terminal_id] &&
           store.terminalScrollReason(pane.terminal_id) ? (
@@ -2537,6 +2586,17 @@ export function TerminalView({
               History unavailable: pane.scroll not advertised
             </span>
           ) : null}
+          <button
+            type="button"
+            className="terminal-pane-action terminal-pane-image"
+            title="Upload image to terminal"
+            aria-label="Upload image to terminal"
+            disabled={pasteLoading}
+            onPointerDown={preventPaneActionFocus}
+            onClick={() => desktopImagePickerRef.current?.click()}
+          >
+            <ImagePlus size={14} />
+          </button>
           <button
             type="button"
             className="terminal-pane-action"

@@ -1,0 +1,10 @@
+{
+  "name": "shprd-senpi-attachment",
+  "private": true,
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "./senpi.ts"
+    ]
+  }
+}

@@ -7,12 +7,14 @@ export type AgentSession = {
   cwd: string;
   connected: boolean;
   busy: boolean;
+  capabilities: { image_prompt: boolean };
 };
 export type AgentModel = { provider: string; id: string; name: string };
 export type AgentMessage = { key: string; role: string; content: unknown };
+export type AgentImage = { mimeType: string; data: string };
 export type AgentCommand =
   | { type: "get_state" | "get_messages" | "abort" | "get_available_models" }
-  | { type: "prompt"; message: string }
+  | { type: "prompt"; message: string; image?: AgentImage }
   | { type: "set_model"; provider: string; modelId: string };
 
 export function record(value: unknown): Record<string, unknown> {
@@ -59,6 +61,9 @@ export function parseAgentSessions(value: unknown): AgentSession[] {
       cwd: s.cwd,
       connected: s.connected,
       busy: s.busy,
+      capabilities: {
+        image_prompt: record(s.capabilities).image_prompt === true,
+      },
     };
   });
 }
@@ -104,18 +109,43 @@ export function parseAgentModels(value: unknown): AgentModel[] {
 export type AgentTransport = {
   scopeKey: string;
   call: (method: string, params?: Record<string, unknown>) => Promise<unknown>;
+  canFetchImageUrl: boolean;
+  fetchImage: (url: string) => Promise<Blob>;
   subscribe: (listener: (envelope: unknown) => void) => () => void;
   onStatus: (listener: (status: ConnectionStatus) => void) => () => void;
 };
+
+export function imageFetchPath(
+  connectionId: string,
+  generation: number,
+  url: string,
+): string {
+  return `/api/connections/${encodeURIComponent(connectionId)}/image-fetch?connection_generation=${encodeURIComponent(generation)}&url=${encodeURIComponent(url)}`;
+}
 
 export function createAgentTransport(
   client: ConnectionClient,
   subscribe: AgentTransport["subscribe"],
   onStatus: AgentTransport["onStatus"],
+  canFetchImageUrl = false,
 ): AgentTransport {
   return {
-    scopeKey: client.connectionId,
+    scopeKey: `${client.connectionId}:${client.generation}`,
+    canFetchImageUrl,
     call: (method, params) => client.call(method, params),
+    fetchImage: async (url) => {
+      if (!canFetchImageUrl) throw new Error("Image URL fetch is unavailable.");
+      if (!client.isCurrent())
+        throw new Error("Connection changed during image fetch");
+      const response = await fetch(
+        imageFetchPath(client.connectionId, client.generation, url),
+        { credentials: "same-origin" },
+      );
+      if (!client.isCurrent())
+        throw new Error("Connection changed during image fetch");
+      if (!response.ok) throw new Error("Could not fetch image");
+      return response.blob();
+    },
     subscribe: (listener) =>
       subscribe((value) => {
         const envelope = record(value);
@@ -341,7 +371,7 @@ export class AgentWorkspaceClient {
       ),
     });
   }
-  command = async (command: AgentCommand) => {
+  command = async (command: AgentCommand): Promise<boolean> => {
     const { selectedId, connected, pending } = this.state;
     const session = this.state.sessions.find((s) => s.id === selectedId);
     if (
@@ -350,9 +380,17 @@ export class AgentWorkspaceClient {
       !connected ||
       (pending && command.type !== "abort")
     )
-      return;
+      return false;
     if (command.type === "prompt" && (!command.message.trim() || session.busy))
-      return;
+      return false;
+    if (
+      command.type === "prompt" &&
+      command.image &&
+      !session.capabilities.image_prompt
+    ) {
+      this.fail(new Error("Image prompts are unavailable for this agent."));
+      return false;
+    }
     const epoch = this.epoch;
     const revision = this.eventRevision;
     const commandEpoch = ++this.commandEpoch;
@@ -364,7 +402,7 @@ export class AgentWorkspaceClient {
         epoch !== this.epoch ||
         commandEpoch !== this.commandEpoch
       )
-        return;
+        return false;
       switch (command.type) {
         case "prompt":
           if (this.state.drafts[selectedId] === command.message)
@@ -381,6 +419,7 @@ export class AgentWorkspaceClient {
         default:
           break;
       }
+      return true;
     } catch (error) {
       if (
         this.active &&
@@ -388,6 +427,7 @@ export class AgentWorkspaceClient {
         commandEpoch === this.commandEpoch
       )
         this.fail(error);
+      return false;
     } finally {
       if (
         this.active &&

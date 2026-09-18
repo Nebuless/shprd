@@ -9,16 +9,23 @@ function cookieHeader(response: Response): string {
 }
 
 describe("request authentication boundaries", () => {
-  test("brands the login page as Herdr Studio", async () => {
+  test("brands the login page as SHPRD while legacy auth cookies remain valid", async () => {
     const handlers = createAuthHandlers({
       authRequired: true,
       password: "fixed-password",
     });
     const html = await handlers.loginPage().text();
 
-    expect(html).toContain("<title>Herdr Studio login</title>");
-    expect(html).toContain("<h2>▦ Herdr Studio</h2>");
-    expect(html).not.toContain("herdr-gui");
+    expect(html).toContain("<title>SHPRD login</title>");
+    expect(html).toContain("<h2>▦ SHPRD</h2>");
+    const login = await handlers.handleLogin(
+      new Request("http://example.test/api/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: "fixed-password" }),
+      }),
+    );
+    expect(cookieHeader(login).startsWith("shprd_auth=")).toBe(true);
   });
 
   test("does not derive authorization from reverse-proxy authorities", async () => {

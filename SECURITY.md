@@ -13,23 +13,23 @@ maintainer through the address listed on their GitHub profile.
 
 ## Trust Model
 
-Herdr Studio is a privileged local administration tool. A connected browser can
+SHPRD is a privileged local administration tool. A connected browser can
 interact with terminal sessions, run repository hooks, read session data, and
 upload or delete workspace files. Anyone who can access the UI should be
-treated as having the same authority as the user running Herdr Studio.
+treated as having the same authority as the user running SHPRD.
 
 The server binds to `127.0.0.1` by default. In the current implementation,
 listeners configured as `127.0.0.1`, `localhost`, or `::1` bypass built-in
-authentication even when `HERDR_GUI_PASSWORD` is set. If a VPN, SSH tunnel, or
+authentication even when `SHPRD_PASSWORD` is set. If a VPN, SSH tunnel, or
 reverse proxy forwards to that listener, its access policy is the remote
-permission boundary; there is no additional Studio login gate. Require an
+permission boundary; there is no additional SHPRD login gate. Require an
 independently authenticated proxy if that boundary is insufficient.
 
 Do not expose the service directly to the public internet. When binding to a
 non-loopback address:
 
-- Set a strong `HERDR_GUI_PASSWORD`.
-- Prefer `HERDR_GUI_PASSWORD` over the `--password` flag so the password is not
+- Set a strong `SHPRD_PASSWORD`.
+- Prefer `SHPRD_PASSWORD` over the `--password` flag so the password is not
   exposed in process arguments.
 - Put the service behind HTTPS or a trusted VPN.
 - Restrict network access with a firewall or reverse proxy.

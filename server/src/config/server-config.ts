@@ -1,5 +1,5 @@
 import { homedir, networkInterfaces, tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { parseArgs } from "node:util";
 import { createHash } from "node:crypto";
@@ -64,7 +64,17 @@ export function resolveServerLogLevel(
   return parseLogLevel(cliValue ?? envValue ?? "info");
 }
 
+export function legacyConfigDirForRuntime(
+  executablePath = process.execPath,
+  homeDir = homedir(),
+): string | undefined {
+  return basename(executablePath).toLowerCase().startsWith("herdr-gui")
+    ? join(homeDir, ".config", "herdr-gui")
+    : undefined;
+}
+
 export function loadServerConfig(appVersion: string): ServerConfig {
+  process.env.SHPRD_CONFIG_DIR ??= legacyConfigDirForRuntime();
   let args: CliArgs;
   try {
     args = parseArgs({
@@ -75,34 +85,40 @@ export function loadServerConfig(appVersion: string): ServerConfig {
     }).values as CliArgs;
   } catch (e) {
     console.error(`[bridge] ${(e as Error).message}`);
-    console.error("Run `herdr-gui --help` for usage.");
+    console.error("Run `shprd --help` for usage.");
     process.exit(2);
   }
 
   if (args.help) {
-    console.log(`Herdr Studio — web client for Herdr
+    console.log(`SHPRD — web client for Herdr
 
-Usage: herdr-gui [options]
-       herdr-gui service <action>
+Usage: shprd [options]
+       shprd auth token <show|path>
+       shprd service <action>
+
+Auth actions:
+  token show                  print active auth token
+  token path                  print active auth token path
 
 Service actions:
-  install [--force]           install and start the platform user service
+  install [--force] [--tailscale | --tailscale-no-auth]
+                              install and start the platform user service
   status                      show service status
   restart                     restart the managed service
   reload                      reload its definition and restart the service
   uninstall                   stop and remove the service definition
-  Run \`herdr-gui service --help\` for service details.
+  Run \`shprd service --help\` for service details.
 
 Options (flags override env vars):
   --host <addr>              listen address        (env HOST,            default 127.0.0.1)
   --port <n>                 listen port           (env PORT,            default 8787)
-  --password <pw>            fixed login password  (env HERDR_GUI_PASSWORD; otherwise a token is generated)
+  --password <pw>            fixed login password  (env SHPRD_PASSWORD; HERDR_GUI_PASSWORD accepted)
   --socket-path <path>       control socket        (env HERDR_SOCKET_PATH)
   --client-socket-path <p>   render socket         (env HERDR_CLIENT_SOCKET_PATH)
   --ssh-host <user@host>     remote Herdr over SSH (env HERDR_SSH_HOST)
   --session <name>           named herdr session   (env HERDR_SESSION)
   --public-dir <path>        static assets dir     (env PUBLIC_DIR,      default: embedded)
-  --log-level <level>        error|warn|info|debug  (env HERDR_GUI_LOG_LEVEL, default: info)
+  --log-level <level>        error|warn|info|debug  (env SHPRD_LOG_LEVEL; HERDR_GUI_LOG_LEVEL accepted, default: info)
   --open                     open browser on start (env OPEN_BROWSER=1)
   -V, --version              show version
   --help                     show this help
@@ -111,7 +127,7 @@ Options (flags override env vars):
   }
 
   if (args.version) {
-    console.log(`herdr-gui ${appVersion}`);
+    console.log(`shprd ${appVersion}`);
     process.exit(0);
   }
 
@@ -119,7 +135,7 @@ Options (flags override env vars):
   try {
     logLevel = resolveServerLogLevel(
       args["log-level"],
-      process.env.HERDR_GUI_LOG_LEVEL,
+      process.env.SHPRD_LOG_LEVEL ?? process.env.HERDR_GUI_LOG_LEVEL,
     );
   } catch (error) {
     console.error(`[bridge] ${(error as Error).message}`);
@@ -129,11 +145,28 @@ Options (flags override env vars):
   const host = String(args.host ?? process.env.HOST ?? "127.0.0.1");
   const port = Number(args.port ?? process.env.PORT ?? 8787);
   const configuredPassword = String(
-    args.password ?? process.env.HERDR_GUI_PASSWORD ?? "",
+    args.password ??
+      process.env.SHPRD_PASSWORD ??
+      process.env.HERDR_GUI_PASSWORD ??
+      "",
   );
-  const authRequired = !isLocalHost(host);
+  const tailscaleNoAuth = process.env.SHPRD_TAILSCALE_NO_AUTH === "1";
+  const tailscaleTokenAuth =
+    process.env.SHPRD_TAILSCALE_NO_AUTH === "0" && isTailnetIPv4(host);
+  let authRequired: boolean;
+  try {
+    authRequired = resolveAuthRequired(host, tailscaleNoAuth);
+  } catch (error) {
+    console.error(`[bridge] ${(error as Error).message}`);
+    process.exit(2);
+  }
+  const effectiveConfiguredPassword = tailscaleTokenAuth
+    ? ""
+    : configuredPassword;
   const generatedAuthTokenPath =
-    authRequired && !configuredPassword ? defaultAuthTokenPath() : undefined;
+    authRequired && !effectiveConfiguredPassword
+      ? defaultAuthTokenPath()
+      : undefined;
   let generatedAuthToken: string | undefined;
   try {
     generatedAuthToken = generatedAuthTokenPath
@@ -145,7 +178,7 @@ Options (flags override env vars):
     );
     process.exit(1);
   }
-  const password = configuredPassword || generatedAuthToken || "";
+  const password = effectiveConfiguredPassword || generatedAuthToken || "";
 
   const sshHostValue =
     (typeof args["ssh-host"] === "string" && args["ssh-host"]) ||
@@ -195,6 +228,31 @@ Options (flags override env vars):
 
 function isLocalHost(host: string) {
   return host === "127.0.0.1" || host === "localhost" || host === "::1";
+}
+
+export function isTailnetIPv4(host: string): boolean {
+  const match = host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) return false;
+  const octets = match.slice(1).map(Number);
+  return (
+    octets.every((octet) => octet >= 0 && octet <= 255) &&
+    octets[0] === 100 &&
+    octets[1] >= 64 &&
+    octets[1] <= 127
+  );
+}
+
+export function resolveAuthRequired(
+  host: string,
+  tailscaleNoAuth: boolean,
+): boolean {
+  if (!tailscaleNoAuth) return !isLocalHost(host);
+  if (!isTailnetIPv4(host)) {
+    throw new Error(
+      "SHPRD_TAILSCALE_NO_AUTH=1 requires HOST to be a Tailnet IPv4 address",
+    );
+  }
+  return false;
 }
 
 function remoteTunnelLocalPath(

@@ -52,6 +52,124 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn image_upload_returns_temp_path_without_terminal_input()
+    -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        use axum::body::{Body, to_bytes};
+        use tower::ServiceExt;
+
+        let directory = tempfile::tempdir()?;
+        let app = configured_router(
+            directory.path().join("control.sock"),
+            directory.path().to_path_buf(),
+            Auth::new(false, String::new())?,
+        );
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/api/upload-image")
+                    .header("x-image-ext", "png")
+                    .body(Body::from("image-bytes"))?,
+            )
+            .await?;
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = to_bytes(response.into_body(), 16 * 1024).await?;
+        let uploaded: Value = serde_json::from_slice(&body)?;
+        let path = uploaded["path"].as_str().ok_or("missing image path")?;
+        assert!(path.starts_with("/tmp/herdr-img-"));
+        assert_eq!(tokio::fs::read(path).await?, b"image-bytes");
+        tokio::fs::remove_file(path).await?;
+        assert_eq!(uploaded["remote"], false);
+
+        let app = configured_router(
+            directory.path().join("control-2.sock"),
+            directory.path().to_path_buf(),
+            Auth::new(false, String::new())?,
+        );
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/api/upload-image")
+                    .body(Body::empty())?,
+            )
+            .await?;
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+
+        let app = configured_router(
+            directory.path().join("control-3.sock"),
+            directory.path().to_path_buf(),
+            Auth::new(false, String::new())?,
+        );
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/api/upload-image")
+                    .body(Body::from(vec![
+                        0_u8;
+                        shprd_workspace::IMAGE_UPLOAD_MAX_BYTES + 1
+                    ]))?,
+            )
+            .await?;
+        assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+        let (host, manager) =
+            terminal_host_with_manager(directory.path().join("render.sock")).await?;
+        let generation = manager.lease(&ConnectionId::parse("alpha")?)?.generation();
+        let app = Router::new()
+            .route(
+                "/api/connections/{connection_id}/upload-image",
+                post(upload_image),
+            )
+            .with_state(Arc::clone(&host));
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri(format!(
+                        "/api/connections/alpha/upload-image?connection_generation={generation}"
+                    ))
+                    .body(Body::from("scoped-image"))?,
+            )
+            .await?;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers()["x-herdr-connection-id"], "alpha");
+        assert_eq!(
+            response.headers()["x-herdr-connection-generation"],
+            generation.to_string()
+        );
+        let body = to_bytes(response.into_body(), 16 * 1024).await?;
+        let uploaded: Value = serde_json::from_slice(&body)?;
+        let path = uploaded["path"]
+            .as_str()
+            .ok_or("missing scoped image path")?;
+        assert_eq!(tokio::fs::read(path).await?, b"scoped-image");
+        tokio::fs::remove_file(path).await?;
+        assert!(host.terminals.lock().await.is_empty());
+
+        let app = Router::new()
+            .route(
+                "/api/connections/{connection_id}/upload-image",
+                post(upload_image),
+            )
+            .with_state(host);
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri(format!(
+                        "/api/connections/alpha/upload-image?connection_generation={}",
+                        generation + 1
+                    ))
+                    .body(Body::from("stale-image"))?,
+            )
+            .await?;
+        assert_eq!(response.status(), StatusCode::CONFLICT);
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn queued_payloads_lose_retired_data_at_publication()
     -> Result<(), Box<dyn std::error::Error>> {
         // Given queued reply and event from a ready runtime.
@@ -914,9 +1032,18 @@ fn build_router(
         .route("/ws", get(websocket))
         .route("/api/health", get(health))
         .route("/api/herdr-info", get(herdr_info))
+        .route("/api/upload-image", post(upload_image))
         .route(
             "/api/connections/{connection_id}/herdr-info",
             get(herdr_info),
+        )
+        .route(
+            "/api/connections/{connection_id}/upload-image",
+            post(upload_image),
+        )
+        .route(
+            "/api/connections/{connection_id}/image-fetch",
+            get(fetch_image),
         )
         .fallback_service(ServeDir::new(public_dir))
         .layer(middleware::from_fn_with_state(
@@ -952,6 +1079,267 @@ async fn authenticate(State(state): State<Arc<Host>>, request: Request, next: Ne
 
 async fn health(State(state): State<Arc<Host>>) -> Json<serde_json::Value> {
     Json(json!({"ok":true,"version":env!("CARGO_PKG_VERSION"),"socket":state.socket}))
+}
+
+async fn upload_image(State(state): State<Arc<Host>>, request: Request) -> Response {
+    let lease = if let Some(manager) = &state.manager {
+        let route =
+            shprd_connections::parse_http_route(request.uri().path(), request.method().as_str());
+        let query: Result<HashMap<String, String>, _> =
+            axum::extract::Query::try_from_uri(request.uri()).map(|value| value.0);
+        let resolved = route.and_then(|route| {
+            let route = route.ok_or_else(|| {
+                shprd_connections::Error::Invalid("invalid connection route".into())
+            })?;
+            let query =
+                query.map_err(|_| shprd_connections::Error::Invalid("invalid query".into()))?;
+            let generation = shprd_connections::query_generation(
+                query.get("connection_generation").map(String::as_str),
+            )?;
+            manager.resolve(route.connection_id.as_ref(), generation)
+        });
+        match resolved {
+            Ok(lease) => Some(lease),
+            Err(error) => {
+                let status = match &error {
+                    shprd_connections::Error::Routing { status, .. } => {
+                        StatusCode::from_u16(*status).unwrap_or(StatusCode::BAD_REQUEST)
+                    }
+                    shprd_connections::Error::Stale => StatusCode::CONFLICT,
+                    _ => StatusCode::BAD_REQUEST,
+                };
+                return (
+                    status,
+                    Json(json!({"error":shprd_connections::sanitize_error(&error.to_string())})),
+                )
+                    .into_response();
+            }
+        }
+    } else {
+        None
+    };
+    let remote = if let (Some(lease), Some(profiles)) = (&lease, &state.profiles) {
+        let profiles = profiles.read().await;
+        match profiles.profile(&lease.connection_id) {
+            Ok(profile) => matches!(
+                profile.transport(),
+                shprd_connections::Transport::Ssh { .. }
+            ),
+            Err(error) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error":shprd_connections::sanitize_error(&error.to_string())})),
+                )
+                    .into_response();
+            }
+        }
+    } else {
+        false
+    };
+    let host = if remote {
+        let profiles = state
+            .profiles
+            .as_ref()
+            .expect("remote profile store missing")
+            .read()
+            .await;
+        let profile = match profiles
+            .profile(&lease.as_ref().expect("remote lease missing").connection_id)
+        {
+            Ok(profile) => profile,
+            Err(error) => {
+                return (
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error":shprd_connections::sanitize_error(&error.to_string())})),
+                )
+                    .into_response();
+            }
+        };
+        match profile.transport() {
+            shprd_connections::Transport::Ssh {
+                ssh_destination, ..
+            } => shprd_workspace::HostConfig::Ssh {
+                destination: ssh_destination.clone(),
+            },
+            shprd_connections::Transport::Local { .. } => shprd_workspace::HostConfig::Local,
+        }
+    } else {
+        shprd_workspace::HostConfig::Local
+    };
+    let extension = request
+        .headers()
+        .get("x-image-ext")
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or("png")
+        .to_owned();
+    let body = match axum::body::to_bytes(
+        request.into_body(),
+        shprd_workspace::IMAGE_UPLOAD_MAX_BYTES + 1,
+    )
+    .await
+    {
+        Ok(body) => body,
+        Err(_) => {
+            return (
+                StatusCode::PAYLOAD_TOO_LARGE,
+                Json(json!({"error":"image too large (>25MB)"})),
+            )
+                .into_response();
+        }
+    };
+    let mut body = body.as_ref();
+    let path = match shprd_workspace::upload_terminal_image(&host, &extension, &mut body, || {
+        lease
+            .as_ref()
+            .is_none_or(shprd_connections::Lease::is_current)
+    })
+    .await
+    {
+        Ok(path) => path,
+        Err(error) => {
+            let status = match &error {
+                shprd_workspace::Error::Invalid(message) if message.contains("too large") => {
+                    StatusCode::PAYLOAD_TOO_LARGE
+                }
+                shprd_workspace::Error::Invalid(_) => StatusCode::BAD_REQUEST,
+                shprd_workspace::Error::Stale(_) => StatusCode::CONFLICT,
+                shprd_workspace::Error::Timeout => StatusCode::GATEWAY_TIMEOUT,
+                shprd_workspace::Error::Process(_) => StatusCode::BAD_GATEWAY,
+                shprd_workspace::Error::Io(_) | shprd_workspace::Error::Json(_) => {
+                    StatusCode::INTERNAL_SERVER_ERROR
+                }
+            };
+            return (
+                status,
+                Json(json!({"error":shprd_connections::sanitize_error(&error.to_string())})),
+            )
+                .into_response();
+        }
+    };
+    let mut response = Json(json!({"path":path,"remote":remote})).into_response();
+    if let Some(lease) = lease {
+        for (name, value) in shprd_connections::response_headers(&lease) {
+            if let (Ok(name), Ok(value)) = (
+                axum::http::HeaderName::try_from(name),
+                axum::http::HeaderValue::try_from(value),
+            ) {
+                response.headers_mut().insert(name, value);
+            }
+        }
+    }
+    response
+}
+
+async fn fetch_image(State(state): State<Arc<Host>>, request: Request) -> Response {
+    let Some(manager) = &state.manager else {
+        return (StatusCode::BAD_REQUEST, Json(json!({"error":"image fetch unavailable"})))
+            .into_response();
+    };
+    let route = match shprd_connections::parse_http_route(
+        request.uri().path(),
+        request.method().as_str(),
+    ) {
+        Ok(Some(route)) if route.endpoint == shprd_connections::HttpEndpoint::FetchImage => route,
+        _ => {
+            return (StatusCode::BAD_REQUEST, Json(json!({"error":"invalid image fetch route"})))
+                .into_response();
+        }
+    };
+    let query: HashMap<String, String> = match axum::extract::Query::try_from_uri(request.uri()) {
+        Ok(query) => query.0,
+        Err(_) => {
+            return (StatusCode::BAD_REQUEST, Json(json!({"error":"invalid image request"})))
+                .into_response();
+        }
+    };
+    let generation = match shprd_connections::query_generation(
+        query.get("connection_generation").map(String::as_str),
+    ) {
+        Ok(generation) => generation,
+        Err(_) => {
+            return (StatusCode::BAD_REQUEST, Json(json!({"error":"invalid image request"})))
+                .into_response();
+        }
+    };
+    let lease = match manager.resolve(route.connection_id.as_ref(), generation) {
+        Ok(lease) => lease,
+        Err(error) => {
+            let status = if matches!(error, shprd_connections::Error::Stale) {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::BAD_REQUEST
+            };
+            return (status, Json(json!({"error":"image fetch unavailable"}))).into_response();
+        }
+    };
+    let Some(profiles) = &state.profiles else {
+        return (StatusCode::BAD_REQUEST, Json(json!({"error":"image fetch unavailable"})))
+            .into_response();
+    };
+    let local = {
+        let profiles = profiles.read().await;
+        match profiles.profile(&lease.connection_id) {
+            Ok(profile) => matches!(profile.transport(), shprd_connections::Transport::Local { .. }),
+            Err(_) => {
+                return (StatusCode::BAD_REQUEST, Json(json!({"error":"image fetch unavailable"})))
+                    .into_response();
+            }
+        }
+    };
+    if !local || !lease.is_current() {
+        return (StatusCode::BAD_REQUEST, Json(json!({"error":"image fetch unavailable"})))
+            .into_response();
+    }
+    let Some(url) = query.get("url").filter(|url| !url.is_empty() && url.len() <= 8192) else {
+        return (StatusCode::BAD_REQUEST, Json(json!({"error":"invalid image request"})))
+            .into_response();
+    };
+    let current = lease.clone();
+    let image = match crate::image_fetch::fetch_image(url, move || current.is_current()).await {
+        Ok(image) => image,
+        Err(error) => {
+            let status = match error {
+                crate::image_fetch::FetchError::Stale => StatusCode::CONFLICT,
+                crate::image_fetch::FetchError::TooLarge => StatusCode::PAYLOAD_TOO_LARGE,
+                crate::image_fetch::FetchError::Network => StatusCode::BAD_GATEWAY,
+                _ => StatusCode::BAD_REQUEST,
+            };
+            return (status, Json(json!({"error":error.to_string()}))).into_response();
+        }
+    };
+    if !lease.is_current() {
+        return (StatusCode::CONFLICT, Json(json!({"error":"connection changed during image fetch"})))
+            .into_response();
+    }
+    let content_length = image.data.len();
+    let mut response = image.data.into_response();
+    response.headers_mut().insert(
+        header::CONTENT_TYPE,
+        axum::http::HeaderValue::from_static(image.mime_type),
+    );
+    response
+        .headers_mut()
+        .insert(header::CACHE_CONTROL, axum::http::HeaderValue::from_static(image.cache_control));
+    response.headers_mut().insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        axum::http::HeaderValue::from_static("nosniff"),
+    );
+    let Ok(content_length) = axum::http::HeaderValue::try_from(content_length.to_string()) else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error":"image fetch unavailable"})))
+            .into_response();
+    };
+    response
+        .headers_mut()
+        .insert(header::CONTENT_LENGTH, content_length);
+    for (name, value) in shprd_connections::response_headers(&lease) {
+        if let (Ok(name), Ok(value)) = (
+            axum::http::HeaderName::try_from(name),
+            axum::http::HeaderValue::try_from(value),
+        ) {
+            response.headers_mut().insert(name, value);
+        }
+    }
+    response
 }
 
 async fn herdr_info(State(state): State<Arc<Host>>, request: Request) -> Response {
@@ -1067,6 +1455,10 @@ async fn websocket(State(state): State<Arc<Host>>, upgrade: WebSocketUpgrade) ->
         .on_upgrade(|socket| websocket_session(state, socket))
 }
 
+fn image_url_fetch_available(profiles_available: bool, manager_available: bool) -> bool {
+    profiles_available && manager_available
+}
+
 async fn websocket_session(state: Arc<Host>, mut socket: WebSocket) {
     let default_id = match &state.manager {
         Some(manager) => match manager.default_id() {
@@ -1075,7 +1467,7 @@ async fn websocket_session(state: Arc<Host>, mut socket: WebSocket) {
         },
         None => "legacy-default".to_owned(),
     };
-    let hello = json!({"hello":true,"socket":state.socket,"bridge_protocol_version":2,"default_connection_id":default_id, "capabilities":{"connection_id":true,"connection_scoped_http":false,"connection_runtime_generation":true,"native_agents":state.attachments.is_some()}});
+    let hello = json!({"hello":true,"socket":state.socket,"bridge_protocol_version":2,"default_connection_id":default_id, "capabilities":{"connection_id":true,"connection_scoped_http":false,"connection_runtime_generation":true,"native_agents":state.attachments.is_some(),"image_url_fetch":image_url_fetch_available(state.profiles.is_some(), state.manager.is_some())}});
     if socket
         .send(Message::Text(hello.to_string().into()))
         .await
@@ -1978,6 +2370,14 @@ async fn agent_control(
 }
 
 const LOGIN: &str = r#"<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SHPRD login</title><style>body{font:16px system-ui;background:#0f1115;color:#e6e8ee;display:grid;place-items:center;min-height:100dvh;margin:0}form{width:min(320px,85vw)}input,button{box-sizing:border-box;width:100%;padding:12px;margin-top:12px}p{min-height:24px}</style><form><h1>SHPRD</h1><label for="password">Password or token</label><input id="password" type="password" autocomplete="current-password" required><button>Log in</button><p role="alert"></p></form><script>document.querySelector('form').addEventListener('submit',async event=>{event.preventDefault();const error=document.querySelector('[role=alert]');try{const response=await fetch('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:document.querySelector('input').value})});if(response.ok){location.href='/'}else{error.textContent='Wrong password or token'}}catch{error.textContent='Connection failed. Try again.'}})</script></html>"#;
+
+#[test]
+fn image_url_fetch_requires_scoped_profiles_and_manager() {
+    assert!(!image_url_fetch_available(false, false));
+    assert!(!image_url_fetch_available(false, true));
+    assert!(!image_url_fetch_available(true, false));
+    assert!(image_url_fetch_available(true, true));
+}
 
 #[cfg(unix)]
 #[tokio::test]

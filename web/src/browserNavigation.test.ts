@@ -420,6 +420,19 @@ describe("store browser-local navigation", () => {
     });
   });
 
+  test("terminal exposes an accessible image picker", () => {
+    const previous = store.get();
+    __storeTesting.replaceState(browserState());
+    try {
+      const rendered = renderTerminalSnapshot();
+      expect(rendered).toContain('aria-label="Upload image to terminal"');
+      expect(rendered).toContain('type="file"');
+      expect(rendered).toContain('accept="image/*"');
+    } finally {
+      __storeTesting.replaceState(previous);
+    }
+  });
+
   test("empty, removed, paused, disconnected and failed targets do not spin", () => {
     const pending = { ...browserState(), layout: null };
     expect(terminalNavigationLoading(pending)).toBe(true);

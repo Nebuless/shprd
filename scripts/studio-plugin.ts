@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Thin Herdr plugin shim for Herdr Studio. Herdr invokes the verbs below
+// Thin SHPRD plugin shim for Herdr. Herdr invokes the verbs below
 // through herdr-plugin.toml actions; the verb names and their argv mapping
 // are a frozen contract because managed installs call the action set cached
 // at install time.
@@ -31,7 +31,9 @@ import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const BINARY_CANDIDATES =
-  process.platform === "win32" ? ["herdr-gui.exe", "herdr-gui"] : ["herdr-gui"];
+  process.platform === "win32"
+    ? ["shprd.exe", "shprd", "herdr-gui.exe", "herdr-gui"]
+    : ["shprd", "herdr-gui"];
 
 function binaryPath(): string | null {
   for (const name of BINARY_CANDIDATES) {
@@ -76,12 +78,12 @@ export const PLATFORM_ASSETS: Record<
   string,
   { asset: string; binary: string }
 > = {
-  "darwin-arm64": { asset: "herdr-gui-darwin-arm64", binary: "herdr-gui" },
-  "darwin-x64": { asset: "herdr-gui-darwin-x64", binary: "herdr-gui" },
-  "linux-arm64": { asset: "herdr-gui-linux-arm64", binary: "herdr-gui" },
-  "linux-x64": { asset: "herdr-gui-linux-x64", binary: "herdr-gui" },
-  "win32-arm64": { asset: "herdr-gui-windows-arm64", binary: "herdr-gui.exe" },
-  "win32-x64": { asset: "herdr-gui-windows-x64", binary: "herdr-gui.exe" },
+  "darwin-arm64": { asset: "shprd-darwin-arm64", binary: "shprd" },
+  "darwin-x64": { asset: "shprd-darwin-x64", binary: "shprd" },
+  "linux-arm64": { asset: "shprd-linux-arm64", binary: "shprd" },
+  "linux-x64": { asset: "shprd-linux-x64", binary: "shprd" },
+  "win32-arm64": { asset: "shprd-windows-arm64", binary: "shprd.exe" },
+  "win32-x64": { asset: "shprd-windows-x64", binary: "shprd.exe" },
 };
 
 const RELEASE_REPOSITORY = "Nebuless/herdr-studio";
@@ -180,9 +182,7 @@ function buildSource(): number {
 async function ensureBinary(): Promise<string | null> {
   const existing = binaryPath();
   if (existing) return existing;
-  console.error(
-    "studio-plugin: herdr-gui binary missing, downloading it first",
-  );
+  console.error("studio-plugin: SHPRD binary missing, downloading it first");
   if ((await downloadPrebuilt()) !== 0) return null;
   const downloaded = binaryPath();
   if (!downloaded) {
@@ -210,10 +210,13 @@ function configDir(): string {
   if (process.platform === "win32") {
     return join(
       process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"),
-      "herdr-gui",
+      "shprd",
     );
   }
-  return join(homedir(), ".config", "herdr-gui");
+  const shprdDir = join(homedir(), ".config", "shprd");
+  return existsSync(shprdDir)
+    ? shprdDir
+    : join(homedir(), ".config", "herdr-gui");
 }
 
 // Mirrors the server's service env parser: leading whitespace, an optional
@@ -241,7 +244,10 @@ export function readServiceEnv(
 }
 
 export function computeUrl(dir = configDir()): string {
-  const envFile = join(dir, "herdr-gui.env");
+  const envFile = join(
+    dir,
+    existsSync(join(dir, "shprd.env")) ? "shprd.env" : "herdr-gui.env",
+  );
   let host = "127.0.0.1";
   let port = "8787";
   if (existsSync(envFile)) {
@@ -268,7 +274,11 @@ export function computeUrl(dir = configDir()): string {
 }
 
 function printUrl(): number {
-  const envFile = join(configDir(), "herdr-gui.env");
+  const dir = configDir();
+  const envFile = join(
+    dir,
+    existsSync(join(dir, "shprd.env")) ? "shprd.env" : "herdr-gui.env",
+  );
   if (!existsSync(envFile)) {
     console.error(
       `studio-plugin: no service environment at ${envFile}, showing defaults`,
@@ -303,7 +313,7 @@ function statusText(): string {
 
 function renderPanel(message: string) {
   const lines = [
-    "Herdr Studio",
+    "SHPRD",
     "",
     `Status:  ${statusText()}`,
     `URL:     ${computeUrl()}`,

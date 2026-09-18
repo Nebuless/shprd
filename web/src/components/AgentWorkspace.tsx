@@ -8,10 +8,14 @@ import {
 } from "react";
 import {
   ArrowUp,
+  Clipboard,
+  ImagePlus,
+  Link,
   MessageSquare,
   RefreshCw,
   Square,
   Terminal,
+  X,
 } from "lucide-react";
 import {
   AgentWorkspaceClient,
@@ -20,6 +24,12 @@ import {
   type AgentSession,
   type AgentTransport,
 } from "../agentClient";
+import {
+  createEphemeralImageSlot,
+  getSafeImageSourceLabel,
+  readImageAttachment,
+  type ImageAttachment,
+} from "../agentImageAttachment";
 import { bridge, type ConnectionClient } from "../api";
 import { MarkdownPreview } from "./markdown";
 import "./AgentWorkspace.css";
@@ -36,6 +46,7 @@ export function ConnectedAgentWorkspace({
   client: ConnectionClient;
   onOpenTerminal: AgentWorkspaceProps["onOpenTerminal"];
 }) {
+  const canFetchImageUrl = bridge.hello?.capabilities.image_url_fetch === true;
   const transport = useMemo(
     () =>
       createAgentTransport(
@@ -50,8 +61,9 @@ export function ConnectedAgentWorkspace({
               });
           }),
         (listener) => bridge.onStatus(listener),
+        canFetchImageUrl,
       ),
-    [client],
+    [canFetchImageUrl, client],
   );
   return (
     <AgentWorkspace transport={transport} onOpenTerminal={onOpenTerminal} />
@@ -127,12 +139,195 @@ export function AgentWorkspace({
     client.getSnapshot,
   );
   const id = useId();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const attachmentSlot = useRef(createEphemeralImageSlot());
+  type AttachedImage = {
+    image: ImageAttachment;
+    preview: string;
+    label: string;
+    owner: { sessionId: string; scopeKey: string };
+  };
+  const [attachment, setAttachment] = useState<AttachedImage | null>(null);
+  const attachmentRef = useRef<AttachedImage | null>(null);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
+  const [attachmentOpen, setAttachmentOpen] = useState(false);
+  const [urlEntry, setUrlEntry] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [failedImageSource, setFailedImageSource] = useState<
+    "clipboard" | "url" | null
+  >(null);
+  const [imageStatus, setImageStatus] = useState("");
+  const [imagePending, setImagePending] = useState(false);
+  const imageAttempt = useRef(0);
   const scroll = useRef<HTMLDivElement>(null);
   const follow = useRef(true);
   const session = state.sessions.find((s) => s.id === state.selectedId) ?? null;
   const draft = state.selectedId ? (state.drafts[state.selectedId] ?? "") : "";
   const usable = state.connected && Boolean(session?.connected);
+  const imageSupported = usable && session?.capabilities.image_prompt === true;
+  const imageUrlSupported = imageSupported && transport.canFetchImageUrl;
+  attachmentRef.current = attachment;
+  const imageOwner = useRef<{
+    id: string | null;
+    scopeKey: string;
+    supported: boolean;
+  }>({
+    id: state.selectedId,
+    scopeKey: transport.scopeKey,
+    supported: imageSupported,
+  });
+  imageOwner.current = {
+    id: state.selectedId,
+    scopeKey: transport.scopeKey,
+    supported: imageSupported,
+  };
+  const ownsImageAttempt = (
+    attempt: number,
+    owner: string | null,
+    scopeKey: string,
+  ) =>
+    imageAttempt.current === attempt &&
+    owner !== null &&
+    imageOwner.current.id === owner &&
+    imageOwner.current.scopeKey === scopeKey &&
+    imageOwner.current.supported;
+  const clearAttachment = (preview?: string) => {
+    if (preview && attachmentRef.current?.preview !== preview) return;
+    imageAttempt.current += 1;
+    attachmentSlot.current.remove();
+    setAttachment(null);
+    setImagePending(false);
+    setImageStatus("");
+    setImageUrl("");
+    setFailedImageSource(null);
+  };
+  const uploadImageUrl = async () => {
+    const url = imageUrl.trim();
+    if (!url) return;
+    const owner = session?.id ?? null;
+    const scopeKey = transport.scopeKey;
+    const attempt = ++imageAttempt.current;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "https:")
+        throw new Error("Use a public HTTPS image URL.");
+      setImagePending(true);
+      setImageStatus("Fetching image URL...");
+      const blob = await transport.fetchImage(url);
+      await selectAttachment(blob, url, owner, scopeKey, attempt, "url");
+    } catch (error) {
+      if (!ownsImageAttempt(attempt, owner, scopeKey)) return;
+      setFailedImageSource("url");
+      setImageStatus(
+        error instanceof Error ? error.message : "Could not fetch image URL.",
+      );
+      menuTrigger.current?.focus();
+    } finally {
+      if (ownsImageAttempt(attempt, owner, scopeKey)) setImagePending(false);
+    }
+  };
+  const openFilePicker = () => {
+    imageAttempt.current += 1;
+    setImagePending(false);
+    setAttachmentOpen(false);
+    const restoreFocus = () => menuTrigger.current?.focus();
+    window.addEventListener("focus", restoreFocus, { once: true });
+    fileInput.current?.click();
+  };
+  const cancelImageUrl = () => {
+    imageAttempt.current += 1;
+    setImagePending(false);
+    setUrlEntry(false);
+    setFailedImageSource(null);
+    setImageStatus("");
+    menuTrigger.current?.focus();
+  };
+  const readClipboardImage = async () => {
+    const owner = session?.id ?? null;
+    const scopeKey = transport.scopeKey;
+    const attempt = ++imageAttempt.current;
+    setImagePending(true);
+    setImageStatus("Reading clipboard image...");
+    try {
+      const items = await navigator.clipboard.read();
+      const item = items
+        .flatMap((entry) => entry.types.map((type) => ({ entry, type })))
+        .find(({ type }) => type.startsWith("image/"));
+      if (!item) throw new Error("Clipboard has no readable image.");
+      await selectAttachment(
+        await item.entry.getType(item.type),
+        "Clipboard image",
+        owner,
+        scopeKey,
+        attempt,
+        "clipboard",
+      );
+    } catch (error) {
+      if (!ownsImageAttempt(attempt, owner, scopeKey)) return;
+      setFailedImageSource("clipboard");
+      setImageStatus(
+        error instanceof DOMException && error.name === "NotAllowedError"
+          ? "Clipboard permission was denied."
+          : error instanceof Error &&
+              error.message === "Clipboard has no readable image."
+            ? error.message
+            : "Clipboard image access is unavailable.",
+      );
+      menuTrigger.current?.focus();
+    } finally {
+      if (ownsImageAttempt(attempt, owner, scopeKey)) setImagePending(false);
+    }
+  };
+  const selectAttachment = async (
+    blob: Blob,
+    label: string,
+    owner = session?.id ?? null,
+    scopeKey = transport.scopeKey,
+    attempt?: number,
+    source?: "clipboard" | "url",
+  ) => {
+    const imageAttemptId = attempt ?? ++imageAttempt.current;
+    setImagePending(true);
+    setImageStatus("Preparing image...");
+    try {
+      const image = await readImageAttachment(blob);
+      if (!owner || !ownsImageAttempt(imageAttemptId, owner, scopeKey)) return;
+      const preview = attachmentSlot.current.set(URL.createObjectURL(blob));
+      setAttachment({
+        image,
+        preview,
+        label: getSafeImageSourceLabel(label),
+        owner: { sessionId: owner, scopeKey },
+      });
+      setImageStatus("Image ready.");
+      setFailedImageSource(null);
+      setAttachmentOpen(false);
+      setUrlEntry(false);
+      menuTrigger.current?.focus();
+    } catch (error) {
+      if (!ownsImageAttempt(imageAttemptId, owner, scopeKey)) return;
+      if (source) setFailedImageSource(source);
+      setImageStatus(
+        error instanceof Error ? error.message : "Could not prepare image",
+      );
+      menuTrigger.current?.focus();
+    } finally {
+      if (ownsImageAttempt(imageAttemptId, owner, scopeKey))
+        setImagePending(false);
+    }
+  };
   useEffect(() => client.start(transport), [client, transport]);
+  useEffect(() => {
+    clearAttachment();
+    // Selection, disconnect, and capability loss invalidate image ownership.
+  }, [
+    state.selectedId,
+    state.connected,
+    session?.connected,
+    imageSupported,
+    transport.scopeKey,
+  ]);
+  useEffect(() => () => attachmentSlot.current.remove(), []);
   useEffect(() => {
     void state.messages;
     if (follow.current && scroll.current)
@@ -305,18 +500,69 @@ export function AgentWorkspace({
           className="agent-workspace-composer"
           onSubmit={(event) => {
             event.preventDefault();
-            void client.command({ type: "prompt", message: draft });
+            if (imagePending) return;
+            void (async () => {
+              const sentAttachment = attachment;
+              const currentAttachment =
+                sentAttachment &&
+                sentAttachment.owner.sessionId === session?.id &&
+                sentAttachment.owner.scopeKey === transport.scopeKey
+                  ? sentAttachment
+                  : null;
+              if (sentAttachment && !currentAttachment) {
+                clearAttachment(sentAttachment.preview);
+                setImageStatus("Image attachment expired. Add it again.");
+                return;
+              }
+              const accepted = await client.command({
+                type: "prompt",
+                message: draft,
+                ...(currentAttachment
+                  ? { image: currentAttachment.image }
+                  : {}),
+              });
+              if (accepted && currentAttachment)
+                clearAttachment(currentAttachment.preview);
+            })();
           }}
         >
           <div className="agent-workspace-status" role="status">
-            {!usable
-              ? "Session offline. Draft retained; reconnect to send."
-              : state.pending
-                ? "Sending command..."
-                : session?.busy
-                  ? "Agent working..."
-                  : "Ready"}
+            {imageStatus ||
+              (!usable
+                ? "Session offline. Draft retained; reconnect to send."
+                : state.pending
+                  ? "Sending command..."
+                  : session?.busy
+                    ? "Agent working..."
+                    : "Ready")}
           </div>
+          {attachment ? (
+            <div className="agent-workspace-image-preview">
+              <img src={attachment.preview} alt={attachment.label} />
+              <span>{attachment.label}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  clearAttachment();
+                  menuTrigger.current?.focus();
+                }}
+                aria-label="Remove image"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : null}
+          <input
+            ref={fileInput}
+            type="file"
+            className="agent-workspace-sr-only"
+            accept="image/png,image/jpeg,image/gif,image/webp,image/bmp,image/x-icon,image/vnd.microsoft.icon,image/avif"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = "";
+              if (file) void selectAttachment(file, file.name);
+            }}
+          />
           <label className="agent-workspace-sr-only" htmlFor={id + "-message"}>
             Message agent
           </label>
@@ -380,6 +626,115 @@ export function AgentWorkspace({
                 ))}
               </select>
             </label>
+            {imageSupported ? (
+              <div className="agent-workspace-image-actions">
+                <button
+                  type="button"
+                  ref={menuTrigger}
+                  aria-expanded={attachmentOpen}
+                  onClick={() => {
+                    setAttachmentOpen((open) => !open);
+                    setUrlEntry(false);
+                  }}
+                >
+                  <ImagePlus size={16} /> Image
+                </button>
+                {attachmentOpen ? (
+                  <div
+                    className="agent-workspace-image-menu"
+                    onKeyDown={(event) => {
+                      if (event.key !== "Escape") return;
+                      event.preventDefault();
+                      setAttachmentOpen(false);
+                      menuTrigger.current?.focus();
+                    }}
+                  >
+                    <button type="button" onClick={openFilePicker}>
+                      <ImagePlus size={14} /> Pick file
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachmentOpen(false);
+                        void readClipboardImage();
+                      }}
+                    >
+                      <Clipboard size={14} /> Paste image
+                    </button>
+                    {imageUrlSupported ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttachmentOpen(false);
+                          setUrlEntry(true);
+                        }}
+                      >
+                        <Link size={14} /> Paste URL
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+                {urlEntry && imageUrlSupported ? (
+                  <label className="agent-workspace-image-url">
+                    <span>HTTPS image URL</span>
+                    <input
+                      type="url"
+                      autoFocus
+                      value={imageUrl}
+                      placeholder="https://example.com/image.png"
+                      onChange={(event) =>
+                        setImageUrl(event.currentTarget.value)
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          cancelImageUrl();
+                          return;
+                        }
+                        if (event.key !== "Enter") return;
+                        event.preventDefault();
+                        void uploadImageUrl();
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={imagePending || !imageUrl.trim()}
+                      onClick={() => void uploadImageUrl()}
+                    >
+                      Upload
+                    </button>
+                    <button type="button" onClick={cancelImageUrl}>
+                      Cancel
+                    </button>
+                  </label>
+                ) : null}
+              </div>
+            ) : null}
+            {failedImageSource ? (
+              <div className="agent-workspace-image-recovery">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (failedImageSource === "url") void uploadImageUrl();
+                    else void readClipboardImage();
+                  }}
+                >
+                  Retry {failedImageSource === "url" ? "URL" : "clipboard"}
+                </button>
+                <button type="button" onClick={openFilePicker}>
+                  Replace image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearAttachment();
+                    menuTrigger.current?.focus();
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : null}
             <span className="agent-workspace-shortcut">Ctrl / Cmd + Enter</span>
             {session?.busy || state.pending ? (
               <button
@@ -394,7 +749,9 @@ export function AgentWorkspace({
               <button
                 type="submit"
                 className="agent-workspace-send"
-                disabled={!usable || state.loading || !draft.trim()}
+                disabled={
+                  !usable || state.loading || imagePending || !draft.trim()
+                }
               >
                 <ArrowUp size={16} />
                 Send

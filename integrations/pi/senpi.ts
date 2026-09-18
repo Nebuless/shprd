@@ -3,6 +3,7 @@ import { createAttachment } from "./attachment";
 
 export default function attachmentExtension(pi: ExtensionAPI) {
   const attachment = createAttachment("senpi", {
+    imagePrompt: false,
     prompt: (message) =>
       pi.sendUserMessage(message, {
         deliverAs: "followUp",

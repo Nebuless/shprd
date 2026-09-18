@@ -11,7 +11,7 @@ use std::{
 };
 use tokio::{
     fs,
-    io::{AsyncRead, AsyncReadExt},
+    io::{AsyncRead, AsyncReadExt, AsyncWriteExt},
 };
 
 #[derive(Debug)]
@@ -300,6 +300,93 @@ pub(crate) fn filename(params: &Value) -> Result<String> {
     }
     Ok(name.to_owned())
 }
+
+pub(crate) async fn upload_terminal_image<R, F>(
+    host: &HostConfig,
+    extension: &str,
+    body: &mut R,
+    current: &F,
+) -> Result<String>
+where
+    R: AsyncRead + Unpin,
+    F: Fn() -> bool + Sync,
+{
+    let extension: String = extension
+        .bytes()
+        .filter(u8::is_ascii_alphanumeric)
+        .take(16)
+        .map(|byte| char::from(byte.to_ascii_lowercase()))
+        .collect();
+    let extension = if extension.is_empty() {
+        "png"
+    } else {
+        &extension
+    };
+    let temp = tempfile::Builder::new()
+        .prefix("herdr-img-")
+        .suffix(&format!(".{extension}"))
+        .tempfile_in(std::env::temp_dir())?;
+    let mut writer = fs::File::from_std(temp.reopen()?);
+    let mut size = 0_usize;
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        if !current() {
+            return Err(Error::Stale("connection generation changed".into()));
+        }
+        let count = body.read(&mut buffer).await?;
+        if count == 0 {
+            break;
+        }
+        size = size
+            .checked_add(count)
+            .ok_or_else(|| Error::Invalid("image too large (>25MB)".into()))?;
+        if size > crate::IMAGE_UPLOAD_MAX_BYTES {
+            return Err(Error::Invalid("image too large (>25MB)".into()));
+        }
+        writer.write_all(&buffer[..count]).await?;
+    }
+    if size == 0 {
+        return Err(Error::Invalid("empty body".into()));
+    }
+    writer.sync_all().await?;
+    if !current() {
+        return Err(Error::Stale("connection generation changed".into()));
+    }
+    match host {
+        HostConfig::Local => temp
+            .into_temp_path()
+            .keep()
+            .map_err(|error| Error::Io(error.error))
+            .map(|path| path.to_string_lossy().into_owned()),
+        HostConfig::Ssh { .. } => {
+            let mut reader = fs::File::from_std(temp.reopen()?);
+            let output = process::stream_input(
+                host,
+                &[
+                    "sh",
+                    "-c",
+                    "set -eu\numask 077\ntmp=$(mktemp /tmp/herdr-img-XXXXXX)\ntrap 'rm -f -- \"$tmp\"' EXIT HUP INT TERM\ncat > \"$tmp\"\ntarget=\"$tmp.$1\"\nmv -- \"$tmp\" \"$target\"\ntrap - EXIT HUP INT TERM\nprintf '%s' \"$target\"",
+                    "shprd",
+                    extension,
+                ],
+                &mut reader,
+                current,
+            )
+            .await?
+            .checked()?;
+            if !current() {
+                return Err(Error::Stale("connection generation changed".into()));
+            }
+            let output = output.text();
+            let path = output.trim();
+            if !path.starts_with("/tmp/herdr-img-") {
+                return Err(Error::Process("invalid image upload response".into()));
+            }
+            Ok(path.to_owned())
+        }
+    }
+}
+
 pub(crate) async fn upload<R: AsyncRead + Unpin, F: Fn() -> bool + Sync>(
     host: &HostConfig,
     checkout: &Checkout,

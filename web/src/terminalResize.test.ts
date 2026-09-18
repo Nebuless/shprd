@@ -5,6 +5,7 @@ import {
   clearTerminalRelayViewports,
   forgetTerminalRelayViewportsExcept,
   rememberTerminalRelayViewport,
+  terminalAttachRequest,
   terminalAttachWatchdogMs,
   terminalEndpointViewportSize,
   terminalRelayViewportForTab,
@@ -282,6 +283,30 @@ describe("terminal relay viewport cache", () => {
       rows: 47,
     });
     clearTerminalRelayViewports();
+  });
+});
+
+describe("terminalAttachRequest", () => {
+  test("carries pane identity so native hosts can select endpoint transport", () => {
+    expect(
+      terminalAttachRequest(
+        "term-1",
+        "workspace:panel",
+        { cols: 80, rows: 24 },
+        { cols: 160, rows: 48 },
+        { cols: 170, rows: 50 },
+      ),
+    ).toEqual({
+      terminal_id: "term-1",
+      pane_id: "workspace:panel",
+      cols: 80,
+      rows: 24,
+      surface_cols: 160,
+      surface_rows: 48,
+      relay_active: true,
+      relay_cols: 170,
+      relay_rows: 50,
+    });
   });
 });
 

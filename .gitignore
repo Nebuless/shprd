@@ -26,4 +26,6 @@ server/public
 server/src/public-files.gen.ts
 server/herdr-gui
 server/herdr-gui-*
+server/shprd
+server/shprd-*
 server/*.bun-build

@@ -1,5 +1,6 @@
 import type { ConnectionClient } from "./api";
 import { connectionHttpPath } from "./connectionHttp";
+import { terminalPasteRequest } from "./terminalPaste";
 
 /**
  * Uploads an image through the connection's HTTP endpoint and returns the
@@ -64,4 +65,15 @@ export async function uploadTerminalImage(
     throw new Error("image upload response did not include a path");
   }
   return payload.path;
+}
+
+/** Uploads an image then sends returned host path to one pane. */
+export async function uploadTerminalImageToPane(
+  client: ConnectionClient,
+  file: File,
+  paneId: string,
+): Promise<void> {
+  const path = await uploadTerminalImage(client, file);
+  const request = terminalPasteRequest(paneId, path);
+  await client.call(request.method, request.params);
 }

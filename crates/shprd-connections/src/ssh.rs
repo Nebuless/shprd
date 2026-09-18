@@ -92,7 +92,7 @@ pub fn classify_ssh_failure(exit_code: i32, stderr: &str) -> SshFailure {
         (
             SshFailureKind::HostKey,
             false,
-            "SSH host-key verification failed; verify the host outside Herdr Studio".into(),
+            "SSH host-key verification failed; verify the host outside SHPRD".into(),
         )
     } else if [
         "permission denied",

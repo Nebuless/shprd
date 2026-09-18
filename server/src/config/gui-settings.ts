@@ -43,7 +43,7 @@ let temporaryFileSequence = 0;
 
 export function guiSettingsPath(): string {
   return join(
-    process.env.SHPRD_CONFIG_DIR || join(homedir(), ".config", "herdr-gui"),
+    process.env.SHPRD_CONFIG_DIR || join(homedir(), ".config", "shprd"),
     "settings.json",
   );
 }

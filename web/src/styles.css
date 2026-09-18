@@ -1358,6 +1358,36 @@ textarea:focus {
   border-radius: 7px;
   background: var(--input-bg);
 }
+.config-shell-host {
+  display: grid;
+  gap: 6px;
+  margin: 6px 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.config-shell-host input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+}
+.config-shell-actions {
+  display: flex;
+  gap: 6px;
+  margin: 6px 8px;
+}
+.config-shell-actions button {
+  flex: 1;
+}
+.config-shell-status {
+  margin: 6px 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
 .config-row {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr);
@@ -8582,6 +8612,9 @@ textarea:focus {
     padding: 8px 0;
   }
   .config-title,
+  .config-shell-host,
+  .config-shell-actions,
+  .config-shell-status,
   .config-preference-row,
   .config-runtime-row,
   .config-details-toggle,

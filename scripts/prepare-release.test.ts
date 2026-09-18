@@ -19,7 +19,7 @@ const PACKAGE_JSON = `{
 `;
 
 const PLUGIN_MANIFEST = `id = "herdr.studio"
-name = "Herdr Studio"
+name = "SHPRD"
 version = "0.4.1"
 min_herdr_version = "0.7.2"
 `;

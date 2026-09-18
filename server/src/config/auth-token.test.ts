@@ -11,6 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { defaultAuthTokenPath, loadOrCreateAuthToken } from "./auth-token";
+import { runServiceCommand } from "./service-manager";
 
 const tempDirs: string[] = [];
 
@@ -25,6 +26,7 @@ function tempAuthTokenPath(homeDir = tempHome()): string {
     homeDir,
     process.platform,
     join(homeDir, "AppData", "Roaming"),
+    "",
   );
 }
 
@@ -35,11 +37,41 @@ afterEach(() => {
 });
 
 describe("generated authentication token", () => {
+  test("prints the active token and its path through the CLI", () => {
+    const homeDir = tempHome();
+    const tokenPath = defaultAuthTokenPath(homeDir, "linux", undefined, "");
+    const token = loadOrCreateAuthToken(tokenPath);
+    const logs: string[] = [];
+    const runtime = {
+      platform: "linux",
+      homeDir,
+      execPath: "/opt/shprd-test/bin/shprd",
+      argv: ["/opt/shprd-test/bin/shprd", "auth", "token", "show"],
+    };
+
+    expect(
+      runServiceCommand(["auth", "token", "show"], {
+        runtime,
+        log: (line) => logs.push(line),
+      }),
+    ).toBe(0);
+    expect(logs).toEqual([token]);
+
+    logs.splice(0);
+    expect(
+      runServiceCommand(["auth", "token", "path"], {
+        runtime,
+        log: (line) => logs.push(line),
+      }),
+    ).toBe(0);
+    expect(logs).toEqual([tokenPath]);
+  });
+
   test("uses APPDATA for the Windows token", () => {
     const home = join("C:", "Users", "tester");
     const appData = join(home, "AppData", "Roaming");
-    expect(defaultAuthTokenPath(home, "win32", appData)).toBe(
-      join(appData, "herdr-gui", "auth-token"),
+    expect(defaultAuthTokenPath(home, "win32", appData, "")).toBe(
+      join(appData, "shprd", "auth-token"),
     );
   });
 

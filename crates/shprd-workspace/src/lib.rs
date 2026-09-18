@@ -13,6 +13,7 @@ pub const PREVIEW_MAX_BYTES: usize = 512 * 1024;
 pub const PREVIEW_IMAGE_MAX_BYTES: usize = 5 * 1024 * 1024;
 pub const GIT_DIFF_MAX_BYTES: usize = 512 * 1024;
 pub const LIST_LIMIT: usize = 1000;
+pub const IMAGE_UPLOAD_MAX_BYTES: usize = 25 * 1024 * 1024;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -205,6 +206,21 @@ impl WorkspaceService {
             .retain(|(_, workspace, _)| workspace != workspace_id);
     }
 }
+
+/// Stores an image in the connection host's temporary directory without terminal input.
+pub async fn upload_terminal_image<R, F>(
+    host: &HostConfig,
+    extension: &str,
+    body: &mut R,
+    current: F,
+) -> Result<String>
+where
+    R: AsyncRead + Unpin,
+    F: Fn() -> bool + Send + Sync,
+{
+    files::upload_terminal_image(host, extension, body, &current).await
+}
+
 fn validate_request(checkout: &Checkout, params: &Value) -> Result<()> {
     if checkout.workspace_id.is_empty() || checkout.path.is_empty() || checkout.path.contains('\0')
     {
@@ -413,6 +429,26 @@ mod safety_tests {
             .expect("fake SSH permissions");
         let host = HostConfig::test_ssh("test-host", path);
         (dir, host)
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn ssh_terminal_image_upload_streams_to_temp_path() {
+        let (fake_dir, host) = fake_ssh();
+        let mut body = std::io::Cursor::new(b"terminal image".to_vec());
+
+        let path = upload_terminal_image(&host, "PNG", &mut body, || true)
+            .await
+            .expect("remote image upload");
+
+        assert!(path.starts_with("/tmp/herdr-img-"));
+        assert!(path.ends_with(".png"));
+        assert_eq!(
+            std::fs::read(&path).expect("remote image content"),
+            b"terminal image"
+        );
+        std::fs::remove_file(&path).expect("remote image cleanup");
+        drop(fake_dir);
     }
 
     #[cfg(unix)]

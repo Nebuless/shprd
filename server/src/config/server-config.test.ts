@@ -3,7 +3,9 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   herdrConfigDir,
+  isTailnetIPv4,
   nativeSocketPath,
+  resolveAuthRequired,
   resolveServerLogLevel,
 } from "./server-config";
 
@@ -22,6 +24,18 @@ describe("herdrConfigDir", () => {
   test("uses the XDG-style config dir on other platforms", () => {
     expect(herdrConfigDir("darwin")).toBe(join(homedir(), ".config", "herdr"));
     expect(herdrConfigDir("linux")).toBe(join(homedir(), ".config", "herdr"));
+  });
+});
+
+describe("resolveAuthRequired", () => {
+  test("allows ACL-only auth only on Tailnet IPv4", () => {
+    expect(isTailnetIPv4("100.85.194.64")).toBe(true);
+    expect(isTailnetIPv4("100.128.0.1")).toBe(false);
+    expect(resolveAuthRequired("100.85.194.64", true)).toBe(false);
+    expect(resolveAuthRequired("100.85.194.64", false)).toBe(true);
+    expect(() => resolveAuthRequired("0.0.0.0", true)).toThrow(
+      "requires HOST to be a Tailnet IPv4",
+    );
   });
 });
 

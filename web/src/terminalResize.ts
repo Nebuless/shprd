@@ -19,6 +19,28 @@ export type TerminalRelayLayout = {
 
 export const TERMINAL_RESIZE_DEBOUNCE_MS = 90;
 
+export function terminalAttachRequest(
+  terminalId: string,
+  paneId: string,
+  size: TerminalSize,
+  surfaceSize: TerminalSize | null,
+  relaySize: TerminalSize | null,
+) {
+  return {
+    terminal_id: terminalId,
+    pane_id: paneId,
+    cols: size.cols,
+    rows: size.rows,
+    ...(surfaceSize
+      ? { surface_cols: surfaceSize.cols, surface_rows: surfaceSize.rows }
+      : {}),
+    relay_active: relaySize !== null,
+    ...(relaySize
+      ? { relay_cols: relaySize.cols, relay_rows: relaySize.rows }
+      : {}),
+  };
+}
+
 const relayViewportByTab = new Map<string, TerminalSize>();
 
 function relayViewportKey(

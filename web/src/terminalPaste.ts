@@ -95,6 +95,13 @@ export function terminalPasteInputText(
   return textareaValue.slice(prefix.length, insertedEnd) || null;
 }
 
+export function terminalPasteTargetsTerminal(
+  targetInTerminal: boolean,
+  activeInTerminal: boolean,
+) {
+  return targetInTerminal || activeInTerminal;
+}
+
 export function prepareTerminalPasteText(text: string) {
   // Match xterm's paste normalization while letting Herdr apply bracketed
   // paste from the authoritative PTY mode instead of the browser's stale copy.

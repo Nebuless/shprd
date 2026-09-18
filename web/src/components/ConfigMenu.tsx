@@ -32,6 +32,11 @@ import {
   UI_SCALE_STEP,
 } from "../appearance";
 import { connectionHttpPath } from "../connectionHttp";
+import {
+  requestShellControl,
+  shellHostChangesCurrent,
+  shellHostUrl,
+} from "../shellBridge";
 import { shallowEqual, store, useStoreSelector } from "../store";
 import { useConnectionClient } from "../useConnectionClient";
 import {
@@ -135,6 +140,9 @@ export function ConfigMenu({
   const [terminalThemesOpen, setTerminalThemesOpen] = useState(false);
   const [autoSyncOpen, setAutoSyncOpen] = useState(false);
   const [connectionDetailsOpen, setConnectionDetailsOpen] = useState(false);
+  const [shellHost, setShellHost] = useState(() => shellHostUrl() ?? "");
+  const [shellBusy, setShellBusy] = useState(false);
+  const [shellStatus, setShellStatus] = useState("");
   const [health, setHealth] = useState<HealthInfo | null>(null);
   const [herdrInfo, setHerdrInfo] = useState<HerdrInfo | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -221,7 +229,7 @@ export function ConfigMenu({
           >
             <div className="config-summary">
               <div>
-                <strong>Herdr Studio</strong>
+                <strong>SHPRD</strong>
                 <span>Version {APP_VERSION}</span>
               </div>
               <span
@@ -544,6 +552,90 @@ export function ConfigMenu({
                 disabled={s.updateInstalling}
               />
             </div>
+
+            {shellHostUrl() ? (
+              <div className="config-section">
+                <div className="config-title">Shell</div>
+                <label className="config-shell-host">
+                  <span>Host URL</span>
+                  <input
+                    aria-label="Host URL"
+                    type="url"
+                    value={shellHost}
+                    placeholder="https://your-host.example"
+                    autoComplete="off"
+                    spellCheck={false}
+                    disabled={shellBusy}
+                    onChange={(event) => setShellHost(event.target.value)}
+                  />
+                </label>
+                <div className="config-shell-actions">
+                  <button
+                    type="button"
+                    disabled={shellBusy}
+                    onClick={() => {
+                      if (
+                        shellHostChangesCurrent(shellHost) &&
+                        !window.confirm(
+                          "Changing hosts reloads the workspace. Unsaved drafts will be lost. Continue?",
+                        )
+                      ) {
+                        return;
+                      }
+                      setShellBusy(true);
+                      setShellStatus("");
+                      void requestShellControl("host.open", shellHost)
+                        .then((reply) => {
+                          if (reply.type !== "host.opened") {
+                            throw new Error(
+                              "Enter an HTTP(S) origin without credentials or a path.",
+                            );
+                          }
+                          setShellHost(reply.host);
+                          setShellStatus("Host opened. Workspace reloading.");
+                        })
+                        .catch((error: unknown) =>
+                          setShellStatus(
+                            error instanceof Error
+                              ? error.message
+                              : "Shell host update failed",
+                          ),
+                        )
+                        .finally(() => setShellBusy(false));
+                    }}
+                  >
+                    Open host
+                  </button>
+                  <button
+                    type="button"
+                    disabled={shellBusy}
+                    onClick={() => {
+                      setShellBusy(true);
+                      setShellStatus("");
+                      void requestShellControl("bridge.check")
+                        .then((reply) => {
+                          setShellStatus(
+                            reply.type === "bridge.checked"
+                              ? "React bridge connected. Workspace state preserved."
+                              : "React bridge unavailable. Check host reachability and shell bridge integration.",
+                          );
+                        })
+                        .catch(() =>
+                          setShellStatus(
+                            "React bridge unavailable. Check host reachability and shell bridge integration.",
+                          ),
+                        )
+                        .finally(() => setShellBusy(false));
+                    }}
+                  >
+                    Check bridge
+                  </button>
+                </div>
+                {shellStatus ? (
+                  <p className="config-shell-status">{shellStatus}</p>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="config-section">
               <div className="config-title">Runtime</div>

@@ -1,3 +1,4 @@
+use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde_json::json;
 use shprd_agent::{Attachment, Command};
 
@@ -25,12 +26,31 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .request(
             &Command::Prompt {
                 message: "fixture-only".into(),
+                image: None,
             },
             |_| {},
         )
         .await?;
     if result["accepted"] != true {
         return Err("prompt not admitted".into());
+    }
+    if id.starts_with("atomic:") {
+        let image_result = attachment
+            .request(
+                &Command::Prompt {
+                    message: "fixture-image".into(),
+                    image: Some(shprd_agent::Image {
+                        mime_type: "image/png".into(),
+                        data: STANDARD
+                            .encode(include_bytes!("../../../site/assets/herdr-icon-48.png")),
+                    }),
+                },
+                |_| {},
+            )
+            .await?;
+        if image_result["accepted"] != true {
+            return Err("image prompt not admitted".into());
+        }
     }
     let mut events = Vec::new();
     attachment

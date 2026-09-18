@@ -47,12 +47,13 @@ function credentialBearingUpdateBaseUrl(): string {
 function updateManifest(
   version: string,
   platform: string,
-  archive = `herdr-gui-${platform}.tar.xz`,
+  name: "shprd" | "herdr-gui" = "shprd",
+  archive = `${name}-${platform}.tar.xz`,
   sha256 = updateSha256,
 ): string {
   return JSON.stringify({
     schema: 1,
-    name: "herdr-gui",
+    name,
     version,
     platform,
     archive,
@@ -79,8 +80,14 @@ describe("update helpers", () => {
     expect(UPDATE_HTTP_IDLE_TIMEOUT_SECONDS).toBeLessThanOrEqual(255);
   });
 
-  test("parses VERSION files", () => {
+  test("parses current and legacy VERSION files", () => {
+    expect(parseUpdateVersionFile("shprd 0.2.6 linux-x64\n")).toEqual({
+      name: "shprd",
+      version: "0.2.6",
+      platform: "linux-x64",
+    });
     expect(parseUpdateVersionFile("herdr-gui 0.2.6 linux-x64\n")).toEqual({
+      name: "herdr-gui",
       version: "0.2.6",
       platform: "linux-x64",
     });
@@ -95,11 +102,17 @@ describe("update helpers", () => {
   test("parses bounded update manifests and binds checksum filenames", () => {
     expect(parseUpdateManifest(updateManifest("0.2.17", "linux-x64"))).toEqual({
       schema: 1,
-      name: "herdr-gui",
+      name: "shprd",
       version: "0.2.17",
       platform: "linux-x64",
-      archive: "herdr-gui-linux-x64.tar.xz",
+      archive: "shprd-linux-x64.tar.xz",
       sha256: updateSha256,
+    });
+    expect(
+      parseUpdateManifest(updateManifest("0.2.16", "linux-x64", "herdr-gui")),
+    ).toMatchObject({
+      name: "herdr-gui",
+      archive: "herdr-gui-linux-x64.tar.xz",
     });
     expect(() => parseUpdateManifest("{}")).toThrow("invalid update manifest");
     expect(() =>
@@ -160,27 +173,27 @@ describe("update helpers", () => {
   test("maps only published runtime architectures to update packages", () => {
     expect(resolveUpdateTarget("linux", "x64")).toEqual({
       platform: "linux-x64",
-      packageDir: "herdr-gui-linux-x64",
-      archiveName: "herdr-gui-linux-x64.tar.xz",
-      manifestName: "herdr-gui-linux-x64.update.json",
+      packageDir: "shprd-linux-x64",
+      archiveName: "shprd-linux-x64.tar.xz",
+      manifestName: "shprd-linux-x64.update.json",
     });
     expect(resolveUpdateTarget("darwin", "arm64")).toEqual({
       platform: "darwin-arm64",
-      packageDir: "herdr-gui-darwin-arm64",
-      archiveName: "herdr-gui-darwin-arm64.tar.xz",
-      manifestName: "herdr-gui-darwin-arm64.update.json",
+      packageDir: "shprd-darwin-arm64",
+      archiveName: "shprd-darwin-arm64.tar.xz",
+      manifestName: "shprd-darwin-arm64.update.json",
     });
     expect(resolveUpdateTarget("darwin", "x64")).toEqual({
       platform: "darwin-x64",
-      packageDir: "herdr-gui-darwin-x64",
-      archiveName: "herdr-gui-darwin-x64.tar.xz",
-      manifestName: "herdr-gui-darwin-x64.update.json",
+      packageDir: "shprd-darwin-x64",
+      archiveName: "shprd-darwin-x64.tar.xz",
+      manifestName: "shprd-darwin-x64.update.json",
     });
     expect(resolveUpdateTarget("linux", "arm64")).toEqual({
       platform: "linux-arm64",
-      packageDir: "herdr-gui-linux-arm64",
-      archiveName: "herdr-gui-linux-arm64.tar.xz",
-      manifestName: "herdr-gui-linux-arm64.update.json",
+      packageDir: "shprd-linux-arm64",
+      archiveName: "shprd-linux-arm64.tar.xz",
+      manifestName: "shprd-linux-arm64.update.json",
     });
     expect(resolveUpdateTarget("win32", "x64")).toBeNull();
   });
@@ -236,11 +249,11 @@ describe("update helpers", () => {
       can_auto_update: true,
       platform: "darwin-arm64",
       source_url:
-        "https://github.com/Nebuless/herdr-studio/releases/latest/download/herdr-gui-darwin-arm64.tar.xz",
+        "https://github.com/Nebuless/herdr-studio/releases/latest/download/shprd-darwin-arm64.tar.xz",
     });
     expect(commands).toHaveLength(1);
     expect(commands[0]).toContain("--max-filesize 4096");
-    expect(commands[0]).toContain("herdr-gui-darwin-arm64.update.json");
+    expect(commands[0]).toContain("shprd-darwin-arm64.update.json");
     expect(commands[0]).not.toContain(".tar.xz");
     expect(commands[0]).not.toContain("herdr-gui-linux-x64");
   });
@@ -269,9 +282,9 @@ describe("update helpers", () => {
       can_auto_update: true,
       platform: "linux-x64",
       source_url:
-        "https://github.com/Nebuless/herdr-studio/releases/latest/download/herdr-gui-linux-x64.tar.xz",
+        "https://github.com/Nebuless/herdr-studio/releases/latest/download/shprd-linux-x64.tar.xz",
     });
-    expect(commands[0]).toContain("herdr-gui-linux-x64.update.json");
+    expect(commands[0]).toContain("shprd-linux-x64.update.json");
     expect(commands[0]).not.toContain(".tar.xz");
     expect(commands[0]).not.toContain("herdr-gui-darwin-arm64");
   });
@@ -299,11 +312,10 @@ describe("update helpers", () => {
     const response = await handlers.handleUpdateCheck(updateCheckRequest());
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      source_url:
-        "https://downloads.example.com/herdr/herdr-gui-linux-x64.tar.xz",
+      source_url: "https://downloads.example.com/herdr/shprd-linux-x64.tar.xz",
     });
     expect(commands[0]).toContain(
-      "https://downloads.example.com/herdr/herdr-gui-linux-x64.update.json",
+      "https://downloads.example.com/herdr/shprd-linux-x64.update.json",
     );
   });
 
@@ -344,6 +356,9 @@ describe("update helpers", () => {
           return { code: 22, stdout: "", stderr: "manifest not found" };
         }
         if (commands.length === 2) {
+          return { code: 22, stdout: "", stderr: "legacy manifest not found" };
+        }
+        if (commands.length === 3) {
           return {
             code: 0,
             stdout: "herdr-gui 0.2.17 linux-x64\n",
@@ -368,11 +383,12 @@ describe("update helpers", () => {
       update_available: true,
       platform: "linux-x64",
     });
-    expect(commands).toHaveLength(3);
-    expect(commands[0].join(" ")).toContain(".update.json");
-    expect(commands[1][2]).toContain("tar -xJOf");
-    expect(commands[2].join(" ")).toContain(".tar.xz.sha256");
-    expect(commands[2].join(" ")).toContain("--max-filesize 4096");
+    expect(commands).toHaveLength(4);
+    expect(commands[0].join(" ")).toContain("shprd-linux-x64.update.json");
+    expect(commands[1].join(" ")).toContain("herdr-gui-linux-x64.update.json");
+    expect(commands[2][2]).toContain("tar -xJOf");
+    expect(commands[3].join(" ")).toContain(".tar.xz.sha256");
+    expect(commands[3].join(" ")).toContain("--max-filesize 4096");
   });
 
   test("rejects malformed manifests instead of treating them as legacy", async () => {
@@ -612,16 +628,16 @@ describe("update helpers", () => {
     });
     expect(commands).toHaveLength(2);
     const installCommand = commands[1][2];
-    expect(installCommand).toContain("herdr-gui-darwin-arm64.tar.xz");
+    expect(installCommand).toContain("shprd-darwin-arm64.tar.xz");
     expect(installCommand).not.toContain(".sha256");
     expect(installCommand).toContain(`expected_sha256='${updateSha256}'`);
     expect(installCommand).toContain('shasum -a 256 "$archive"');
     expect(installCommand).toContain('sha256sum "$archive"');
     expect(installCommand).toContain('version_file="$package_dir/VERSION"');
-    expect(installCommand).toContain('binary="$package_dir/herdr-gui"');
+    expect(installCommand).toContain('binary="$package_dir/shprd"');
     expect(installCommand).toContain('tar -xJf "$archive" -C "$tmp"');
-    expect(installCommand).toContain("'herdr-gui-darwin-arm64/VERSION'");
-    expect(installCommand).toContain("'herdr-gui-darwin-arm64/herdr-gui'");
+    expect(installCommand).toContain("'shprd-darwin-arm64/VERSION'");
+    expect(installCommand).toContain("'shprd-darwin-arm64/shprd'");
     expect(installCommand).toContain("target='/Applications/herdr-gui'");
     expect(installCommand).toContain('backup="$target.previous"');
     expect(installCommand).toContain('mktemp "$target_dir/.$target_base.new.');

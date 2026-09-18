@@ -21,7 +21,7 @@ for (const [agent, installed] of variants) {
     const previous = process.env.SHPRD_AGENT_DIR;
     process.env.SHPRD_AGENT_DIR = directory;
     let result: Awaited<ReturnType<typeof loadExtensions>> | undefined;
-    const calls: string[] = [];
+    const calls: unknown[] = [];
     const ctx = {
       cwd: directory,
       hasUI: false,
@@ -60,7 +60,7 @@ for (const [agent, installed] of variants) {
       expect(result.errors).toEqual([]);
       expect(result.extensions).toHaveLength(1);
       result.runtime.getThinkingLevel = () => "off";
-      result.runtime.sendUserMessage = (message: string, options: object) => {
+      result.runtime.sendUserMessage = (message: unknown, options: object) => {
         calls.push(message);
         expect(options).toEqual({
           deliverAs: "followUp",
@@ -87,7 +87,22 @@ for (const [agent, installed] of variants) {
         probe: "ok",
         session_id: agent + ":runtime-fixture",
       });
-      expect(calls).toEqual(["fixture-only", "abort"]);
+      expect(calls).toEqual(
+        agent === "atomic"
+          ? [
+              "fixture-only",
+              [
+                { type: "text", text: "fixture-image" },
+                {
+                  type: "image",
+                  data: expect.any(String),
+                  mimeType: "image/png",
+                },
+              ],
+              "abort",
+            ]
+          : ["fixture-only", "abort"],
+      );
       await emit("session_shutdown");
       expect(await readdir(directory)).toEqual([]);
       await emit("session_start");

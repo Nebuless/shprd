@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>dev.herdr.shprd</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/sh</string>
+    <string>-c</string>
+    <string>set -a; if [ -f "$HOME/.config/shprd/shprd.env" ]; then . "$HOME/.config/shprd/shprd.env"; fi; set +a; exec "$HOME/.local/bin/shprd"</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>SHPRD_RESTART_SUPERVISOR</key>
+    <string>1</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>2</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/shprd.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/shprd.stderr.log</string>
+</dict>
+</plist>

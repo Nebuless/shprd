@@ -1,0 +1,8 @@
+{
+  "name": "shprd-atomic-extension",
+  "private": true,
+  "type": "module",
+  "pi": {
+    "extensions": ["./atomic.ts"]
+  }
+}

@@ -1,11 +1,24 @@
 use serde_json::json;
-use shprd_connections::{ConnectionId, Manager, parse_http_route, resolve_rpc};
+use shprd_connections::{
+    ConnectionId, HttpEndpoint, Manager, parse_http_route, resolve_rpc,
+};
 #[test]
 fn scoped_http_routes_preserve_id_and_reject_invalid_encoding_or_method() {
     let route = parse_http_route("/api/connections/dev%3Aone/file/download", "GET")
         .unwrap()
         .unwrap();
     assert_eq!(route.connection_id.unwrap().as_str(), "dev:one");
+    let image = parse_http_route("/api/connections/dev%3Aone/image-fetch", "GET")
+        .unwrap()
+        .unwrap();
+    assert_eq!(image.connection_id.unwrap().as_str(), "dev:one");
+    assert_eq!(image.endpoint, HttpEndpoint::FetchImage);
+    assert!(
+        parse_http_route("/api/image-fetch", "GET")
+            .unwrap()
+            .is_none()
+    );
+    assert!(parse_http_route("/api/connections/dev%3Aone/image-fetch", "POST").is_err());
     assert!(parse_http_route("/api/connections/%2E%2E/file/download", "GET").is_err());
     assert!(parse_http_route("/api/connections/dev/file/upload", "GET").is_err());
     assert!(parse_http_route("/api/connections/dev/unknown", "GET").is_err());

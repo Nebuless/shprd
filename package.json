@@ -1,8 +1,8 @@
 {
-  "name": "herdr-studio",
+  "name": "shprd",
   "private": true,
   "version": "0.6.2",
-  "description": "Herdr Studio: a web client for Herdr (local socket bridge + React dashboard).",
+  "description": "SHPRD: a web client for Herdr (local socket bridge + React dashboard).",
   "license": "MIT",
   "author": "Arthur",
   "homepage": "https://Nebuless.github.io/herdr-studio/",
@@ -57,7 +57,7 @@
     "precommit": "bun run format:check && bun run lint && bun run typecheck && bun run test",
     "install-hooks": "git config core.hooksPath .githooks && chmod +x .githooks/pre-commit .githooks/commit-msg",
     "clean:bun-build": "find server -maxdepth 1 -name '*.bun-build' -exec rm -rf {} +",
-    "clean": "rm -rf web/dist server/public server/src/public-files.gen.ts server/herdr-gui server/herdr-gui-* && bun run clean:bun-build",
+    "clean": "rm -rf web/dist server/public server/src/public-files.gen.ts server/shprd server/shprd-* && bun run clean:bun-build",
     "start:server": "cd server && bun run src/index.ts"
   },
   "devDependencies": {

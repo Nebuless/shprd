@@ -2,9 +2,24 @@ import { test, expect } from "bun:test";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createConnection } from "node:net";
 import { once } from "node:events";
 import { createAttachment } from "./attachment";
+
+const integrationDirectory = fileURLToPath(new URL(".", import.meta.url));
+
+test("variant manifests register exactly one matching adapter", async () => {
+  for (const [manifest, entrypoint] of [
+    ["package.json", "./senpi.ts"],
+    ["atomic.package.json", "./atomic.ts"],
+  ]) {
+    const parsed = JSON.parse(
+      await readFile(join(integrationDirectory, manifest), "utf8"),
+    ) as { pi?: { extensions?: unknown } };
+    expect(parsed.pi?.extensions).toEqual([entrypoint]);
+  }
+});
 
 for (const agent of ["senpi", "atomic"] as const) {
   test(agent +
@@ -13,11 +28,15 @@ for (const agent of ["senpi", "atomic"] as const) {
     const model = { provider: "fixture", id: "free", name: "Fixture" };
     const messages = [{ role: "user", content: "existing" }];
     let busy = false;
-    const admitted: string[] = [];
+    const admitted: Array<{
+      message: string;
+      image?: { mimeType: string; data: string };
+    }> = [];
     const selected: string[] = [];
     const runtime = {
-      prompt(message: string) {
-        admitted.push(message);
+      imagePrompt: agent === "atomic",
+      prompt(message: string, image?: { mimeType: string; data: string }) {
+        admitted.push({ message, image });
         busy = true;
       },
       async setModel(value: typeof model) {
@@ -115,6 +134,7 @@ for (const agent of ["senpi", "atomic"] as const) {
           id: agent + ":fixture-session",
           connected: true,
           busy: false,
+          capabilities: { image_prompt: agent === "atomic" },
         },
       });
       expect(
@@ -143,7 +163,31 @@ for (const agent of ["senpi", "atomic"] as const) {
       expect(
         await client.request({ type: "prompt", message: "hello" }),
       ).toMatchObject({ result: { accepted: true } });
-      expect(admitted).toEqual(["hello"]);
+      expect(admitted).toEqual([{ message: "hello" }]);
+      if (agent === "atomic") {
+        expect(
+          await client.request({
+            type: "prompt",
+            message: "inspect image",
+            image: {
+              mimeType: "image/vnd.microsoft.icon",
+              data: "iVBORw0KGgo=",
+            },
+          }),
+        ).toMatchObject({ result: { accepted: true } });
+        expect(admitted).toContainEqual({
+          message: "inspect image",
+          image: { mimeType: "image/x-icon", data: "iVBORw0KGgo=" },
+        });
+      } else {
+        expect(
+          await client.request({
+            type: "prompt",
+            message: "inspect image",
+            image: { mimeType: "image/png", data: "iVBORw0KGgo=" },
+          }),
+        ).toMatchObject({ error: { code: "IMAGE_UNSUPPORTED" } });
+      }
       expect(await client.request({ type: "abort" })).toMatchObject({
         agent_event: { event: { type: "abort_requested" } },
       });
@@ -164,10 +208,11 @@ for (const agent of ["senpi", "atomic"] as const) {
         },
       });
       const bad = await connect();
+      const admittedBeforeBadRequest = admitted.slice();
       expect(
         await bad.request({ type: "prompt", message: "forbidden" }, "wrong"),
       ).toMatchObject({ error: { code: "UNAUTHORIZED" } });
-      expect(admitted).toEqual(["hello"]);
+      expect(admitted).toEqual(admittedBeforeBadRequest);
       client.socket.destroy();
       const second = await connect();
       expect(await second.request({ type: "get_messages" })).toMatchObject({

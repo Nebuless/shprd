@@ -6,6 +6,7 @@ pub mod connections;
 pub mod endpoint;
 pub mod herdr;
 pub mod host;
+pub mod image_fetch;
 pub mod input;
 pub mod render;
 pub mod services;

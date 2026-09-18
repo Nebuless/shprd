@@ -64,7 +64,7 @@ export function defaultConnectionProfilesPath(): string {
   return (
     process.env.HERDR_GUI_CONNECTIONS_PATH ??
     join(
-      process.env.SHPRD_CONFIG_DIR || join(homedir(), ".config", "herdr-gui"),
+      process.env.SHPRD_CONFIG_DIR || join(homedir(), ".config", "shprd"),
       "connections.json",
     )
   );

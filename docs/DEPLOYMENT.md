@@ -43,13 +43,13 @@ This source build supports verified legacy protocols 14-20, from standalone
 Herdr 0.7.0 / protocol 14 through Herdr 0.8.2 / protocol 20, and **tagged Herdr
 0.9.0 / protocol 22**. The [plugin installer](#herdr-plugin) separately requires
 Herdr 0.7.2 or newer. Protocol 21 and unknown versions are rejected at the control
-probe and binary handshake. Use a Studio build explicitly supporting your
+probe and binary handshake. Use an SHPRD build explicitly supporting your
 server, or a separate compatible server; do not downgrade a live server.
 Published binaries retain the behavior documented for their release in the
 [Changelog](../CHANGELOG.md).
 
 Herdr 0.9.0 terminals use **stable endpoint generation 1** (distinct from
-terminal protocol 22). Set `HERDR_GUI_DISABLE_ENDPOINT=1` to use the legacy
+terminal protocol 22). Set `SHPRD_DISABLE_ENDPOINT=1` to use the legacy
 direct-terminal fallback:
 
 - Endpoint rendering crops the server-rendered tab to each pane. Unknown endpoint
@@ -59,7 +59,7 @@ direct-terminal fallback:
   rendering can remain usable without optional history support. The explicitly
   enabled legacy fallback uses takeover and can disconnect another owner.
 - Terminal-program OSC 52 writes follow Herdr's **foreground-recipient**
-  behavior: Studio sends only to the browser with input in the last 30 seconds
+  behavior: SHPRD sends only to the browser with input in the last 30 seconds
   matching the receiving endpoint session, never to passive viewers. Herdr
   sends no producing-pane or input identity: a delayed/background write from
   pane A after B becomes foreground can reach B's recent input owner. This is
@@ -79,13 +79,13 @@ direct-terminal fallback:
   terminal tab before creating; unavailable sources fail explicitly. See
   [creation contracts](./ARCHITECTURE.md#browser-navigation-and-creation) for
   bootstrap and timeout handling.
-- Legacy servers and `HERDR_GUI_DISABLE_ENDPOINT=1` retain **Shared navigation**:
+- Legacy servers and `SHPRD_DISABLE_ENDPOINT=1` retain **Shared navigation**:
   public JSON focus can move other clients. The connection menu shows the mode,
   using the bridge's actual backend selection, not browser version guesses.
   Enhanced Kitty keyboard / modifyOtherKeys parity and pixel mouse are not
   supported. Legacy keyboard-mode messages are decoded, not applied in-browser.
 - Closing a workspace does not implicitly close its linked group. If Herdr
-  requires group closure, Studio leaves it intact and directs you to the CLI:
+  requires group closure, SHPRD leaves it intact and directs you to the CLI:
   `herdr --session <name> workspace close <workspace_id> --group`. Review all
   linked workspaces first; this explicitly closes the entire group.
 
@@ -96,54 +96,54 @@ For endpoint negotiation, input, and reconnect contracts, see
 
 Prebuilt standalone binaries are available for Linux, macOS, and Windows on
 x86-64 and arm64. On Linux and macOS, the installer verifies the release
-checksum and installs the standalone binary to `~/.local/bin/herdr-gui`:
+checksum and installs the standalone binary to `~/.local/bin/shprd`:
 
 ```bash
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-herdr-gui.sh \
+  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
   | sh
 ```
 
 Make sure `~/.local/bin` is in `PATH`, then run:
 
 ```bash
-herdr-gui --version
-herdr-gui
+shprd --version
+shprd
 ```
 
 Open the URL printed by the process. Run the installer again to update.
 
-Windows releases provide x64 and ARM64 archives containing `herdr-gui.exe`.
-Download the matching `herdr-gui-windows-<arch>.tar.xz` and `.sha256` files from
+Windows releases provide x64 and ARM64 archives containing `shprd.exe`.
+Download the matching `shprd-windows-<arch>.tar.xz` and `.sha256` files from
 the [latest release](https://github.com/Nebuless/herdr-studio/releases/latest),
 verify the checksum with `Get-FileHash`, and extract the archive with Windows
 11's built-in `tar.exe`. Releases predating native ARM64 support contain only
 the x64 archive; prefer the native ARM64 package when it is available.
 
-To install into a system directory, set `HERDR_GUI_INSTALL_DIR`:
+To install into a system directory, set `SHPRD_INSTALL_DIR`:
 
 ```bash
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-herdr-gui.sh \
-  | sudo env HERDR_GUI_INSTALL_DIR=/usr/local/bin sh
+  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
+  | sudo env SHPRD_INSTALL_DIR=/usr/local/bin sh
 ```
 
-Set `HERDR_GUI_VERSION` to install a fixed release instead of `latest`:
+Set `SHPRD_VERSION` to install a fixed release instead of `latest`:
 
 ```bash
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-herdr-gui.sh \
-  | HERDR_GUI_VERSION=0.4.8 sh
+  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
+  | SHPRD_VERSION=0.4.8 sh
 ```
 
-`HERDR_GUI_RELEASE_BASE_URL` selects a compatible flat release mirror. Mirrors
+`SHPRD_RELEASE_BASE_URL` selects a compatible flat release mirror. Mirrors
 must use HTTPS, except for loopback testing, and their URLs cannot contain
 credentials, query strings, or fragments. The installer and in-app updater
-preserve a replaced executable as `herdr-gui.previous` for manual recovery.
+preserve a replaced executable as `shprd.previous` for manual recovery.
 
 ## Herdr plugin
 
-Herdr 0.7.2 or newer can install Herdr Studio as a plugin. The plugin
+Herdr 0.7.2 or newer can install SHPRD as a plugin. The plugin
 downloads the checksum-verified prebuilt release binary matching the plugin
 version, so no source toolchain is needed; the plugin shim itself runs on
 [Bun](https://bun.sh):
@@ -179,33 +179,33 @@ session-modal popup by default; pass `--placement split` (or `tab`, `zoomed`,
 ## Basic runtime configuration
 
 Flags override environment variables, which override defaults. Run
-`herdr-gui --help` for the complete list.
+`shprd --help` for the complete list.
 
 | Flag | Environment variable | Default |
 | --- | --- | --- |
 | `--host <addr>` | `HOST` | `127.0.0.1` |
 | `--port <n>` | `PORT` | `8787` |
-| `--password <pw>` | `HERDR_GUI_PASSWORD` | Generated token for non-loopback binds |
+| `--password <pw>` | `SHPRD_PASSWORD` | Generated token for non-loopback binds |
 | `--socket-path <path>` | `HERDR_SOCKET_PATH` | Default Herdr control socket or named pipe |
 | `--client-socket-path <path>` | `HERDR_CLIENT_SOCKET_PATH` | Default Herdr render socket or named pipe |
 | `--ssh-host <user@host>` | `HERDR_SSH_HOST` | Disabled; supported on Linux and macOS |
 | `--session <name>` | `HERDR_SESSION` | Named Herdr session, if set |
 | `--public-dir <path>` | `PUBLIC_DIR` | Embedded assets |
-| `--log-level <level>` | `HERDR_GUI_LOG_LEVEL` | `info` |
+| `--log-level <level>` | `SHPRD_LOG_LEVEL` | `info` |
 | `--open` | `OPEN_BROWSER=1` | Disabled |
 
 Additional runtime settings:
 
 | Environment variable | Purpose |
 | --- | --- |
-| `HERDR_GUI_UPDATE_BASE_URL` | Override the latest-release asset directory |
-| `HERDR_GUI_DISABLE_UPDATE_CHECK=1` | Disable update checks |
-| `HERDR_GUI_RESTART_SUPERVISOR=0\|1` | Declare or override external supervisor detection |
-| `HERDR_GUI_DISABLE_ENDPOINT=1` | Use the legacy terminal fallback; see compatibility limits above |
+| `SHPRD_UPDATE_BASE_URL` | Override the latest-release asset directory |
+| `SHPRD_DISABLE_UPDATE_CHECK=1` | Disable update checks |
+| `SHPRD_RESTART_SUPERVISOR=0\|1` | Declare or override external supervisor detection |
+| `SHPRD_DISABLE_ENDPOINT=1` | Use the legacy terminal fallback; see compatibility limits above |
 
 A custom update mirror must use the same flat asset layout as GitHub Releases
 and provide each platform archive, its `.sha256` file, and the corresponding
-`herdr-gui-<platform>.update.json` metadata file. HTTPS is required except for
+`shprd-<platform>.update.json` metadata file. HTTPS is required except for
 loopback test mirrors. URLs containing credentials, query strings, or fragments
 are rejected.
 
@@ -213,13 +213,13 @@ Common examples:
 
 ```bash
 # Local use without authentication
-herdr-gui
+shprd
 
 # Listen on all interfaces with a generated token
-herdr-gui --host 0.0.0.0 --port 8787
+shprd --host 0.0.0.0 --port 8787
 
 # Use a fixed password and the login page
-herdr-gui --host 0.0.0.0 --port 8787 --password 's3cr3t'
+shprd --host 0.0.0.0 --port 8787 --password 's3cr3t'
 ```
 
 Read [SECURITY.md](../SECURITY.md) before using a non-loopback bind.
@@ -234,12 +234,12 @@ Herdr event, terminal frame, or successful auto-sync traffic.
 Use `debug` temporarily when diagnosing request or lifecycle behavior:
 
 ```bash
-herdr-gui --log-level debug
-# or in herdr-gui.env
-HERDR_GUI_LOG_LEVEL=debug
+shprd --log-level debug
+# or in shprd.env
+SHPRD_LOG_LEVEL=debug
 ```
 
-For a managed service, restart after changing `herdr-gui.env`. Debug context can
+For a managed service, restart after changing `shprd.env`. Debug context can
 include workspace paths and connection or terminal identifiers, so return to
 `info` after collecting the required diagnostics. Runtime logs print browser
 and LAN URLs without authentication tokens; generated tokens remain in the
@@ -264,7 +264,7 @@ SSH profiles require an already-running remote Herdr server and accept only an
 OpenSSH alias or `user@host`. Leave the remote control and render socket paths
 empty to resolve the default sockets under the remote home directory. Configure
 ports, jump hosts, identities, and other transport details in `~/.ssh/config`.
-Herdr Studio follows normal OpenSSH host-key and agent or Keychain policies; it
+SHPRD follows normal OpenSSH host-key and agent or Keychain policies; it
 does not store passwords, private keys, passphrases, or arbitrary SSH options.
 
 ```text
@@ -273,12 +273,12 @@ Control socket: (empty - auto)
 Render socket:  (empty - auto)
 ```
 
-SSH profiles and `--ssh-host` currently require Herdr Studio to run on Linux or
+SSH profiles and `--ssh-host` currently require SHPRD to run on Linux or
 macOS because the stream-local transport cannot expose a forwarded Unix socket
 as a local Windows named pipe. Windows supports native local Herdr profiles.
 
-Profiles are stored atomically in `~/.config/herdr-gui/connections.json`
-(overridable with `HERDR_GUI_CONNECTIONS_PATH`), with directory mode `0700` and
+Profiles are stored atomically in `~/.config/shprd/connections.json`
+(overridable with `SHPRD_CONNECTIONS_PATH`), with directory mode `0700` and
 file mode `0600` on Unix. Registry/direct-parent symlinks are rejected. Version-1
 local registries migrate to version 2 on the first successful mutation. Invalid
 registries are preserved with mutations disabled: repair the durable file before
@@ -303,7 +303,7 @@ once into the first real profile without overwriting existing values.
 The legacy command-line connection is also available:
 
 ```bash
-herdr-gui --ssh-host user@host
+shprd --ssh-host user@host
 ```
 
 It forwards both control and terminal-render sockets. Image paste, workspace
@@ -316,21 +316,39 @@ the automatically selected tunnel paths.
 The standalone binary can install and manage a platform-native user service:
 
 ```bash
-herdr-gui service install
-herdr-gui service status
-herdr-gui service restart
-herdr-gui service reload
-herdr-gui service uninstall
+shprd service install
+shprd service status
+shprd service restart
+shprd service reload
+shprd service uninstall
 ```
 
 | Command | Behavior |
 | --- | --- |
-| `service install` | Create or update the service definition and start it |
-| `service install --force` | Replace a definition not generated by Herdr Studio |
+| `service install` | Create or update the service definition and start it on loopback only |
+| `service install --tailscale` | Detect a Tailnet IPv4 address, bind there, and retain SHPRD token authentication |
+| `service install --tailscale-no-auth` | Detect a Tailnet IPv4 address, bind there, and disable SHPRD application authentication |
+| `service install --force` | Replace a definition not generated by SHPRD |
 | `service status` | Show native service-manager status |
-| `service restart` | Restart after changing `herdr-gui.env` |
+| `service restart` | Restart after changing `shprd.env` |
 | `service reload` | Reload the platform definition, then restart |
 | `service uninstall` | Stop and remove the service while preserving configuration and tokens |
+
+The default `service install` binds loopback only and resets a prior SHPRD
+Tailnet mode back to local access. `--tailscale` detects a Tailnet IPv4 binding
+and keeps SHPRD token authentication. When token mode is
+used, show the active token with:
+
+```bash
+shprd auth token show
+```
+
+`--tailscale-no-auth` also detects a Tailnet IPv4 binding, but deliberately
+turns off SHPRD application authentication and relies solely on private Tailnet
+ACLs. Review those ACLs before use. Neither Tailscale mode changes Tailscale
+configuration. The no-auth flag never creates a LAN or public listener. If a legacy
+`herdr-gui` user service is still installed or active, SHPRD blocks installation
+until that service is uninstalled to avoid listener conflicts.
 
 Verify the running service with:
 
@@ -342,21 +360,20 @@ Linux uses a systemd user service with `Restart=always`; macOS uses a launchd
 LaunchAgent with `KeepAlive`; Windows registers a current-user Task Scheduler
 job that starts at login, runs with normal privileges, and restarts on failure.
 
-A new service listens on `0.0.0.0:8787`, creates a persistent login token, and
-prints tokenized localhost and LAN URLs during installation. Configuration is
-stored in `~/.config/herdr-gui/herdr-gui.env` on Unix or
-`%APPDATA%\herdr-gui\herdr-gui.env` on Windows and is preserved on reinstall or
-uninstall. Edit that file for `HOST`, `PORT`, an optional fixed password, and
-Herdr connection settings, then run `herdr-gui service restart`.
+A new default service listens on loopback only and needs no application token.
+Configuration is stored in `~/.config/shprd/shprd.env` on Unix or
+`%APPDATA%\shprd\shprd.env` on Windows and is preserved on reinstall or
+uninstall. Reinstalling without a Tailnet flag resets a prior SHPRD Tailnet
+mode to loopback access. Edit that file for `HOST`, `PORT`, an optional fixed
+password, and Herdr connection settings, then run `shprd service restart`.
 
-The random token is stored in `~/.config/herdr-gui/auth-token` on Unix and
-`%APPDATA%\herdr-gui\auth-token` on Windows. Visiting a printed `?token=...` URL
+The random token is stored in `~/.config/shprd/auth-token` on Unix and
+`%APPDATA%\shprd\auth-token` on Windows. Visiting a printed `?token=...` URL
 sets an HttpOnly session cookie and removes the token from the address bar. To
 rotate the token, stop the service, delete the token file, and restart.
 
 On Windows, approve the Task Scheduler or firewall prompt if one appears. Allow
-Private networks only, or set `HOST=127.0.0.1` before installation for
-local-only access. On Linux, enable linger with
+Private networks only when using a Tailnet mode. On Linux, enable linger with
 `sudo loginctl enable-linger "$USER"` if the service must survive logout.
 
 Templates under `deploy/` remain available for manual customization. A custom
@@ -366,28 +383,28 @@ owner:
 ```ini
 [Service]
 ExecStart=
-ExecStart=/absolute/path/service-wrapper -- %h/.local/bin/herdr-gui --host 0.0.0.0
+ExecStart=/absolute/path/service-wrapper -- %h/.local/bin/shprd --host 0.0.0.0
 ```
 
-The updater saves the replaced executable as `herdr-gui.previous`, atomically
+The updater saves the replaced executable as `shprd.previous`, atomically
 installs the verified binary, and exits. It never starts a replacement process.
 A subsequent `service install` preserves a custom `ExecStart` from a managed
-unit when it still invokes the same Herdr Studio binary.
+unit when it still invokes the same SHPRD binary.
 
 ### Separate SHPRD installation
 
 Set `SHPRD_CONFIG_DIR` to an absolute private directory for a parallel SHPRD
 instance. Its generated `auth-token`, `settings.json`, and `connections.json`
-live there; `HERDR_GUI_CONNECTIONS_PATH` still overrides the registry file.
-The instance uses a separate `shprd_auth` cookie so another Herdr Studio port
+live there; `SHPRD_CONNECTIONS_PATH` still overrides the registry file.
+The instance uses a separate `shprd_auth` cookie so another SHPRD port
 on the same hostname keeps its login. Herdr sockets, SSH configuration, and
 agent history remain under the real user home.
 
 Use a separate binary, port, and systemd user unit, for example
 `~/.local/share/shprd/studio/shprd-studio`, `~/.config/shprd/studio`, and
 `shprd-studio.service`. Do not run the legacy `service install` command for
-this instance: it manages `herdr-gui.service`. Disable release update checks
-with `HERDR_GUI_DISABLE_UPDATE_CHECK=1` for a source-built refactor snapshot.
+this instance: it manages `shprd.service`. Disable release update checks
+with `SHPRD_DISABLE_UPDATE_CHECK=1` for a source-built refactor snapshot.
 
 ## Build a standalone executable
 
@@ -395,7 +412,7 @@ The build embeds the frontend and Bun runtime in a self-contained executable:
 
 ```bash
 bun run build
-# server/herdr-gui
+# server/shprd
 ```
 
 The executable serves the frontend, WebSocket bridge, and HTTP APIs and connects
@@ -428,28 +445,28 @@ these hosts because Bun's musl binary still dynamically links `libstdc++` and
 Run or clean a local build with:
 
 ```bash
-./server/herdr-gui
+./server/shprd
 bun run clean
 ```
 
 ## Troubleshooting
 
-### Herdr Studio cannot connect to Herdr
+### SHPRD cannot connect to Herdr
 
 Confirm that Herdr is running and that its control socket exists:
 
 ```bash
 ls ~/.config/herdr/herdr.sock
-herdr-gui --socket-path /path/to/herdr.sock
+shprd --socket-path /path/to/herdr.sock
 ```
 
-### Another device cannot open Herdr Studio
+### Another device cannot open SHPRD
 
 Listen on all interfaces, use the tokenized URL printed at startup, and confirm
 that both devices are on the same network and the firewall allows the port:
 
 ```bash
-herdr-gui --host 0.0.0.0 --port 8781
+shprd --host 0.0.0.0 --port 8781
 ```
 
 ### `--ssh-host` still connects locally
@@ -463,7 +480,7 @@ tunnels.
 Pass `--open` or set `OPEN_BROWSER=1`:
 
 ```bash
-herdr-gui --open
+shprd --open
 ```
 
 For release preparation and platform packaging requirements, see

@@ -3,11 +3,20 @@ import { createAttachment } from "./attachment";
 
 export default function attachmentExtension(pi: ExtensionAPI) {
   const attachment = createAttachment("atomic", {
-    prompt: (message) =>
-      pi.sendUserMessage(message, {
-        deliverAs: "followUp",
-        expandPromptTemplates: false,
-      }),
+    imagePrompt: true,
+    prompt: (message, image) =>
+      pi.sendUserMessage(
+        image
+          ? [
+              { type: "text", text: message },
+              { type: "image", data: image.data, mimeType: image.mimeType },
+            ]
+          : message,
+        {
+          deliverAs: "followUp",
+          expandPromptTemplates: false,
+        },
+      ),
     setModel: (model: Parameters<ExtensionAPI["setModel"]>[0]) =>
       pi.setModel(model),
     thinkingLevel: () => pi.getThinkingLevel(),

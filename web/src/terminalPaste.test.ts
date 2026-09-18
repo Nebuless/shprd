@@ -12,6 +12,7 @@ import {
   prepareTerminalPasteText,
   terminalPasteInputText,
   terminalPasteRequest,
+  terminalPasteTargetsTerminal,
   type TerminalPasteTextareaSnapshot,
 } from "./terminalPaste";
 
@@ -196,6 +197,12 @@ function snapshot(
 }
 
 describe("terminal paste", () => {
+  test("ignores body paste unless terminal owns focus", () => {
+    expect(terminalPasteTargetsTerminal(false, false)).toBe(false);
+    expect(terminalPasteTargetsTerminal(true, false)).toBe(true);
+    expect(terminalPasteTargetsTerminal(false, true)).toBe(true);
+  });
+
   test("recovers full native paste text from xterm's helper textarea", () => {
     const text = `${"中英文😀".repeat(300)}\nsecond line`;
     expect(
@@ -263,12 +270,20 @@ describe("terminal paste", () => {
     );
   });
 
-  test("routes text through Herdr's mode-aware pane input API", () => {
+  test("routes text and uploaded image paths through Herdr's mode-aware pane input API", () => {
     expect(terminalPasteRequest("p7", "if true\n  echo ok")).toEqual({
       method: "pane.send_input",
       params: {
         pane_id: "p7",
         text: "if true\r  echo ok",
+        keys: [],
+      },
+    });
+    expect(terminalPasteRequest("p7", "/tmp/herdr-img-upload.png")).toEqual({
+      method: "pane.send_input",
+      params: {
+        pane_id: "p7",
+        text: "/tmp/herdr-img-upload.png",
         keys: [],
       },
     });

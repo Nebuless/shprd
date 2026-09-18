@@ -50,6 +50,40 @@ fn dialog_command_roundtrips_public_wire_shape() {
     assert_eq!(serde_json::to_value(command).unwrap(), value);
 }
 
+#[test]
+fn image_prompt_roundtrips_public_wire_shape() {
+    let value = json!({
+        "type":"prompt",
+        "message":"Inspect this",
+        "image":{"mimeType":"image/png","data":"iVBORw0KGgo="}
+    });
+    let command: shprd_agent::Command = serde_json::from_value(value.clone()).unwrap();
+    assert_eq!(serde_json::to_value(command).unwrap(), value);
+}
+
+#[test]
+fn accepts_valid_png_raster() {
+    use base64::{Engine as _, engine::general_purpose::STANDARD};
+
+    let image = shprd_agent::Image {
+        mime_type: "image/png".to_owned(),
+        data: STANDARD.encode(include_bytes!("../../../site/assets/herdr-icon-48.png")),
+    };
+    assert!(shprd_agent::validate_image(&image).is_ok());
+}
+
+#[test]
+fn rejects_magic_wrapped_image_before_adapter_dispatch() {
+    let image = shprd_agent::Image {
+        mime_type: "image/png".to_owned(),
+        data: "iVBORw0KGgptYWxpY2lvdXM=".to_owned(),
+    };
+    assert!(matches!(
+        shprd_agent::validate_image(&image),
+        Err(shprd_agent::Error::InvalidImage)
+    ));
+}
+
 #[tokio::test]
 async fn refuses_public_discovery_and_symlinks() {
     let directory = tempfile::tempdir().unwrap();

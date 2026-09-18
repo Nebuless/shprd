@@ -14,6 +14,9 @@ const UPDATE_PLATFORMS = [
 
 type UpdatePlatform = (typeof UPDATE_PLATFORMS)[number];
 
+const UPDATE_PACKAGE_NAMES = ["shprd", "herdr-gui"] as const;
+type UpdatePackageName = (typeof UPDATE_PACKAGE_NAMES)[number];
+
 export interface UpdateTarget {
   platform: UpdatePlatform;
   packageDir: string;
@@ -23,7 +26,7 @@ export interface UpdateTarget {
 
 export interface UpdateManifest {
   schema: 1;
-  name: "herdr-gui";
+  name: UpdatePackageName;
   version: string;
   platform: string;
   archive: string;
@@ -45,6 +48,25 @@ const UPDATE_CHECK_TIMEOUT_MS = 15000;
 const UPDATE_LEGACY_CHECK_REQUESTS = 3;
 const UPDATE_INSTALL_TIMEOUT_MS = 120000;
 const UPDATE_CONFIRMATION_HEADER = "x-herdr-gui-update";
+
+function updateTargetFor(
+  name: UpdatePackageName,
+  platform: UpdatePlatform,
+): UpdateTarget {
+  return {
+    platform,
+    packageDir: `${name}-${platform}`,
+    archiveName: `${name}-${platform}.tar.xz`,
+    manifestName: `${name}-${platform}.update.json`,
+  };
+}
+
+function updateEnvironment(
+  environment: Record<string, string | undefined>,
+  name: string,
+): string | undefined {
+  return environment[`SHPRD_${name}`] ?? environment[`HERDR_GUI_${name}`];
+}
 export const UPDATE_HTTP_IDLE_TIMEOUT_SECONDS =
   Math.ceil(
     (UPDATE_CHECK_TIMEOUT_MS * UPDATE_LEGACY_CHECK_REQUESTS +
@@ -61,12 +83,7 @@ export function resolveUpdateTarget(
     (publishedPlatform) => publishedPlatform === candidate,
   );
   if (updatePlatform === undefined) return null;
-  return {
-    platform: updatePlatform,
-    packageDir: `herdr-gui-${updatePlatform}`,
-    archiveName: `herdr-gui-${updatePlatform}.tar.xz`,
-    manifestName: `herdr-gui-${updatePlatform}.update.json`,
-  };
+  return updateTargetFor("shprd", updatePlatform);
 }
 
 interface ParsedVersion {
@@ -86,6 +103,7 @@ function parsedVersion(value: string): ParsedVersion | null {
 }
 
 export function parseUpdateVersionFile(text: string): {
+  name: UpdatePackageName;
   version: string;
   platform: string;
 } {
@@ -94,7 +112,7 @@ export function parseUpdateVersionFile(text: string): {
   if (
     Buffer.byteLength(text) > 256 ||
     fields.length !== 3 ||
-    name !== "herdr-gui" ||
+    !UPDATE_PACKAGE_NAMES.includes(name as UpdatePackageName) ||
     !version ||
     !parsedVersion(version) ||
     !platform ||
@@ -102,7 +120,7 @@ export function parseUpdateVersionFile(text: string): {
   ) {
     throw new Error("invalid update VERSION file");
   }
-  return { version, platform };
+  return { name: name as UpdatePackageName, version, platform };
 }
 
 export function parseUpdateManifest(text: string): UpdateManifest {
@@ -121,13 +139,13 @@ export function parseUpdateManifest(text: string): UpdateManifest {
   const manifest = value as Record<string, unknown>;
   if (
     manifest.schema !== 1 ||
-    manifest.name !== "herdr-gui" ||
+    !UPDATE_PACKAGE_NAMES.includes(manifest.name as UpdatePackageName) ||
     typeof manifest.version !== "string" ||
     !parsedVersion(manifest.version) ||
     typeof manifest.platform !== "string" ||
     !/^[a-z0-9]+-[a-z0-9]+$/.test(manifest.platform) ||
     typeof manifest.archive !== "string" ||
-    !/^herdr-gui-[a-z0-9-]+\.tar\.xz$/.test(manifest.archive) ||
+    !/^(?:shprd|herdr-gui)-[a-z0-9-]+\.tar\.xz$/.test(manifest.archive) ||
     typeof manifest.sha256 !== "string" ||
     !/^[0-9a-fA-F]{64}$/.test(manifest.sha256)
   ) {
@@ -135,7 +153,7 @@ export function parseUpdateManifest(text: string): UpdateManifest {
   }
   return {
     schema: 1,
-    name: "herdr-gui",
+    name: manifest.name as UpdatePackageName,
     version: manifest.version,
     platform: manifest.platform,
     archive: manifest.archive,
@@ -231,7 +249,7 @@ export function compareVersion(a: string, b: string): number {
 export function isSupervisorManagedEnvironment(
   environment: Record<string, string | undefined>,
 ): boolean {
-  const override = environment.HERDR_GUI_RESTART_SUPERVISOR;
+  const override = updateEnvironment(environment, "RESTART_SUPERVISOR");
   if (override === "1") return true;
   if (override === "0") return false;
   if (environment.INVOCATION_ID) return true;
@@ -272,7 +290,7 @@ export function createUpdateHandlers({
   let updateBaseUrlError: Error | null = null;
   try {
     updateBaseUrlValue = normalizeUpdateBaseUrl(
-      environment.HERDR_GUI_UPDATE_BASE_URL,
+      updateEnvironment(environment, "UPDATE_BASE_URL"),
     );
   } catch (error) {
     updateBaseUrlError = error as Error;
@@ -290,15 +308,15 @@ export function createUpdateHandlers({
     return updateBaseUrlValue;
   }
 
-  function updateArchiveUrl(): string {
-    return updateTarget
-      ? `${updateBaseUrl()}/${updateTarget.archiveName}`
+  function updateArchiveUrl(target = updateTarget): string {
+    return target
+      ? `${updateBaseUrl()}/${target.archiveName}`
       : updateBaseUrl();
   }
 
-  function updateManifestUrl(): string {
-    return updateTarget
-      ? `${updateBaseUrl()}/${updateTarget.manifestName}`
+  function updateManifestUrl(target = updateTarget): string {
+    return target
+      ? `${updateBaseUrl()}/${target.manifestName}`
       : updateBaseUrl();
   }
 
@@ -381,14 +399,18 @@ export function createUpdateHandlers({
         `no update package is available for ${runtime.platform}-${runtime.arch}`,
       );
     }
+    const manifestTarget = updateTargetFor(
+      manifest.name,
+      updateTarget.platform,
+    );
     if (manifest.platform !== updateTarget.platform) {
       throw new Error(
         `latest update platform is ${manifest.platform}, expected ${updateTarget.platform}`,
       );
     }
-    if (manifest.archive !== updateTarget.archiveName) {
+    if (manifest.archive !== manifestTarget.archiveName) {
       throw new Error(
-        `latest update archive is ${manifest.archive}, expected ${updateTarget.archiveName}`,
+        `latest update archive is ${manifest.archive}, expected ${manifestTarget.archiveName}`,
       );
     }
     return manifest;
@@ -419,12 +441,34 @@ export function createUpdateHandlers({
       throw processFailure(manifestResult, "update manifest download");
     }
 
-    // Releases predating the lightweight manifest remain updateable. This path
-    // is intentionally a compatibility fallback; new releases never need to
-    // download a complete archive merely to discover its version.
-    const versionPath = `${updateTarget.packageDir}/VERSION`;
+    const legacyTarget = updateTargetFor("herdr-gui", updateTarget.platform);
+    const legacyManifestResult = await runProcessWithCodeTimeout(
+      [
+        "curl",
+        ...curlTransportArgs(),
+        "-fsSL",
+        "--max-filesize",
+        String(UPDATE_METADATA_MAX_BYTES),
+        updateManifestUrl(legacyTarget),
+      ],
+      UPDATE_CHECK_TIMEOUT_MS,
+    );
+    if (legacyManifestResult.code === 0) {
+      return validateUpdateManifest(
+        parseUpdateManifest(legacyManifestResult.stdout),
+      );
+    }
+    if (legacyManifestResult.code !== 22) {
+      throw processFailure(
+        legacyManifestResult,
+        "legacy update manifest download",
+      );
+    }
+
+    // Releases predating metadata manifests remain updateable.
+    const versionPath = `${legacyTarget.packageDir}/VERSION`;
     const legacyCommand =
-      `curl ${curlTransportCommand()} -fsSL ${shQuote(updateArchiveUrl())} | ` +
+      `curl ${curlTransportCommand()} -fsSL ${shQuote(updateArchiveUrl(legacyTarget))} | ` +
       `tar -xJOf - ${shQuote(versionPath)}`;
     const versionResult = await runProcessWithCodeTimeout(
       ["sh", "-c", legacyCommand],
@@ -441,7 +485,7 @@ export function createUpdateHandlers({
         "-fsSL",
         "--max-filesize",
         String(UPDATE_METADATA_MAX_BYTES),
-        `${updateArchiveUrl()}.sha256`,
+        `${updateArchiveUrl(legacyTarget)}.sha256`,
       ],
       UPDATE_CHECK_TIMEOUT_MS,
     );
@@ -450,13 +494,13 @@ export function createUpdateHandlers({
     }
     return validateUpdateManifest({
       schema: 1,
-      name: "herdr-gui",
+      name: version.name,
       version: version.version,
       platform: version.platform,
-      archive: updateTarget.archiveName,
+      archive: legacyTarget.archiveName,
       sha256: parseUpdateChecksumFile(
         checksumResult.stdout,
-        updateTarget.archiveName,
+        legacyTarget.archiveName,
       ),
     });
   }
@@ -499,7 +543,7 @@ export function createUpdateHandlers({
         ...sourceDetails(),
       };
     }
-    if (environment.HERDR_GUI_DISABLE_UPDATE_CHECK === "1") {
+    if (updateEnvironment(environment, "DISABLE_UPDATE_CHECK") === "1") {
       return {
         current_version: appVersion,
         update_available: false,
@@ -597,9 +641,10 @@ export function createUpdateHandlers({
         });
       }
 
+      const packageTarget = updateTargetFor(latest.name, updateTarget.platform);
       const command = `
 set -eu
-tmp="$(mktemp -d "\${TMPDIR:-/tmp}/herdr-gui-update.XXXXXX")"
+tmp="$(mktemp -d "\${TMPDIR:-/tmp}/shprd-update.XXXXXX")"
 target=${shQuote(capability.targetPath)}
 target_tmp=""
 backup_tmp=""
@@ -618,7 +663,7 @@ cleanup() {
 }
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
-archive="$tmp/${updateTarget.archiveName}"
+archive="$tmp/${packageTarget.archiveName}"
 expected_sha256=${shQuote(latest.sha256)}
 curl ${curlTransportCommand()} -fsSL ${shQuote(updateArchiveUrl())} -o "$archive"
 if command -v shasum >/dev/null 2>&1; then
@@ -634,11 +679,11 @@ if [ "$actual_sha256" != "$expected_sha256" ]; then
   exit 1
 fi
 tar -xJf "$archive" -C "$tmp" \
-  ${shQuote(`${updateTarget.packageDir}/VERSION`)} \
-  ${shQuote(`${updateTarget.packageDir}/herdr-gui`)}
-package_dir="$tmp/${updateTarget.packageDir}"
+  ${shQuote(`${packageTarget.packageDir}/VERSION`)} \
+  ${shQuote(`${packageTarget.packageDir}/${latest.name}`)}
+package_dir="$tmp/${packageTarget.packageDir}"
 version_file="$package_dir/VERSION"
-binary="$package_dir/herdr-gui"
+binary="$package_dir/${latest.name}"
 if [ ! -d "$package_dir" ] || [ -L "$package_dir" ] || \
    [ ! -f "$version_file" ] || [ -L "$version_file" ] || \
    [ ! -f "$binary" ] || [ -L "$binary" ] || [ ! -x "$binary" ]; then
@@ -651,7 +696,7 @@ actual_version=""
 actual_platform=""
 extra_version_field=""
 read -r package_name actual_version actual_platform extra_version_field < "$version_file"
-if [ "$package_name" != "herdr-gui" ] || \
+if [ "$package_name" != ${shQuote(latest.name)} ] || \
    [ "$actual_version" != "$expected_version" ] || \
    [ "$actual_platform" != ${shQuote(updateTarget.platform)} ] || \
    [ -n "$extra_version_field" ]; then
@@ -659,7 +704,7 @@ if [ "$package_name" != "herdr-gui" ] || \
   exit 1
 fi
 binary_version="$("$binary" --version)"
-if [ "$binary_version" != "herdr-gui $expected_version" ]; then
+if [ "$binary_version" != ${shQuote(`${latest.name} ${latest.version}`)} ]; then
   echo "downloaded binary version does not match update manifest" >&2
   exit 1
 fi

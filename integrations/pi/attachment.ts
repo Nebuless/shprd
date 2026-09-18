@@ -7,7 +7,18 @@ import { once } from "node:events";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-const LIMIT = 1024 * 1024;
+const IMAGE_LIMIT = 25 * 1024 * 1024;
+const LIMIT = Math.ceil(IMAGE_LIMIT / 3) * 4 + 1024 * 1024;
+const IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/bmp",
+  "image/x-icon",
+  "image/vnd.microsoft.icon",
+  "image/avif",
+]);
 const exec = promisify(execFile);
 export interface NativeModel {
   readonly provider: string;
@@ -50,8 +61,13 @@ export interface NativeContext<M extends NativeModel> {
     ): Promise<string | undefined>;
   };
 }
+export type NativeImage = {
+  readonly mimeType: string;
+  readonly data: string;
+};
 export interface NativeRuntime<M extends NativeModel> {
-  prompt(message: string): void;
+  readonly imagePrompt: boolean;
+  prompt(message: string, image?: NativeImage): void;
   setModel(model: M): Promise<boolean>;
   thinkingLevel(): string;
 }
@@ -73,6 +89,28 @@ function text(value: unknown, max = 65536): string {
   )
     throw new AttachmentError("INVALID_REQUEST");
   return value;
+}
+function image(value: unknown): NativeImage {
+  const parsed = object(value);
+  if (
+    Object.keys(parsed).length !== 2 ||
+    !IMAGE_MIME_TYPES.has(parsed.mimeType as string) ||
+    typeof parsed.data !== "string" ||
+    !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(
+      parsed.data,
+    )
+  )
+    throw new AttachmentError("INVALID_REQUEST");
+  const data = Buffer.from(parsed.data, "base64");
+  if (data.length === 0 || data.length > IMAGE_LIMIT)
+    throw new AttachmentError("INVALID_REQUEST");
+  return {
+    mimeType:
+      parsed.mimeType === "image/vnd.microsoft.icon"
+        ? "image/x-icon"
+        : (parsed.mimeType as string),
+    data: parsed.data,
+  };
 }
 export const defaultDirectory = () =>
   process.env.SHPRD_AGENT_DIR ?? join(homedir(), ".shprd", "attachments");
@@ -140,6 +178,7 @@ export function createAttachment<M extends NativeModel>(
       : null,
     thinkingLevel: runtime.thinkingLevel(),
     capabilities: {
+      image_prompt: runtime.imagePrompt,
       ui_dialog: current.hasUI,
       existing_dialog_response: false,
       custom_ui: "terminal_handoff",
@@ -168,9 +207,14 @@ export function createAttachment<M extends NativeModel>(
             name: model.name,
           })),
         };
-      case "prompt":
-        runtime.prompt(text(command.message));
+      case "prompt": {
+        const promptImage =
+          command.image === undefined ? undefined : image(command.image);
+        if (promptImage && !runtime.imagePrompt)
+          throw new AttachmentError("IMAGE_UNSUPPORTED");
+        runtime.prompt(text(command.message), promptImage);
         return { accepted: true };
+      }
       case "abort":
         current.abort();
         emit({ type: "abort_requested" });

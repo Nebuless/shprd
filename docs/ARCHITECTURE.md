@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes Herdr Studio's current system contracts. See
+This document describes SHPRD's current system contracts. See
 [FEATURES.md](../FEATURES.md) for behavior and shortcuts,
 [DEPLOYMENT.md](./DEPLOYMENT.md) for supported configurations, and the
 [SHPRD refactor plan](./SHPRD-REFACTOR-PLAN.md) for native migration gates.

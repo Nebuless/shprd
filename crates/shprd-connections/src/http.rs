@@ -3,15 +3,17 @@ use crate::{ConnectionId, Lease, Result, routing::routing};
 pub enum HttpEndpoint {
     HerdrInfo,
     UploadImage,
+    FetchImage,
     AgentSessionDownload,
     AgentSessionAtif,
     FileDownload,
     FileUpload,
     FileDelete,
 }
-const ENDPOINTS: [(HttpEndpoint, &str, &str); 7] = [
+const ENDPOINTS: [(HttpEndpoint, &str, &str); 8] = [
     (HttpEndpoint::HerdrInfo, "/herdr-info", "GET"),
     (HttpEndpoint::UploadImage, "/upload-image", "POST"),
+    (HttpEndpoint::FetchImage, "/image-fetch", "GET"),
     (
         HttpEndpoint::AgentSessionDownload,
         "/agent-session/download",
@@ -84,6 +86,9 @@ pub fn parse_http_route(path: &str, method: &str) -> Result<Option<HttpRoute>> {
             Ok(None)
         };
     };
+    if *endpoint == HttpEndpoint::FetchImage && id.is_none() {
+        return Ok(None);
+    }
     if method != *expected {
         return Err(routing(405, "method not allowed for connection endpoint"));
     }

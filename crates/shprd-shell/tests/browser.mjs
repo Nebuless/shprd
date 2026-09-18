@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { resolve, sep } from "node:path";
 import { mkdir } from "node:fs/promises";
-import { installShellBridge } from "../assets/react-bridge.mjs";
+import { installShellBridge } from "../../../web/src/shellBridge.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const dist = resolve(
@@ -10,9 +10,10 @@ const dist = resolve(
 );
 const reactRoot = process.env.SHPRD_REACT_MODULE_ROOT;
 const playwright = process.env.SHPRD_PLAYWRIGHT_MODULE;
+const reactDist = process.env.SHPRD_REACT_DIST;
 assert.ok(
-  reactRoot && playwright,
-  "Set SHPRD_REACT_MODULE_ROOT and SHPRD_PLAYWRIGHT_MODULE to installed dependencies",
+  reactRoot && playwright && reactDist,
+  "Set SHPRD_REACT_MODULE_ROOT, SHPRD_PLAYWRIGHT_MODULE and SHPRD_REACT_DIST to built assets",
 );
 const { chromium } = await import(playwright);
 const evidence = root + "/evidence";
@@ -121,45 +122,20 @@ try {
   });
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  async function checkBridge() {
-    await page.evaluate(() => {
-      window.bridgeFinished = new Promise((resolve, reject) => {
-        const observer = new MutationObserver(() => {
-          const button = [...document.querySelectorAll("button")].find(
-            (item) => item.textContent === "Check bridge",
-          );
-          if (button && !button.disabled) {
-            observer.disconnect();
-            clearTimeout(timeout);
-            resolve();
-          }
-        });
-        const timeout = setTimeout(() => {
-          observer.disconnect();
-          reject(new Error("Bridge completion event missing"));
-        }, 10000);
-        observer.observe(document.querySelector(".shprd-toolbar"), {
-          subtree: true,
-          childList: true,
-          attributes: true,
-          characterData: true,
-        });
-      });
-    });
-    await page
-      .getByRole("button", { name: "Check bridge", exact: true })
-      .click();
-    await page.evaluate(() => window.bridgeFinished);
-  }
   await page.goto(shellOrigin);
-  assert.equal(
-    await page.locator("#shprd-host").inputValue(),
-    defaultFixture.url.href,
-  );
+  assert.equal(await page.locator(".shprd-toolbar").count(), 0);
+  assert.equal(await page.locator(".shprd-settings").count(), 0);
   await page.locator("#shprd-react").waitFor();
-  await page.frameLocator("#shprd-react").locator("#draft").waitFor();
-  await checkBridge();
-  assert.match(await page.locator("#shprd-status").innerText(), /connected/);
+  const frame = page.frameLocator("#shprd-react");
+  await frame.locator("#draft").waitFor();
+  const [fixtureFrame] = page
+    .frames()
+    .filter((candidate) => candidate !== page.mainFrame());
+  assert.ok(fixtureFrame, "fixture iframe was not attached");
+  assert.deepEqual(
+    await fixtureFrame.evaluate(() => window.requestShellCheck()),
+    { protocol: "shprd.shell.v1", type: "bridge.checked" },
+  );
 
   let requested;
   let release;
@@ -174,29 +150,24 @@ try {
     await ready;
     await route.continue();
   });
-  await page.locator("#shprd-host").fill(fixtureOrigin);
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Open host", exact: true }).click();
-  try {
-    await navigation;
-    assert.equal(
-      await page
-        .getByRole("button", { name: "Check bridge", exact: true })
-        .isDisabled(),
-      true,
-    );
-  } finally {
-    release();
-  }
-  const frame = page.frameLocator("#shprd-react");
   await frame.locator("#draft").fill("Draft survives shell updates");
-  await page.locator("#shprd-host").fill("https://editing-only.example");
-  await checkBridge();
-  assert.equal(
+  const request = fixtureFrame.evaluate(
+    (host) => window.requestShellHost(host),
+    fixtureOrigin,
+  );
+  await navigation;
+  await request;
+  const navigated = page.waitForEvent(
+    "framenavigated",
+    (candidate) => candidate === fixtureFrame,
+  );
+  release();
+  await navigated;
+  await frame.locator("#draft").waitFor();
+  assert.notEqual(
     await frame.locator("#draft").inputValue(),
     "Draft survives shell updates",
   );
-  assert.match(await page.locator("#shprd-status").innerText(), /connected/);
   await page.screenshot({ path: evidence + "/shell-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: evidence + "/shell-mobile-width.png" });
@@ -206,60 +177,51 @@ try {
     ),
     true,
   );
-  assert.equal(
-    await frame.locator("#draft").inputValue(),
-    "Draft survives shell updates",
-  );
-  // Given: live draft. When: changing host is cancelled. Then: original context survives.
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Open host", exact: true }).click();
-  assert.equal(
-    await frame.locator("#draft").inputValue(),
-    "Draft survives shell updates",
-  );
-  await page.locator("#shprd-host").fill("https://user:secret@example.com");
-  await page.getByRole("button", { name: "Open host", exact: true }).click();
-  await page.getByRole("alert").waitFor();
-  assert.equal(
-    await frame.locator("#draft").inputValue(),
-    "Draft survives shell updates",
-  );
 
   // Run retained product bundle, not a rewritten editor or terminal.
-  if (process.env.SHPRD_REACT_DIST) {
-    const reactDist = resolve(process.env.SHPRD_REACT_DIST);
-    const html = await Bun.file(reactDist + "/index.html").text();
+  {
+    const retainedDist = resolve(reactDist);
+    const html = await Bun.file(retainedDist + "/index.html").text();
     retained = Bun.serve({
       hostname: "127.0.0.1",
       port: 0,
       fetch(request) {
         const path = new URL(request.url).pathname;
-        if (path === "/shell-bridge.mjs")
-          return new Response(Bun.file(root + "/assets/react-bridge.mjs"));
         if (path === "/")
-          return new Response(
-            html.replace(
-              "</body>",
-              '<script type="module">import {installShellBridge} from "/shell-bridge.mjs";installShellBridge(' +
-                JSON.stringify(shellOrigin) +
-                ");</script></body>",
-            ),
-            { headers: { "content-type": "text/html" } },
-          );
-        return staticResponse(reactDist, path);
+          return new Response(html, {
+            headers: { "content-type": "text/html" },
+          });
+        return staticResponse(retainedDist, path);
       },
     });
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.locator("#shprd-host").fill(retained.url.origin);
-    page.once("dialog", (dialog) => dialog.accept());
-    await page.getByRole("button", { name: "Open host", exact: true }).click();
+    await fixtureFrame.evaluate(
+      (host) => window.requestShellHost(host),
+      retained.url.origin,
+    );
     await page
       .frameLocator("#shprd-react")
       .locator("#root > *")
       .first()
       .waitFor();
-    await checkBridge();
-    assert.match(await page.locator("#shprd-status").innerText(), /connected/);
+    const retainedFrame = page.frameLocator("#shprd-react");
+    await retainedFrame
+      .locator("button.topbar-button.menu-button")
+      .first()
+      .click();
+    await retainedFrame.getByText("Shell", { exact: true }).waitFor();
+    await retainedFrame
+      .getByRole("button", { name: "Check bridge", exact: true })
+      .click();
+    await retainedFrame
+      .getByText("React bridge connected", { exact: false })
+      .waitFor();
+    await retainedFrame.getByLabel("Host URL").fill(defaultFixture.url.origin);
+    page.once("dialog", (dialog) => dialog.accept());
+    await retainedFrame
+      .getByRole("button", { name: "Open host", exact: true })
+      .click();
+    await frame.locator("#draft").waitFor();
     await page.screenshot({ path: evidence + "/retained-react-desktop.png" });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({

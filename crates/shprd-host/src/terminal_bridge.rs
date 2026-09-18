@@ -310,6 +310,7 @@ impl TerminalBridge {
             _ => return Err(Error::InvalidSurface),
         };
         let mut shared = self.shared.lock().await;
+        let mut initial_endpoint_frame = None;
         let session = if let Some(session) = shared.get_mut(terminal_id) {
             session
         } else {
@@ -351,13 +352,7 @@ impl TerminalBridge {
                     } => {
                         let mut endpoint = *endpoint;
                         endpoint.focus_and_wait(&pane_id).await?;
-                        if let Ok(Some((frame, mouse_reporting))) = endpoint.pane_frame(&pane_id) {
-                            let _ = outputs.send(terminal::Output::Mouse {
-                                enabled: mouse_reporting,
-                                pixels: false,
-                            });
-                            let _ = outputs.send(terminal::Output::Frame(frame));
-                        }
+                        initial_endpoint_frame = endpoint.pane_frame(&pane_id)?;
                         Box::pin(endpoint_run(endpoint, pane_id, command_receiver, outputs))
                     }
                 };
@@ -498,6 +493,20 @@ impl TerminalBridge {
             },
         ) {
             viewer.active.store(false, Ordering::Release);
+        }
+        if let Some((frame, mouse_reporting)) = initial_endpoint_frame {
+            session.mouse_reporting = Some(mouse_reporting);
+            if let Some(viewer) = session.viewers.get(viewer_id) {
+                if let Some(event) = initial_endpoint_frame_event(
+                    terminal_id,
+                    &frame,
+                    mouse_reporting,
+                    viewer,
+                    self.lease.as_ref(),
+                ) {
+                    let _ = viewer.sender.send(event);
+                }
+            }
         }
         Ok(if negotiation.is_null() {
             json!({"ok":true})
@@ -758,6 +767,34 @@ async fn publish_clipboard_to(
             .for_viewer(viewer),
         );
     }
+}
+
+fn initial_endpoint_frame_event(
+    terminal_id: &str,
+    frame: &render::Frame,
+    mouse_reporting: bool,
+    viewer: &Viewer,
+    lease: Option<&shprd_connections::Lease>,
+) -> Option<TerminalEvent> {
+    let width = frame.width.min(viewer.cols);
+    let height = frame.height.min(viewer.rows);
+    let bytes = render::frame_to_ansi(frame, width, height).ok()?;
+    Some(
+        TerminalEvent::new(
+            json!({
+                "terminal": {
+                    "terminal_id": terminal_id,
+                    "width": width,
+                    "height": height,
+                    "full": true,
+                    "bytes": base64::engine::general_purpose::STANDARD.encode(bytes.as_bytes()),
+                    "mouse_reporting": mouse_reporting,
+                }
+            }),
+            lease,
+        )
+        .for_viewer(viewer),
+    )
 }
 
 async fn publish_structured_frame(

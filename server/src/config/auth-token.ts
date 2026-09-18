@@ -13,17 +13,15 @@ const AUTH_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 
 export function defaultAuthTokenPath(
   homeDir = homedir(),
-  platform = process.platform,
+  platform: string = process.platform,
   appDataDir = process.env.APPDATA,
+  configDir = process.env.SHPRD_CONFIG_DIR,
 ): string {
   const base =
     platform === "win32"
       ? (appDataDir ?? join(homeDir, "AppData", "Roaming"))
       : join(homeDir, ".config");
-  return join(
-    process.env.SHPRD_CONFIG_DIR || join(base, "herdr-gui"),
-    "auth-token",
-  );
+  return join(configDir || join(base, "shprd"), "auth-token");
 }
 
 function readAuthToken(path: string): string {

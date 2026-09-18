@@ -12,16 +12,16 @@ import {
 describe("releaseAssetFor", () => {
   test("maps every supported platform to an archive and binary name", () => {
     expect(releaseAssetFor("darwin", "arm64")).toEqual({
-      asset: "herdr-gui-darwin-arm64",
-      binary: "herdr-gui",
+      asset: "shprd-darwin-arm64",
+      binary: "shprd",
     });
     expect(releaseAssetFor("linux", "x64")).toEqual({
-      asset: "herdr-gui-linux-x64",
-      binary: "herdr-gui",
+      asset: "shprd-linux-x64",
+      binary: "shprd",
     });
-    expect(releaseAssetFor("win32", "x64")?.binary).toBe("herdr-gui.exe");
+    expect(releaseAssetFor("win32", "x64")?.binary).toBe("shprd.exe");
     expect(releaseAssetFor("win32", "arm64")?.asset).toBe(
-      "herdr-gui-windows-arm64",
+      "shprd-windows-arm64",
     );
   });
 
@@ -34,7 +34,7 @@ describe("releaseAssetFor", () => {
 describe("parseSha256File", () => {
   test("extracts the digest from shasum output", () => {
     const digest = "a".repeat(64);
-    expect(parseSha256File(`${digest}  herdr-gui-darwin-arm64.tar.xz\n`)).toBe(
+    expect(parseSha256File(`${digest}  shprd-darwin-arm64.tar.xz\n`)).toBe(
       digest,
     );
   });

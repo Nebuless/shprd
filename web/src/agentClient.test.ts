@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
   AgentWorkspaceClient,
   createAgentTransport,
+  imageFetchPath,
   parseAgentSessions,
   parseAgentMessages,
   parseAgentModels,
@@ -79,6 +80,64 @@ test("native UI dialog events request terminal handoff", async () => {
   }
 });
 
+test("builds scoped encoded native image fetch paths", () => {
+  expect(
+    imageFetchPath(
+      "native:one",
+      7,
+      "https://images.example.test/photo.png?size=large",
+    ),
+  ).toBe(
+    "/api/connections/native%3Aone/image-fetch?connection_generation=7&url=https%3A%2F%2Fimages.example.test%2Fphoto.png%3Fsize%3Dlarge",
+  );
+});
+
+test("defaults URL image fetch support off until native host advertises it", () => {
+  const client = {
+    connectionId: "local",
+    generation: 1,
+    serverRuntimeGeneration: 1,
+    call: async () => ({}),
+    isCurrent: () => true,
+    acceptsServerGeneration: () => true,
+  };
+  expect(
+    createAgentTransport(
+      client,
+      () => () => {},
+      () => () => {},
+    ).canFetchImageUrl,
+  ).toBe(false);
+  expect(
+    createAgentTransport(
+      client,
+      () => () => {},
+      () => () => {},
+      true,
+    ).canFetchImageUrl,
+  ).toBe(true);
+});
+
+test("rejects image prompt when agent lacks image capability", async () => {
+  const f = fixture();
+  try {
+    await signal(f.client, () => f.client.getSnapshot().messages.length === 1);
+    await f.client.command({
+      type: "prompt",
+      message: "describe image",
+      image: { mimeType: "image/png", data: "aGVsbG8=" },
+    });
+    expect(
+      f.calls.some((call) => record(call.params?.command).type === "prompt"),
+    ).toBe(false);
+    expect(f.client.getSnapshot().error).toBe(
+      "Image prompts are unavailable for this agent.",
+    );
+  } finally {
+    f.stop();
+  }
+});
+
 test("accepts native adapter model identifiers", () => {
   expect(
     parseAgentModels({
@@ -115,6 +174,7 @@ test("preserves real session identity and connection state for both engines", ()
       cwd: "/repo",
       connected: true,
       busy: false,
+      capabilities: { image_prompt: false },
     },
     {
       id: "a1",
@@ -123,6 +183,7 @@ test("preserves real session identity and connection state for both engines", ()
       cwd: "/repo",
       connected: false,
       busy: true,
+      capabilities: { image_prompt: true },
     },
   ];
   // When
@@ -139,6 +200,7 @@ const sessions = [
     cwd: "/repo",
     connected: true,
     busy: false,
+    capabilities: { image_prompt: false },
   },
   {
     id: "a1",
@@ -147,6 +209,7 @@ const sessions = [
     cwd: "/repo",
     connected: true,
     busy: false,
+    capabilities: { image_prompt: true },
   },
 ];
 function fixture() {
@@ -156,6 +219,8 @@ function fixture() {
   const calls: { method: string; params?: Record<string, unknown> }[] = [];
   const transport: AgentTransport = {
     scopeKey: "local",
+    canFetchImageUrl: false,
+    fetchImage: async () => new Blob(["image"], { type: "image/png" }),
     call: async (method, params) => {
       calls.push({ method, params });
       if (method === "agent_control.list") return { sessions };
@@ -230,6 +295,25 @@ function signal(client: AgentWorkspaceClient, condition: () => boolean) {
     });
   });
 }
+
+test("defaults missing image capability to unsupported", () => {
+  expect(
+    parseAgentSessions({
+      sessions: [
+        {
+          id: "s1",
+          agent: "senpi",
+          name: "Review",
+          cwd: "/repo",
+          connected: true,
+          busy: false,
+        },
+      ],
+    }),
+  ).toEqual([
+    expect.objectContaining({ capabilities: { image_prompt: false } }),
+  ]);
+});
 
 test("rejects malformed sessions and native command errors", () => {
   expect(() =>
@@ -328,6 +412,53 @@ test("native message streaming replaces partial content and updates busy", async
       { type: "text", text: "Hello!" },
     ]);
     expect(f.client.getSnapshot().sessions[0].busy).toBe(false);
+  } finally {
+    f.stop();
+  }
+});
+
+test("rejects image prompt before unsupported native dispatch", async () => {
+  const f = fixture();
+  try {
+    await signal(f.client, () => f.client.getSnapshot().messages.length === 1);
+    f.client.setDraft("keep image draft");
+    const callsBefore = f.calls.length;
+    await f.client.command({
+      type: "prompt",
+      message: "keep image draft",
+      image: { mimeType: "image/png", data: "iVBORw0KGgo=" },
+    });
+    expect(f.calls.length).toBe(callsBefore);
+    expect(f.client.getSnapshot().drafts.s1).toBe("keep image draft");
+    expect(f.client.getSnapshot().error).toBe(
+      "Image prompts are unavailable for this agent.",
+    );
+  } finally {
+    f.stop();
+  }
+});
+
+test("sends image prompt to capable current session", async () => {
+  const f = fixture();
+  try {
+    await signal(f.client, () => f.client.getSnapshot().messages.length === 1);
+    await f.client.select("a1");
+    f.client.setDraft("inspect image");
+    const image = { mimeType: "image/png", data: "iVBORw0KGgo=" };
+    expect(
+      await f.client.command({
+        type: "prompt",
+        message: "inspect image",
+        image,
+      }),
+    ).toBe(true);
+    expect(f.calls[f.calls.length - 1]).toEqual({
+      method: "agent_control.request",
+      params: {
+        session_id: "a1",
+        command: { type: "prompt", message: "inspect image", image },
+      },
+    });
   } finally {
     f.stop();
   }

@@ -8,11 +8,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
+import { createHash } from "node:crypto";
 import { basename, dirname, join, resolve } from "node:path";
 import {
   DEFAULT_SERVICE_ENV_FILE,
   escapeSystemdExecPath,
   GENERATED_MARKER,
+  LEGACY_GENERATED_MARKER,
+  LEGACY_SERVICE_LABEL,
   renderLaunchdService,
   renderSystemdService,
   renderWindowsTaskDefinition,
@@ -21,15 +24,11 @@ import {
   SERVICE_LABEL,
   type ServicePlatform,
 } from "./service-definitions";
-import { loadOrCreateAuthToken } from "./auth-token";
-import {
-  browserUrlFor,
-  getLanIPs,
-  isAnyHost,
-  withLoginToken,
-} from "./server-config";
+import { defaultAuthTokenPath, loadOrCreateAuthToken } from "./auth-token";
+import { browserUrlFor, legacyConfigDirForRuntime } from "./server-config";
 
 type ServiceAction = "install" | "uninstall" | "status" | "restart" | "reload";
+type TailscaleMode = "token" | "no-auth" | undefined;
 
 export const SERVICE_COMMAND_CONTINUE = Symbol("service-command-continue");
 
@@ -48,6 +47,11 @@ interface ServiceCommandDependencies {
   runtime?: ServiceRuntime;
   runCommand?: RunCommand;
   getLanIPs?: () => string[];
+  getTailscaleIPs?: () => string[];
+  isLegacyServiceActive?: (
+    platform: ServicePlatform,
+    runtime: ServiceRuntime,
+  ) => boolean;
   log?: (message: string) => void;
   error?: (message: string) => void;
 }
@@ -55,7 +59,20 @@ interface ServiceCommandDependencies {
 interface ParsedServiceCommand {
   action: ServiceAction | "help" | "run";
   force: boolean;
+  tailscaleMode: TailscaleMode;
   configPath?: string;
+}
+
+function parseAuthTokenCommand(args: string[]): "show" | "path" | null {
+  if (args[0] !== "auth" || args[1] !== "token") return null;
+  if (args[2] === "show" || args[2] === "path") {
+    if (args.length === 3) return args[2];
+    throw new Error(`unknown auth token option: ${args[3]}`);
+  }
+  if (args.length === 2 || args[2] === "help" || args[2] === "--help") {
+    return null;
+  }
+  throw new Error(`unknown auth token action: ${args[2]}`);
 }
 
 function parseServiceCommand(args: string[]): ParsedServiceCommand | null {
@@ -67,7 +84,7 @@ function parseServiceCommand(args: string[]): ParsedServiceCommand | null {
     tail.includes("--help") ||
     tail.includes("-h")
   ) {
-    return { action: "help", force: false };
+    return { action: "help", force: false, tailscaleMode: undefined };
   }
 
   const action = tail[0];
@@ -75,7 +92,12 @@ function parseServiceCommand(args: string[]): ParsedServiceCommand | null {
     if (tail.length !== 2 || !tail[1]) {
       throw new Error("internal service run requires one environment file");
     }
-    return { action: "run", force: false, configPath: tail[1] };
+    return {
+      action: "run",
+      force: false,
+      tailscaleMode: undefined,
+      configPath: tail[1],
+    };
   }
   if (
     !["install", "uninstall", "status", "restart", "reload"].includes(action)
@@ -83,37 +105,58 @@ function parseServiceCommand(args: string[]): ParsedServiceCommand | null {
     throw new Error(`unknown service action: ${action}`);
   }
   const options = tail.slice(1);
-  const unknown = options.filter((option) => option !== "--force");
+  const tailscaleMode = options.includes("--tailscale-no-auth")
+    ? "no-auth"
+    : options.includes("--tailscale")
+      ? "token"
+      : undefined;
+  const unknown = options.filter(
+    (option) =>
+      option !== "--force" &&
+      option !== "--tailscale" &&
+      option !== "--tailscale-no-auth",
+  );
   if (unknown.length > 0) {
     throw new Error(`unknown service option: ${unknown[0]}`);
   }
-  if (options.includes("--force") && action !== "install") {
-    throw new Error("--force is only valid with `service install`");
+  if (
+    options.includes("--tailscale") &&
+    options.includes("--tailscale-no-auth")
+  ) {
+    throw new Error("choose only one Tailnet authentication mode");
+  }
+  if ((options.includes("--force") || tailscaleMode) && action !== "install") {
+    throw new Error(
+      "service install options are only valid with `service install`",
+    );
   }
   return {
     action: action as ServiceAction,
     force: options.includes("--force"),
+    tailscaleMode,
   };
 }
 
 function serviceHelp(): string {
-  return `Manage Herdr Studio as a user service.
+  return `Manage SHPRD as a user service.
 
 Usage:
-  herdr-gui service install [--force]
-  herdr-gui service status
-  herdr-gui service restart
-  herdr-gui service reload
-  herdr-gui service uninstall
+  shprd service install [--force] [--tailscale | --tailscale-no-auth]
+  shprd service status
+  shprd service restart
+  shprd service reload
+  shprd service uninstall
 
 Linux uses a systemd user service. macOS uses a launchd LaunchAgent.
 Windows uses a per-user Task Scheduler task that starts at login.
-New services listen on 0.0.0.0 and use a generated login token by default.
-Install prints tokenized login URLs, preserves the platform-specific
-herdr-gui.env file, and starts the service.
+New services listen on 127.0.0.1 by default.
+--tailscale binds exactly one detected Tailnet IPv4 and keeps SHPRD token auth.
+--tailscale-no-auth binds exactly one detected Tailnet IPv4 and relies on Tailnet ACLs.
+Neither mode changes Tailscale configuration. Install preserves the platform-specific
+shprd.env file and starts the service.
 Reload re-reads the service definition and restarts the process.
 Use --force only to replace an existing service definition not generated by
-herdr-gui. Uninstall preserves the environment file.
+SHPRD. Uninstall preserves the environment file.
 `;
 }
 
@@ -129,6 +172,20 @@ function defaultRunCommand(
   return result.exitCode ?? 1;
 }
 
+function defaultTailscaleIPs(): string[] {
+  const result = Bun.spawnSync(["tailscale", "ip", "-4"], {
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  if (result.exitCode !== 0) return [];
+  return new TextDecoder()
+    .decode(result.stdout)
+    .split(/\r?\n/)
+    .map((address) => address.trim())
+    .filter(Boolean);
+}
+
 function ensureStandaloneBinary(runtime: ServiceRuntime): string {
   const invoked = runtime.argv[1] ?? "";
   const executable = basename(runtime.execPath).toLowerCase();
@@ -137,7 +194,7 @@ function ensureStandaloneBinary(runtime: ServiceRuntime): string {
     executable === "bun.exe" ||
     invoked.endsWith("src/index.ts")
   ) {
-    throw new Error("service install requires the standalone herdr-gui binary");
+    throw new Error("service install requires the standalone shprd binary");
   }
   return resolve(runtime.execPath);
 }
@@ -218,9 +275,13 @@ function restartWindowsTask(taskName: string, runCommand: RunCommand): number {
 function assertServiceDefinitionWritable(path: string, force: boolean) {
   if (existsSync(path)) {
     const existing = readFileSync(path, "utf8");
-    if (!existing.includes(GENERATED_MARKER) && !force) {
+    if (
+      !existing.includes(GENERATED_MARKER) &&
+      !existing.includes(LEGACY_GENERATED_MARKER) &&
+      !force
+    ) {
       throw new Error(
-        `${path} was not generated by herdr-gui; rerun with --force to replace it`,
+        `${path} was not generated by SHPRD; rerun with --force to replace it`,
       );
     }
   }
@@ -248,7 +309,12 @@ function preservedSystemdExecStart(
 ): string | undefined {
   if (!existsSync(definitionPath)) return undefined;
   const contents = readFileSync(definitionPath, "utf8");
-  if (!contents.includes(GENERATED_MARKER)) return undefined;
+  if (
+    !contents.includes(GENERATED_MARKER) &&
+    !contents.includes(LEGACY_GENERATED_MARKER)
+  ) {
+    return undefined;
+  }
 
   const commands = contents
     .split(/\r?\n/)
@@ -336,9 +402,9 @@ function loadServiceEnvironmentFile(path: string) {
 interface ServiceAccess {
   host: string;
   port: number;
-  token?: string;
-  tokenPath?: string;
+  tokenPath: string;
   usesFixedPassword: boolean;
+  tailscaleNoAuth: boolean;
 }
 
 function prepareServiceAccess(configPath: string): ServiceAccess {
@@ -349,57 +415,215 @@ function prepareServiceAccess(configPath: string): ServiceAccess {
   if (!Number.isInteger(port) || port < 1 || port > 65_535) {
     throw new Error(`invalid PORT in ${configPath}: ${configuredPort}`);
   }
-
-  const password = readEnvironmentValue(contents, "HERDR_GUI_PASSWORD") ?? "";
-  const usesFixedPassword = password.length > 0;
-  if (
-    usesFixedPassword ||
-    host === "127.0.0.1" ||
-    host === "localhost" ||
-    host === "::1"
-  ) {
-    return { host, port, usesFixedPassword };
-  }
-
-  const tokenPath = join(dirname(configPath), "auth-token");
+  const tailscaleNoAuth =
+    readEnvironmentValue(contents, "SHPRD_TAILSCALE_NO_AUTH") === "1";
+  const tailscaleTokenAuth =
+    readEnvironmentValue(contents, "SHPRD_TAILSCALE_NO_AUTH") === "0" &&
+    isTailnetIPv4(host);
   return {
     host,
     port,
-    token: loadOrCreateAuthToken(tokenPath),
-    tokenPath,
-    usesFixedPassword,
+    tokenPath: join(dirname(configPath), "auth-token"),
+    usesFixedPassword:
+      !tailscaleTokenAuth &&
+      (
+        readEnvironmentValue(contents, "SHPRD_PASSWORD") ??
+        readEnvironmentValue(contents, "HERDR_GUI_PASSWORD") ??
+        ""
+      ).length > 0,
+    tailscaleNoAuth,
   };
 }
 
 function printServiceAccess(
   access: ServiceAccess,
-  resolveLanIPs: () => string[],
   log: (message: string) => void,
 ) {
+  const url = browserUrlFor(access.host, access.port);
+  if (access.tailscaleNoAuth) {
+    log(`Tailnet URL: ${url}`);
+    log(
+      "Authentication: Tailnet ACLs control access; SHPRD token auth is disabled",
+    );
+    return;
+  }
   if (access.usesFixedPassword) {
     log("Authentication: fixed password from the service config");
-    log(`Open: ${browserUrlFor(access.host, access.port)}`);
+    log(`Open: ${url}`);
     return;
   }
-  if (!access.token) {
-    log(`Open: ${browserUrlFor(access.host, access.port)} (local access)`);
+  if (
+    access.host === "127.0.0.1" ||
+    access.host === "localhost" ||
+    access.host === "::1"
+  ) {
+    log(`Open: ${url} (local access)`);
     return;
   }
-
-  log(`Login token: ${access.token}`);
+  log(`Tailnet URL: ${url}`);
+  log("Authentication: SHPRD token required; run `shprd auth token show`");
   log(`Token file: ${access.tokenPath}`);
-  log(
-    `Open: ${withLoginToken(
-      browserUrlFor(access.host, access.port),
-      access.token,
-    )}`,
+}
+
+function isTailnetIPv4(ip: string): boolean {
+  const match = ip.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (!match) return false;
+  const octets = match.slice(1).map(Number);
+  return (
+    octets.every((octet) => octet >= 0 && octet <= 255) &&
+    octets[0] === 100 &&
+    octets[1] >= 64 &&
+    octets[1] <= 127
   );
-  if (isAnyHost(access.host)) {
-    for (const ip of resolveLanIPs()) {
-      log(
-        `LAN: ${withLoginToken(`http://${ip}:${access.port}`, access.token)}`,
-      );
-    }
+}
+
+function tailscaleIPv4(resolveTailscaleIPs: () => string[]): string {
+  const addresses = [...new Set(resolveTailscaleIPs().filter(isTailnetIPv4))];
+  if (addresses.length !== 1) {
+    throw new Error(
+      "Tailnet install requires exactly one Tailnet IPv4 from `tailscale ip -4`",
+    );
+  }
+  return addresses[0];
+}
+
+function isEnvironmentAssignment(line: string, name: string): boolean {
+  return new RegExp(`^\\s*(?:export\\s+)?${name}\\s*=`).test(line);
+}
+
+function replaceEnvironmentValue(
+  contents: string,
+  name: string,
+  value: string,
+): string {
+  const retained = contents
+    .split(/\r?\n/)
+    .filter((line) => !isEnvironmentAssignment(line, name));
+  while (retained.at(-1) === "") retained.pop();
+  retained.push(`${name}=${value}`, "");
+  return retained.join("\n");
+}
+
+function removeEnvironmentValue(contents: string, name: string): string {
+  const retained = contents
+    .split(/\r?\n/)
+    .filter((line) => !isEnvironmentAssignment(line, name));
+  while (retained.at(-1) === "") retained.pop();
+  return `${retained.join("\n")}\n`;
+}
+
+function hasEnvironmentValue(contents: string, name: string): boolean {
+  return contents
+    .split(/\r?\n/)
+    .some((line) => isEnvironmentAssignment(line, name));
+}
+
+function legacyServiceDefinitionPath(
+  platform: ServicePlatform,
+  runtime: ServiceRuntime,
+): string {
+  if (platform === "systemd") {
+    return join(
+      runtime.homeDir,
+      ".config",
+      "systemd",
+      "user",
+      "herdr-gui.service",
+    );
+  }
+  if (platform === "launchd") {
+    return join(
+      runtime.homeDir,
+      "Library",
+      "LaunchAgents",
+      `${LEGACY_SERVICE_LABEL}.plist`,
+    );
+  }
+  const base = join(
+    runtime.appDataDir ?? join(runtime.homeDir, "AppData", "Roaming"),
+    "herdr-gui",
+  );
+  return join(base, "herdr-gui-task.ps1");
+}
+
+function legacyWindowsTaskName(runtime: ServiceRuntime): string {
+  const base = join(
+    runtime.appDataDir ?? join(runtime.homeDir, "AppData", "Roaming"),
+    "herdr-gui",
+  );
+  const userKey = createHash("sha256")
+    .update(base.toLowerCase())
+    .digest("hex")
+    .slice(0, 16);
+  return `${LEGACY_SERVICE_LABEL}-${userKey}`;
+}
+
+function quietCommandExit(argv: string[]): number | undefined {
+  try {
+    return Bun.spawnSync(argv, {
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    }).exitCode;
+  } catch {
+    return undefined;
+  }
+}
+
+function defaultIsLegacyServiceActive(
+  platform: ServicePlatform,
+  runtime: ServiceRuntime,
+): boolean {
+  if (platform === "systemd") {
+    return (
+      quietCommandExit([
+        "systemctl",
+        "--user",
+        "is-active",
+        "--quiet",
+        "herdr-gui.service",
+      ]) === 0
+    );
+  }
+  if (platform === "launchd") {
+    return (
+      runtime.uid !== undefined &&
+      quietCommandExit([
+        "launchctl",
+        "print",
+        `gui/${runtime.uid}/${LEGACY_SERVICE_LABEL}`,
+      ]) === 0
+    );
+  }
+  return (
+    quietCommandExit([
+      "powershell.exe",
+      "-NoProfile",
+      "-NonInteractive",
+      "-Command",
+      `try { Get-ScheduledTask -TaskName ${powershellLiteral(legacyWindowsTaskName(runtime))} -ErrorAction Stop | Out-Null; exit 0 } catch { exit 1 }`,
+    ]) === 0
+  );
+}
+
+function assertNoLegacyService(
+  platform: ServicePlatform,
+  runtime: ServiceRuntime,
+  isLegacyServiceActive: (
+    platform: ServicePlatform,
+    runtime: ServiceRuntime,
+  ) => boolean,
+) {
+  const legacyDefinition = legacyServiceDefinitionPath(platform, runtime);
+  if (existsSync(legacyDefinition)) {
+    throw new Error(
+      `legacy herdr-gui service exists at ${legacyDefinition}; uninstall it before installing SHPRD`,
+    );
+  }
+  if (isLegacyServiceActive(platform, runtime)) {
+    throw new Error(
+      "legacy herdr-gui service is active; stop and uninstall it before installing SHPRD",
+    );
   }
 }
 
@@ -407,11 +631,19 @@ function installService(
   platform: ServicePlatform,
   runtime: ServiceRuntime,
   force: boolean,
+  tailscaleMode: TailscaleMode,
   runCommand: RunCommand,
-  resolveLanIPs: () => string[],
+  resolveTailscaleIPs: () => string[],
+  isLegacyServiceActive: (
+    platform: ServicePlatform,
+    runtime: ServiceRuntime,
+  ) => boolean,
   log: (message: string) => void,
 ): number {
   const binaryPath = ensureStandaloneBinary(runtime);
+  const tailscaleIp = tailscaleMode
+    ? tailscaleIPv4(resolveTailscaleIPs)
+    : undefined;
   if (platform === "launchd" && runtime.uid === undefined) {
     throw new Error("cannot determine the current user id for launchd");
   }
@@ -434,8 +666,22 @@ function installService(
       );
     }
   }
+  assertNoLegacyService(platform, runtime, isLegacyServiceActive);
   assertServiceDefinitionWritable(paths.definition, force);
   const environmentCreated = ensureEnvironmentFile(paths.config);
+  let contents = readFileSync(paths.config, "utf8");
+  if (tailscaleMode) {
+    contents = replaceEnvironmentValue(contents, "HOST", tailscaleIp ?? "");
+    contents = replaceEnvironmentValue(
+      contents,
+      "SHPRD_TAILSCALE_NO_AUTH",
+      tailscaleMode === "no-auth" ? "1" : "0",
+    );
+  } else if (hasEnvironmentValue(contents, "SHPRD_TAILSCALE_NO_AUTH")) {
+    contents = replaceEnvironmentValue(contents, "HOST", "127.0.0.1");
+    contents = removeEnvironmentValue(contents, "SHPRD_TAILSCALE_NO_AUTH");
+  }
+  writeFileSync(paths.config, contents, { mode: 0o600 });
   const access = prepareServiceAccess(paths.config);
   if (paths.stdoutLog) mkdirSync(dirname(paths.stdoutLog), { recursive: true });
   const customSystemdExecStart =
@@ -454,17 +700,12 @@ function installService(
   if (platform === "systemd") {
     code = runCommand(["systemctl", "--user", "daemon-reload"]);
     if (code === 0) {
-      code = runCommand(["systemctl", "--user", "enable", "herdr-gui.service"]);
+      code = runCommand(["systemctl", "--user", "enable", "shprd.service"]);
     }
     if (code === 0) {
       // `enable --now` does not restart an already-active service after its
       // definition changes. An explicit restart makes reinstall deterministic.
-      code = runCommand([
-        "systemctl",
-        "--user",
-        "restart",
-        "herdr-gui.service",
-      ]);
+      code = runCommand(["systemctl", "--user", "restart", "shprd.service"]);
     }
   } else if (platform === "launchd") {
     const domain = `gui/${runtime.uid}`;
@@ -496,7 +737,7 @@ function installService(
     if (customSystemdExecStart) {
       log(`Preserved custom ExecStart: ${customSystemdExecStart}`);
     }
-    printServiceAccess(access, resolveLanIPs, log);
+    printServiceAccess(access, log);
   }
   return code;
 }
@@ -520,10 +761,11 @@ function uninstallService(
   }
   if (
     definitionExists &&
-    !readFileSync(paths.definition, "utf8").includes(GENERATED_MARKER)
+    !readFileSync(paths.definition, "utf8").includes(GENERATED_MARKER) &&
+    !readFileSync(paths.definition, "utf8").includes(LEGACY_GENERATED_MARKER)
   ) {
     throw new Error(
-      `${paths.definition} was not generated by herdr-gui and will not be removed`,
+      `${paths.definition} was not generated by SHPRD and will not be removed`,
     );
   }
   if (platform === "systemd") {
@@ -532,7 +774,7 @@ function uninstallService(
       "--user",
       "disable",
       "--now",
-      "herdr-gui.service",
+      "shprd.service",
     ]);
     if (stopCode !== 0) return stopCode;
     rmSync(paths.definition, { force: true });
@@ -606,12 +848,7 @@ function runServiceAction(
     if (platform === "systemd") {
       const reloadCode = runCommand(["systemctl", "--user", "daemon-reload"]);
       if (reloadCode !== 0) return reloadCode;
-      return runCommand([
-        "systemctl",
-        "--user",
-        "restart",
-        "herdr-gui.service",
-      ]);
+      return runCommand(["systemctl", "--user", "restart", "shprd.service"]);
     }
     if (platform === "windows-task") {
       const registerCode = registerWindowsTask(paths.definition, runCommand);
@@ -635,8 +872,8 @@ function runServiceAction(
   if (platform === "systemd") {
     return runCommand(
       action === "status"
-        ? ["systemctl", "--user", "--no-pager", "status", "herdr-gui.service"]
-        : ["systemctl", "--user", "restart", "herdr-gui.service"],
+        ? ["systemctl", "--user", "--no-pager", "status", "shprd.service"]
+        : ["systemctl", "--user", "restart", "shprd.service"],
     );
   }
   if (platform === "windows-task") {
@@ -677,6 +914,29 @@ export function runServiceCommand(
   const error = dependencies.error ?? console.error;
   let command: ParsedServiceCommand | null;
   try {
+    const authTokenAction = parseAuthTokenCommand(args);
+    if (authTokenAction) {
+      const runtime = dependencies.runtime ?? {
+        platform: process.platform,
+        homeDir: homedir(),
+        execPath: process.execPath,
+        argv: process.argv,
+      };
+      const path = defaultAuthTokenPath(
+        runtime.homeDir,
+        runtime.platform,
+        runtime.appDataDir,
+        process.env.SHPRD_CONFIG_DIR ??
+          legacyConfigDirForRuntime(runtime.execPath, runtime.homeDir) ??
+          "",
+      );
+      log(authTokenAction === "show" ? loadOrCreateAuthToken(path) : path);
+      return 0;
+    }
+    if (args[0] === "auth" && args[1] === "token") {
+      log("Usage: shprd auth token <show|path>");
+      return 0;
+    }
     command = parseServiceCommand(args);
     if (!command) return null;
     if (command.action === "help") {
@@ -684,8 +944,10 @@ export function runServiceCommand(
       return 0;
     }
     if (command.action === "run") {
-      loadServiceEnvironmentFile(command.configPath ?? "");
-      process.env.HERDR_GUI_RESTART_SUPERVISOR = "1";
+      const configPath = command.configPath ?? "";
+      loadServiceEnvironmentFile(configPath);
+      process.env.SHPRD_CONFIG_DIR ??= dirname(configPath);
+      process.env.SHPRD_RESTART_SUPERVISOR = "1";
       return SERVICE_COMMAND_CONTINUE;
     }
 
@@ -704,8 +966,11 @@ export function runServiceCommand(
         platform,
         runtime,
         command.force,
+        command.tailscaleMode,
         runCommand,
-        dependencies.getLanIPs ?? getLanIPs,
+        dependencies.getTailscaleIPs ?? defaultTailscaleIPs,
+        dependencies.isLegacyServiceActive ??
+          (dependencies.runtime ? () => false : defaultIsLegacyServiceActive),
         log,
       );
     }
@@ -714,8 +979,12 @@ export function runServiceCommand(
     }
     return runServiceAction(command.action, platform, runtime, runCommand);
   } catch (cause) {
-    error(`herdr-gui service: ${(cause as Error).message}`);
-    error("Run `herdr-gui service --help` for usage.");
+    error(`shprd: ${(cause as Error).message}`);
+    error(
+      args[0] === "auth"
+        ? "Run `shprd auth token --help` for usage."
+        : "Run `shprd service --help` for usage.",
+    );
     return 1;
   }
 }

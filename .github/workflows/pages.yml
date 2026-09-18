@@ -5,7 +5,7 @@ on:
         branches: [main]
         paths:
             - ".github/workflows/pages.yml"
-            - "docs/images/herdr-studio-*.png"
+            - "docs/images/shprd-*.png"
             - "docs/TUTORIAL.md"
             - "package.json"
             - "scripts/build-pages.ts"

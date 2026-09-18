@@ -53,7 +53,7 @@ bun run build:site
 ```
 
 Serve `.pages-dist/` with a local static HTTP server and open `/tutorial/`.
-Also check deployment beneath the `/herdr-studio/` Pages subpath, narrow-screen
+Also check deployment beneath the `/shprd/` Pages subpath, narrow-screen
 layouts, keyboard navigation, and reading with JavaScript disabled. Generated
 `.pages-dist/` files must not be committed. The Pages workflow rebuilds when
 the tutorial source, renderer, template, or shared website assets change.

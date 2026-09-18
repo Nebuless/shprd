@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-github_repository="Nebuless/herdr-studio"
+github_repository="Nebuless/shprd"
 custom_release_base="${SHPRD_RELEASE_BASE_URL:-${HERDR_GUI_RELEASE_BASE_URL:-}}"
 install_dir="${SHPRD_INSTALL_DIR:-${HERDR_GUI_INSTALL_DIR:-$HOME/.local/bin}}"
 requested_version="${SHPRD_VERSION:-${HERDR_GUI_VERSION:-}}"

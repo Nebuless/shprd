@@ -10,33 +10,24 @@ const assetDirectory = join(outputDirectory, "assets");
 
 const assets = [
   [
-    "docs/images/herdr-studio-desktop-session-history.png",
-    "herdr-studio-desktop-session-history.png",
+    "docs/images/shprd-desktop-session-history.png",
+    "shprd-desktop-session-history.png",
   ],
   [
-    "docs/images/herdr-studio-desktop-file-explorer.png",
-    "herdr-studio-desktop-file-explorer.png",
+    "docs/images/shprd-desktop-file-explorer.png",
+    "shprd-desktop-file-explorer.png",
   ],
   [
-    "docs/images/herdr-studio-desktop-diff-viewer.png",
-    "herdr-studio-desktop-diff-viewer.png",
+    "docs/images/shprd-desktop-diff-viewer.png",
+    "shprd-desktop-diff-viewer.png",
   ],
+  ["docs/images/shprd-desktop-terminal.png", "shprd-desktop-terminal.png"],
   [
-    "docs/images/herdr-studio-desktop-terminal.png",
-    "herdr-studio-desktop-terminal.png",
+    "docs/images/shprd-mobile-changed-files.png",
+    "shprd-mobile-changed-files.png",
   ],
-  [
-    "docs/images/herdr-studio-mobile-changed-files.png",
-    "herdr-studio-mobile-changed-files.png",
-  ],
-  [
-    "docs/images/herdr-studio-mobile-file-viewer.png",
-    "herdr-studio-mobile-file-viewer.png",
-  ],
-  [
-    "docs/images/herdr-studio-mobile-terminal.png",
-    "herdr-studio-mobile-terminal.png",
-  ],
+  ["docs/images/shprd-mobile-file-viewer.png", "shprd-mobile-file-viewer.png"],
+  ["docs/images/shprd-mobile-terminal.png", "shprd-mobile-terminal.png"],
 ] as const;
 
 async function ensureFile(path: string): Promise<void> {

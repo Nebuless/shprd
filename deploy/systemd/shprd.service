@@ -1,6 +1,6 @@
 [Unit]
 Description=SHPRD
-Documentation=https://github.com/Nebuless/herdr-studio
+Documentation=https://github.com/Nebuless/shprd
 Wants=network-online.target
 After=network-online.target
 

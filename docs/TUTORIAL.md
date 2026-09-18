@@ -95,7 +95,7 @@ access working before adding another network connection.
 > configuration. Review ACLs first. The no-auth flag never makes a LAN or public
 > listener. With token mode, `shprd auth token show` prints the active token.
 
-![Desktop workspace with project navigation on the left, a terminal in the center, and agent message history on the right](./images/herdr-studio-desktop-session-history.png)
+![Desktop workspace with project navigation on the left, a terminal in the center, and agent message history on the right](./images/shprd-desktop-session-history.png)
 
 *Find your project and active pane first. You do not need to identify every
 button yet. Screenshots show an existing version; menu positions may change
@@ -191,7 +191,7 @@ not just the last line in the terminal.
 **You are done when:** you can identify the new lines and explain whether the
 run command is correct, rather than repeating the agent's summary.
 
-![File Explorer previewing a README with raw and rendered views](./images/herdr-studio-desktop-file-explorer.png)
+![File Explorer previewing a README with raw and rendered views](./images/shprd-desktop-file-explorer.png)
 
 *File Explorer explains a file; Diff Viewer explains a change. File-tree search
 covers files already loaded into the tree, not a repository-wide full-text
@@ -226,7 +226,7 @@ are not GitHub PR comments and do not automatically sync to another device.
 When a changed file prevents re-anchoring, the comment is marked stale and its
 original quote remains available for inspection.
 
-![Diff Viewer showing file changes that can be reviewed in context](./images/herdr-studio-desktop-diff-viewer.png)
+![Diff Viewer showing file changes that can be reviewed in context](./images/shprd-desktop-diff-viewer.png)
 
 ### 2.5 Do not rush into bulk actions
 
@@ -311,7 +311,7 @@ means the phone itself, not your work computer.
 project. Confirm that the service address is stable before installing. Install
 your SHPRD URL, not this tutorial's Pages URL.
 
-![Mobile terminal with touch shortcut controls](./images/herdr-studio-mobile-terminal.png)
+![Mobile terminal with touch shortcut controls](./images/shprd-mobile-terminal.png)
 
 *On a small screen, start with one action: check an agent waiting for your
 input, inspect a diff, or add feedback. You do not need to reproduce an entire

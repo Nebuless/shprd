@@ -7,7 +7,7 @@ version = "0.6.2"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT"
-repository = "https://github.com/Nebuless/herdr-studio"
+repository = "https://github.com/Nebuless/shprd"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

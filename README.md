@@ -15,8 +15,8 @@ The experimental SHPRD Rust host and Dioxus shell are source-only alternatives;
 the Bun bridge remains the default. See [native component boundaries](./docs/ARCHITECTURE.md#experimental-native-components)
 and [native development commands](./docs/DEPLOYMENT.md#experimental-native-development).
 
-- [Project website](https://Nebuless.github.io/herdr-studio/)
-- [Hands-on tutorial](https://Nebuless.github.io/herdr-studio/tutorial/)
+- [Project website](https://Nebuless.github.io/shprd/)
+- [Hands-on tutorial](https://Nebuless.github.io/shprd/tutorial/)
   ([Markdown](./docs/TUTORIAL.md)): first steps, review workflows, mobile, and
   private remote access with Tailscale, SSH, or Tailcat.
 - [Feature tour and keyboard shortcuts](./FEATURES.md)
@@ -46,13 +46,13 @@ Workspace terminal with live agent session history.
   <tbody>
     <tr>
       <td width="33.33%" align="center" valign="top">
-        <a href="./docs/images/herdr-studio-desktop-file-explorer.png"><img src="./docs/images/herdr-studio-desktop-file-explorer.png" alt="Desktop file explorer" width="100%" /></a>
+        <a href="./docs/images/shprd-desktop-file-explorer.png"><img src="./docs/images/shprd-desktop-file-explorer.png" alt="Desktop file explorer" width="100%" /></a>
       </td>
       <td width="33.33%" align="center" valign="top">
-        <a href="./docs/images/herdr-studio-desktop-diff-viewer.png"><img src="./docs/images/herdr-studio-desktop-diff-viewer.png" alt="Desktop diff viewer" width="100%" /></a>
+        <a href="./docs/images/shprd-desktop-diff-viewer.png"><img src="./docs/images/shprd-desktop-diff-viewer.png" alt="Desktop diff viewer" width="100%" /></a>
       </td>
       <td width="33.33%" align="center" valign="top">
-        <a href="./docs/images/herdr-studio-desktop-terminal.png"><img src="./docs/images/herdr-studio-desktop-terminal.png" alt="Desktop terminal" width="100%" /></a>
+        <a href="./docs/images/shprd-desktop-terminal.png"><img src="./docs/images/shprd-desktop-terminal.png" alt="Desktop terminal" width="100%" /></a>
       </td>
     </tr>
   </tbody>
@@ -71,13 +71,13 @@ Workspace terminal with live agent session history.
   <tbody>
     <tr>
       <td width="33.33%" align="center" valign="top">
-        <a href="./docs/images/herdr-studio-mobile-changed-files.png"><img src="./docs/images/herdr-studio-mobile-changed-files.png" alt="Mobile changed files viewer" width="100%" /></a>
+        <a href="./docs/images/shprd-mobile-changed-files.png"><img src="./docs/images/shprd-mobile-changed-files.png" alt="Mobile changed files viewer" width="100%" /></a>
       </td>
       <td width="33.33%" align="center" valign="top">
-        <a href="./docs/images/herdr-studio-mobile-terminal.png"><img src="./docs/images/herdr-studio-mobile-terminal.png" alt="Mobile terminal" width="100%" /></a>
+        <a href="./docs/images/shprd-mobile-terminal.png"><img src="./docs/images/shprd-mobile-terminal.png" alt="Mobile terminal" width="100%" /></a>
       </td>
       <td width="33.33%" align="center" valign="top">
-        <a href="./docs/images/herdr-studio-mobile-file-viewer.png"><img src="./docs/images/herdr-studio-mobile-file-viewer.png" alt="Mobile file viewer" width="100%" /></a>
+        <a href="./docs/images/shprd-mobile-file-viewer.png"><img src="./docs/images/shprd-mobile-file-viewer.png" alt="Mobile file viewer" width="100%" /></a>
       </td>
     </tr>
   </tbody>
@@ -87,7 +87,7 @@ Workspace terminal with live agent session history.
 
 Click any screenshot to open the full-resolution image.
 
-[desktop-session]: ./docs/images/herdr-studio-desktop-session-history.png
+[desktop-session]: ./docs/images/shprd-desktop-session-history.png
 
 ## Quick start
 
@@ -97,7 +97,7 @@ SHPRD binary with:
 ```bash
 # Leave empty for latest; set SHPRD_VERSION=X.Y.Z for a specific version (no v prefix).
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
+  https://github.com/Nebuless/shprd/releases/latest/download/install-shprd.sh \
   | SHPRD_VERSION= sh
 ```
 
@@ -109,7 +109,7 @@ shprd
 
 Open the URL printed by the process. On Windows, download the matching x64 or
 ARM64 archive from the
-[latest release](https://github.com/Nebuless/herdr-studio/releases/latest)
+[latest release](https://github.com/Nebuless/shprd/releases/latest)
 instead of running the script. See the
 [deployment guide](./docs/DEPLOYMENT.md) for checksum verification,
 fixed-version installation, authentication, remote connections, updates, and

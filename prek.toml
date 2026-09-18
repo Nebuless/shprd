@@ -44,6 +44,7 @@ name = "Biome format"
 language = "system"
 entry = "mise exec -- bunx biome format --write"
 files = "\\.(css|html|js|json|mjs|ts|tsx)$"
+exclude = "^site/tutorial/index\\.html$"
 stages = ["pre-commit"]
 
 [[repos.hooks]]

@@ -86,7 +86,7 @@ export const PLATFORM_ASSETS: Record<
   "win32-x64": { asset: "shprd-windows-x64", binary: "shprd.exe" },
 };
 
-const RELEASE_REPOSITORY = "Nebuless/herdr-studio";
+const RELEASE_REPOSITORY = "Nebuless/shprd";
 
 export function releaseAssetFor(
   platform: string,

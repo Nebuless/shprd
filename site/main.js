@@ -131,7 +131,7 @@ const copyButton = document.querySelector("[data-copy-command]");
 const copyLabel = copyButton?.querySelector("span");
 const installCommand = document.querySelector("[data-install-command]");
 const commandText =
-  "curl -fsSL https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh | sh";
+  "curl -fsSL https://github.com/Nebuless/shprd/releases/latest/download/install-shprd.sh | sh";
 
 const copyText = async (text) => {
   if (!navigator.clipboard || !window.isSecureContext) {
@@ -180,7 +180,7 @@ if (!reducedMotion.matches && window.matchMedia("(pointer: fine)").matches) {
 
 const starCount = document.querySelector("[data-star-count]");
 
-fetch("https://api.github.com/repos/Nebuless/herdr-studio", {
+fetch("https://api.github.com/repos/Nebuless/shprd", {
   headers: { Accept: "application/vnd.github+json" },
 })
   .then((response) => {

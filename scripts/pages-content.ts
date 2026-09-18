@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 import { dirname, join, posix, relative, resolve } from "node:path";
 
-const repositoryRoot = "https://github.com/Nebuless/herdr-studio/blob/main/";
+const repositoryRoot = "https://github.com/Nebuless/shprd/blob/main/";
 
 export interface TutorialPage {
   content: string;

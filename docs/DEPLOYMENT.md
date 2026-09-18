@@ -100,7 +100,7 @@ checksum and installs the standalone binary to `~/.local/bin/shprd`:
 
 ```bash
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
+  https://github.com/Nebuless/shprd/releases/latest/download/install-shprd.sh \
   | sh
 ```
 
@@ -115,7 +115,7 @@ Open the URL printed by the process. Run the installer again to update.
 
 Windows releases provide x64 and ARM64 archives containing `shprd.exe`.
 Download the matching `shprd-windows-<arch>.tar.xz` and `.sha256` files from
-the [latest release](https://github.com/Nebuless/herdr-studio/releases/latest),
+the [latest release](https://github.com/Nebuless/shprd/releases/latest),
 verify the checksum with `Get-FileHash`, and extract the archive with Windows
 11's built-in `tar.exe`. Releases predating native ARM64 support contain only
 the x64 archive; prefer the native ARM64 package when it is available.
@@ -124,7 +124,7 @@ To install into a system directory, set `SHPRD_INSTALL_DIR`:
 
 ```bash
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
+  https://github.com/Nebuless/shprd/releases/latest/download/install-shprd.sh \
   | sudo env SHPRD_INSTALL_DIR=/usr/local/bin sh
 ```
 
@@ -132,8 +132,8 @@ Set `SHPRD_VERSION` to install a fixed release instead of `latest`:
 
 ```bash
 curl -fsSL \
-  https://github.com/Nebuless/herdr-studio/releases/latest/download/install-shprd.sh \
-  | SHPRD_VERSION=0.4.8 sh
+  https://github.com/Nebuless/shprd/releases/latest/download/install-shprd.sh \
+  | SHPRD_VERSION=0.7.0 sh
 ```
 
 `SHPRD_RELEASE_BASE_URL` selects a compatible flat release mirror. Mirrors
@@ -149,7 +149,7 @@ version, so no source toolchain is needed; the plugin shim itself runs on
 [Bun](https://bun.sh):
 
 ```bash
-herdr plugin install Nebuless/herdr-studio
+herdr plugin install Nebuless/shprd
 ```
 
 Plugin actions manage the same user service described in

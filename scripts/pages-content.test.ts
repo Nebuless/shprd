@@ -73,19 +73,17 @@ describe("tutorial Markdown", () => {
     const { content } = await renderTutorial(
       '# Tutorial\n\n<a id="tailscale"></a>\n\n## Networking\n\n' +
         "[Jump](#tailscale) [Deployment](./DEPLOYMENT.md#logging) [Security](../SECURITY.md)\n\n" +
-        "![Terminal](./images/herdr-studio-desktop-terminal.png)\n\n```bash\necho '<safe>'\n```\n\n" +
+        "![Terminal](./images/shprd-desktop-terminal.png)\n\n```bash\necho '<safe>'\n```\n\n" +
         "| Name | Purpose |\n| --- | --- |\n| Serve | Private access |\n",
     );
     expect(content).toContain('href="#tailscale"');
     expect(content).toContain(
-      'href="https://github.com/Nebuless/herdr-studio/blob/main/docs/DEPLOYMENT.md#logging"',
+      'href="https://github.com/Nebuless/shprd/blob/main/docs/DEPLOYMENT.md#logging"',
     );
     expect(content).toContain(
-      'href="https://github.com/Nebuless/herdr-studio/blob/main/SECURITY.md"',
+      'href="https://github.com/Nebuless/shprd/blob/main/SECURITY.md"',
     );
-    expect(content).toContain(
-      'src="../assets/herdr-studio-desktop-terminal.png"',
-    );
+    expect(content).toContain('src="../assets/shprd-desktop-terminal.png"');
     expect(content).toContain('width="4990"');
     expect(content).toContain('height="2820"');
     expect(content).toContain('loading="lazy"');

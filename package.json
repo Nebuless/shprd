@@ -5,13 +5,13 @@
   "description": "SHPRD: a web client for Herdr (local socket bridge + React dashboard).",
   "license": "MIT",
   "author": "Arthur",
-  "homepage": "https://Nebuless.github.io/herdr-studio/",
+  "homepage": "https://Nebuless.github.io/shprd/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Nebuless/herdr-studio.git"
+    "url": "git+https://github.com/Nebuless/shprd.git"
   },
   "bugs": {
-    "url": "https://github.com/Nebuless/herdr-studio/issues"
+    "url": "https://github.com/Nebuless/shprd/issues"
   },
   "engines": {
     "bun": ">=1.4.1"

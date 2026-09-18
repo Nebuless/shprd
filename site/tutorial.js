@@ -44,7 +44,7 @@ for (const [index, code] of [
 
 const checks = [...(article?.querySelectorAll('input[type="checkbox"]') ?? [])];
 // Bump this key if the meaning or order of the final checklist changes.
-const storageKey = "herdr-studio-tutorial-checklist-v1";
+const storageKey = "shprd-tutorial-checklist-v1";
 let savedChecks = [];
 let storageAvailable = true;
 try {

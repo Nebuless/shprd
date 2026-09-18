@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "herdr-studio",
+      "name": "shprd",
       "devDependencies": {
         "@biomejs/biome": "2.5.9",
         "@commitlint/cli": "21.2.2",

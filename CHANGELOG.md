@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fix standalone SHPRD startup when no custom config directory is set.
+
 ## 0.7.0 - 2026-09-18
 
 - Rename public app, repository, installer, Pages site, and release assets to SHPRD.

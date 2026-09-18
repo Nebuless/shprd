@@ -208,11 +208,11 @@ When the user requests a durable behavior change, record it here or in the relev
 
 ## Child DOX Index
 
-- `.agents/` — tracked agent-skill sources. `.agents/AGENTS.md` owns imported-skill preservation and child skill indexes.
+- `.agents/` — tracked agent-skill sources and the root `skills-lock.json` resolution lock. `.agents/AGENTS.md` owns imported-skill preservation and child skill indexes.
 - `.config/`, `.pi/`, `.qlty/`, `.omo/` — local tool configuration and agent state. Root owns contracts; do not commit generated state unless explicitly requested.
 - `.githooks/` — repository commit and pre-commit hooks. Root owns hook contracts.
 - `.github/` — CI, release, and repository automation. Root owns workflow contracts.
-- `.hermes/` — local external integration material. Intentionally untracked.
+- `.hermes/` — tracked external-integration aliases. Root owns the compatibility contract; aliases resolve through `.agents/`.
 - `crates/` — experimental Rust host, shell, and shared native libraries. Root owns cross-crate contracts; local crate docs add details where present.
 - `deploy/` — service definitions and install defaults. Root owns platform parity.
 - `docs/` — permanent architecture and operator documentation plus tracked implementation plans. `docs/AGENTS.md` owns documentation boundaries.

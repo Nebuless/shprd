@@ -1,2 +1,2 @@
-# Preserve imported skill corpus verbatim, including intentional blank-line whitespace.
+# Exclude imported Rust skill whitespace from Git diff reports; pre-commit normalizes it.
 .agents/skills/rust-skills/** -whitespace

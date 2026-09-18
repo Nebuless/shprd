@@ -1,0 +1,2 @@
+# Preserve imported skill corpus verbatim, including intentional blank-line whitespace.
+.agents/skills/rust-skills/** -whitespace

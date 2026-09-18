@@ -208,4 +208,16 @@ When the user requests a durable behavior change, record it here or in the relev
 
 ## Child DOX Index
 
-This project is not yet indexed. Before continuing you must scan the project, build the DOX tree and replace this message with the actual index. Go deep and scan files recursively to properly evaluate complexity and create nested DOX files where needed.
+- `.agents/` — tracked agent-skill sources. `.agents/AGENTS.md` owns imported-skill preservation and child skill indexes.
+- `.config/`, `.pi/`, `.qlty/`, `.omo/` — local tool configuration and agent state. Root owns contracts; do not commit generated state unless explicitly requested.
+- `.githooks/` — repository commit and pre-commit hooks. Root owns hook contracts.
+- `.github/` — CI, release, and repository automation. Root owns workflow contracts.
+- `.hermes/` — local external integration material. Intentionally untracked.
+- `crates/` — experimental Rust host, shell, and shared native libraries. Root owns cross-crate contracts; local crate docs add details where present.
+- `deploy/` — service definitions and install defaults. Root owns platform parity.
+- `docs/` — permanent architecture and operator documentation plus tracked implementation plans. `docs/AGENTS.md` owns documentation boundaries.
+- `integrations/` — Pi adapter glue and engine integrations. Root owns extension contracts.
+- `scripts/` — build, installer, packaging, and release helpers. Root owns release contracts.
+- `server/` — Bun bridge, local service management, and generated public artifacts. Root owns bridge contracts.
+- `site/` — static documentation site. Root owns published-site behavior.
+- `web/` — React/Vite workspace UI. Root owns browser contracts.

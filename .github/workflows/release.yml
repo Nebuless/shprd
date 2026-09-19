@@ -215,6 +215,7 @@ jobs:
           export PATH="${ANDROID_SDK_ROOT:?}/build-tools/35.0.0:$PATH"
           apk="dist/shprd-v$version-android.apk"
           sha256sum -c "$apk.sha256"
+          SHPRD_ANDROID_APK="$apk" bun test scripts/android-package.test.ts
           unzip -t "$apk"
           apksigner verify --verbose --print-certs "$apk"
           aapt dump badging "$apk" | grep -F "package: name='dev.nebuless.shprd' versionCode=\"1\" versionName=\"$version\""

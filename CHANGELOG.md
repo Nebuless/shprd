@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0 - 2026-09-19
+
 - Add Android APK releases with bundled SHPRD UI and remote Herdr host setup.
 
 ## 0.8.0 - 2026-09-18

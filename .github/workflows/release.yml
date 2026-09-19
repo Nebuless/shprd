@@ -6,12 +6,17 @@ on:
   # Allows the Publish Release workflow (or a maintainer) to dispatch a run
   # on an existing tag ref.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to release
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -21,6 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -40,7 +46,8 @@ jobs:
           server_version="$(bun -e 'console.log(require("./server/package.json").version)')"
 
           [[ "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          test "$GITHUB_REF_NAME" = "v$package_version"
+          tag="${{ inputs.tag || github.ref_name }}"
+          test "$tag" = "v$package_version"
           test "$web_version" = "$package_version"
           test "$server_version" = "$package_version"
           escaped_version="${package_version//./\\.}"
@@ -65,6 +72,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -80,7 +88,8 @@ jobs:
       - name: Verify release package
         shell: bash
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          tag="${{ inputs.tag || github.ref_name }}"
+          version="${tag#v}"
           platform="${{ matrix.platform }}"
           package_dir="shprd-$platform"
           versioned_archive="shprd-v$version-$platform.tar.xz"
@@ -151,12 +160,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
           java-version: "21"
-      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
       - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
         with:
           toolchain: "1.98.1"
@@ -181,7 +190,8 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          tag="${{ inputs.tag || github.ref_name }}"
+          version="${tag#v}"
           test -n "$ANDROID_KEYSTORE_BASE64"
           test -n "$ANDROID_KEYSTORE_PASSWORD"
           test -n "$ANDROID_KEY_ALIAS"
@@ -211,7 +221,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          version="${GITHUB_REF_NAME#v}"
+          tag="${{ inputs.tag || github.ref_name }}"
+          version="${tag#v}"
           export PATH="${ANDROID_SDK_ROOT:?}/build-tools/35.0.0:$PATH"
           apk="dist/shprd-v$version-android.apk"
           sha256sum -c "$apk.sha256"
@@ -235,6 +246,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
@@ -244,10 +256,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          gh release create "$GITHUB_REF_NAME"
+          gh release create "${{ inputs.tag || github.ref_name }}"
           dist/*
           scripts/install-shprd.sh
           --verify-tag
           --latest
           --generate-notes
-          --title "SHPRD $GITHUB_REF_NAME"
+          --title "SHPRD ${{ inputs.tag || github.ref_name }}"

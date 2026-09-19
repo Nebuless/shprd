@@ -18,11 +18,58 @@ body {
   border: 0;
   background: #1a1b26;
 }
-.shprd-empty {
+.shprd-empty,
+.shprd-connect {
   margin: 0;
   padding: 24px;
   color: #d5dcff;
   font:
     14px system-ui,
     sans-serif;
+}
+.shprd-connect {
+  display: grid;
+  gap: 16px;
+  max-width: 480px;
+}
+.shprd-connect h1,
+.shprd-connect p {
+  margin: 0;
+}
+.shprd-connect h1 {
+  font-size: 20px;
+}
+.shprd-host-label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+.shprd-host-label input,
+.shprd-connect button {
+  min-height: 44px;
+  border: 1px solid #2f3549;
+  border-radius: 8px;
+  font:
+    16px system-ui,
+    sans-serif;
+}
+.shprd-host-label input {
+  width: 100%;
+  padding: 8px 12px;
+  color: #d5dcff;
+  background: #11141b;
+}
+.shprd-connect button {
+  padding: 8px 16px;
+  color: #1a1b26;
+  background: #7aa2f7;
+  font-weight: 600;
+}
+.shprd-host-label input:focus-visible,
+.shprd-connect button:focus-visible {
+  outline: 2px solid #7aa2f7;
+  outline-offset: 2px;
+}
+.shprd-host-error {
+  color: #ffb3b3;
 }

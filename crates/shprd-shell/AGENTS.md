@@ -11,8 +11,8 @@ This crate owns shell UI, host validation and shell bridge. Host owns engines, H
 - Host is an HTTP(S) origin without credentials, query, fragment or application path.
 - Web builds default to `http://127.0.0.1:8787`, where `shprd-host` serves retained React and owns the local Herdr sockets. Native desktop and Android shells require an explicit reachable host; their loopback is the device.
 - Bridge protocol `shprd.shell.v1` requires exact origin, owning window and current request ID. Never use wildcard targets or accept opaque origins.
-- React `ConfigMenu` owns host input, confirmation, bridge controls and status. Shell source never renders settings or overlays the iframe.
-- Host changes require React confirmation; bridge checks preserve the current iframe document and draft.
+- Before a native shell has a host, Dioxus renders its accessible remote-host form. After connection, React `ConfigMenu` owns host changes, confirmation, bridge controls and status.
+- Host changes from React require confirmation; bridge checks preserve the current iframe document and draft.
 - `assets/shell-controls.js` accepts only exact packets from current iframe source and origin. React installs `web/src/shellBridge.ts` from the origin-only referrer, then cleans its listener on unmount.
 
 ## Work Guidance

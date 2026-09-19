@@ -32,6 +32,7 @@ import {
   UI_SCALE_STEP,
 } from "../appearance";
 import { connectionHttpPath } from "../connectionHttp";
+import { apiUrl } from "../remoteHost";
 import {
   requestShellControl,
   shellHostChangesCurrent,
@@ -154,7 +155,7 @@ export function ConfigMenu({
     setHealth(null);
     setHerdrInfo(null);
 
-    fetch("/api/health", { credentials: "same-origin" })
+    fetch(apiUrl("/api/health"), { credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null)
       .then((healthInfo) => {
@@ -168,9 +169,12 @@ export function ConfigMenu({
           "/herdr-info",
           connectionClient.serverRuntimeGeneration,
         ),
-        window.location.origin,
+        apiUrl("/"),
       );
-      if (herdrInfoUrl.origin === window.location.origin) {
+      if (
+        herdrInfoUrl.origin ===
+        new URL(apiUrl("/"), window.location.origin).origin
+      ) {
         fetch(herdrInfoUrl, {
           credentials: "same-origin",
           cache: "no-store",

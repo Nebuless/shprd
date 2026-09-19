@@ -1,6 +1,6 @@
 # SHPRD shell
 
-Dioxus 0.7.10 owns connection settings. Retained React runs at the configured host origin in an iframe; React alone owns its editor, terminal and composer. Engines and Herdr stay on the host, including for Android clients.
+Dioxus 0.7.10 owns the shell. Web mode retains the configured host origin in an iframe. Android opens the packaged retained React build locally. React alone owns its editor, terminal and composer; engines and Herdr stay on the host.
 
 ## Build
 
@@ -14,14 +14,14 @@ dx build --platform web --no-default-features --features web
 
 Optional `SHPRD_HOST_URL=https://host.example` at compile time supplies the initial host. Otherwise enter the host through the Rust form. Only an HTTP(S) origin is accepted; credentials, query strings, fragments and application paths are rejected. Host settings are in memory, not persisted. Changing host requires confirmation because navigation discards unsaved React state. Editing settings or checking the bridge leaves the iframe mounted.
 
-The signed Android APK is built from this shell. It is a remote client: enter the HTTP(S) origin of a running, network-reachable SHPRD bridge after installation. It cannot start a Herdr bridge or reach a loopback-only service on the phone.
+The signed Android APK is built from this shell. Its initial UI is the packaged React build, while API and WebSocket operations still require a network-reachable SHPRD bridge. It cannot start a Herdr bridge or reach a loopback-only service on the phone.
 
 For a local release build, source the Android setup from this crate, then run:
 
 ```sh
-. ./android-env.sh
+. ./crates/shprd-shell/android-env.sh
 rustup target add aarch64-linux-android x86_64-linux-android
-dx build --platform android --release --no-default-features --features mobile
+mise run shell:android
 ```
 
 `android-env.sh` exports the installed SDK at `~/.local/share/android-sdk`, NDK 29.0.14206865 and mise Temurin JDK 21. Existing ANDROID_HOME, ANDROID_NDK_HOME and JAVA_HOME overrides take precedence. Other machines should override those paths for their installed toolchain. Release automation supplies its signing key through GitHub Actions secrets; local builds must sign the generated release APK before distribution.

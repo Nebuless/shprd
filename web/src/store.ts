@@ -21,6 +21,7 @@ import {
   type HerdrEventMsg,
   parseConnectionSummary,
 } from "./api";
+import { apiUrl } from "./remoteHost";
 import {
   LEGACY_DEFAULT_CONNECTION_ID,
   migrateLegacyConnectionStorage,
@@ -639,7 +640,7 @@ function wait(ms: number) {
 }
 
 function redirectToLogin() {
-  const loginUrl = new URL("/login", window.location.origin);
+  const loginUrl = new URL(apiUrl("/login"), window.location.origin);
   window.location.replace(loginUrl.href);
 }
 
@@ -660,7 +661,7 @@ function reloadWhenUpdatedServerIsReady(
     const deadline = Date.now() + UPDATE_RESTART_VERIFY_TIMEOUT_MS;
     while (Date.now() < deadline) {
       try {
-        const response = await fetch(`/api/health?t=${Date.now()}`, {
+        const response = await fetch(apiUrl(`/api/health?t=${Date.now()}`), {
           credentials: "same-origin",
           cache: "no-store",
         });
@@ -1348,7 +1349,7 @@ async function checkForUpdate(showErrors = false) {
     return;
   }
   try {
-    const r = await fetch("/api/update/check", {
+    const r = await fetch(apiUrl("/api/update/check"), {
       credentials: "same-origin",
       headers: { "x-herdr-gui-update": "1" },
     });
@@ -2150,7 +2151,7 @@ export const store = {
     }
     // If the server requires a password and the session is missing/expired,
     // bounce to the login page instead of spinning on a failing socket.
-    fetch("/api/health", {
+    fetch(apiUrl("/api/health"), {
       credentials: "same-origin",
       cache: "no-store",
     }).then((r) => {
@@ -3052,7 +3053,7 @@ export const store = {
     if (!latestVersion || state.updateInstalling) return;
     set({ updateInstalling: true });
     try {
-      const r = await fetch("/api/update/install", {
+      const r = await fetch(apiUrl("/api/update/install"), {
         method: "POST",
         credentials: "same-origin",
         headers: { "x-herdr-gui-update": "1" },

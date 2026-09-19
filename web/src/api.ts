@@ -2,6 +2,7 @@ import {
   validateRemoteSocketPath,
   validateSshDestination,
 } from "./sshProfileValidation";
+import { bridgeWebSocketUrl } from "./remoteHost";
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
@@ -238,8 +239,7 @@ export function isBridgeGlobalMethod(method: string): boolean {
 }
 
 function wsUrl(): string {
-  const proto = location.protocol === "https:" ? "wss" : "ws";
-  return `${proto}://${location.host}/ws`;
+  return bridgeWebSocketUrl();
 }
 
 function scopedPayload<T extends object>(

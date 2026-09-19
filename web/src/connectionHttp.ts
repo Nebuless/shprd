@@ -1,3 +1,5 @@
+import { apiUrl } from "./remoteHost";
+
 export function connectionHttpPath(
   connectionId: string,
   endpoint: string,
@@ -5,7 +7,9 @@ export function connectionHttpPath(
 ): string {
   if (!connectionId) throw new Error("invalid connection_id");
   const suffix = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  const path = `/api/connections/${encodeURIComponent(connectionId)}${suffix}`;
+  const path = apiUrl(
+    `/api/connections/${encodeURIComponent(connectionId)}${suffix}`,
+  );
   if (connectionGeneration === undefined || connectionGeneration === null) {
     return path;
   }

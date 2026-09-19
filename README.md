@@ -136,9 +136,10 @@ reachable; PWA mode does not provide offline access.
 
 Download the signed `shprd-vX.Y.Z-android.apk` and matching `.sha256` file
 from the [latest release](https://github.com/Nebuless/shprd/releases/latest).
-The APK is a remote client: after installation, enter the HTTP(S) origin of a
-running SHPRD bridge reachable from the device. It does not start a local
-bridge or connect to a bridge bound only to the phone's loopback address.
+The APK contains the same React interface as the web release and opens it
+locally. Live workspaces still require a running SHPRD bridge reachable from
+the device. The APK does not start a local bridge or connect to a bridge bound
+only to the phone's loopback address.
 
 ## Development
 

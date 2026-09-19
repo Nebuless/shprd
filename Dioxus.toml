@@ -2,7 +2,7 @@
 name = "shprd-shell"
 default_platform = "web"
 out_dir = "crates/shprd-shell/dist"
-asset_dir = "crates/shprd-shell/assets"
+asset_dir = "server/public"
 
 [web.app]
 title = "SHPRD"

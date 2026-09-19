@@ -1,4 +1,5 @@
 import type { ConnectionClient, ConnectionStatus } from "./api";
+import { apiUrl } from "./remoteHost";
 
 export type AgentSession = {
   id: string;
@@ -120,7 +121,9 @@ export function imageFetchPath(
   generation: number,
   url: string,
 ): string {
-  return `/api/connections/${encodeURIComponent(connectionId)}/image-fetch?connection_generation=${encodeURIComponent(generation)}&url=${encodeURIComponent(url)}`;
+  return apiUrl(
+    `/api/connections/${encodeURIComponent(connectionId)}/image-fetch?connection_generation=${encodeURIComponent(generation)}&url=${encodeURIComponent(url)}`,
+  );
 }
 
 export function createAgentTransport(

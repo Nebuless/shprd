@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 // In dev, the web app talks to the bridge through Vite's proxy so the
 // frontend can use a relative /ws URL (same origin, no hardcoded port).
 export default defineConfig({
+  base: "./",
   plugins: [react()],
   resolve: {
     alias: [

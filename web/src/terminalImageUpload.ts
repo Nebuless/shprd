@@ -1,5 +1,6 @@
 import type { ConnectionClient } from "./api";
 import { connectionHttpPath } from "./connectionHttp";
+import { apiUrl } from "./remoteHost";
 import { terminalPasteRequest } from "./terminalPaste";
 
 export function imageUploadUrl(value: string): string | null {
@@ -27,15 +28,19 @@ export async function uploadTerminalImage(
   }
   const file = typeof image === "string" ? null : image;
   const ext = file ? (file.type.split("/")[1] || "png").toLowerCase() : "png";
-  const uploadUrl = new URL(
-    connectionHttpPath(
-      client.connectionId,
-      "/upload-image",
-      client.serverRuntimeGeneration,
-    ),
-    window.location.origin,
+  const requestPath = connectionHttpPath(
+    client.connectionId,
+    "/upload-image",
+    client.serverRuntimeGeneration,
   );
-  if (uploadUrl.origin !== window.location.origin) {
+  const remoteOrigin = apiUrl("/");
+  const uploadUrl = new URL(
+    requestPath,
+    remoteOrigin.startsWith("/") ? window.location.origin : remoteOrigin,
+  );
+  if (
+    uploadUrl.origin !== new URL(remoteOrigin, window.location.origin).origin
+  ) {
     throw new Error("invalid upload origin");
   }
   const res = await fetch(uploadUrl, {

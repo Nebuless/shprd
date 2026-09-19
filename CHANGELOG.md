@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add Android APK releases with bundled SHPRD UI and remote Herdr host setup.
+
 ## 0.8.0 - 2026-09-18
 
 - Fix standalone SHPRD startup when no custom config directory is set.

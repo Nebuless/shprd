@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
+  parseCargoPackageVersion,
   parseManifestVersion,
   parsePackageVersion,
+  replaceCargoPackageVersion,
   replaceManifestVersion,
   replacePackageVersion,
   resolveNextVersion,
@@ -22,6 +24,13 @@ const PLUGIN_MANIFEST = `id = "herdr.studio"
 name = "SHPRD"
 version = "0.4.1"
 min_herdr_version = "0.7.2"
+`;
+
+const SHELL_CARGO_TOML = `[workspace]
+members = ["crates/shprd-shell"]
+
+[workspace.package]
+version = "0.4.1"
 `;
 
 const CHANGELOG = `# Changelog
@@ -70,6 +79,21 @@ describe("replacePackageVersion", () => {
     expect(() => replacePackageVersion(PACKAGE_JSON, "9.9.9", "0.4.2")).toThrow(
       "expected",
     );
+  });
+});
+
+describe("Cargo package version", () => {
+  test("reads and replaces the shell package version", () => {
+    expect(parseCargoPackageVersion(SHELL_CARGO_TOML)).toBe("0.4.1");
+    expect(replaceCargoPackageVersion(SHELL_CARGO_TOML, "0.4.1", "0.4.2")).toBe(
+      SHELL_CARGO_TOML.replace('version = "0.4.1"', 'version = "0.4.2"'),
+    );
+  });
+
+  test("rejects a Cargo manifest without a workspace package version", () => {
+    expect(() =>
+      parseCargoPackageVersion("[workspace]\nmembers = []\n"),
+    ).toThrow("workspace.package");
   });
 });
 

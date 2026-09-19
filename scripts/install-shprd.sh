@@ -95,30 +95,75 @@ if { [ -e "$target" ] || [ -L "$target" ]; } &&
   { [ ! -f "$target" ] || [ -L "$target" ]; }; then
   fail "install target exists but is not a regular file"
 fi
-tmp="$(mktemp -d "${TMPDIR:-/tmp}/shprd-install.XXXXXX")"
+home_staging_dir="${HOME:?HOME must be set}/.local/share/shprd/tmp"
+staging_dir="${SHPRD_TEMP_DIR:-$home_staging_dir}"
+tmp=""
 target_tmp=""
 backup_tmp=""
 
 cleanup() {
-  rm -rf "$tmp"
+  if [ -n "${tmp:-}" ]; then
+    command -p rm -rf "$tmp"
+  fi
   if [ -n "${target_tmp:-}" ]; then
-    rm -f "$target_tmp"
+    command -p rm -f "$target_tmp"
   fi
   if [ -n "${backup_tmp:-}" ]; then
-    rm -f "$backup_tmp"
+    command -p rm -f "$backup_tmp"
   fi
 }
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 
-archive="$tmp/$archive_name"
-checksum="$archive.sha256"
+create_staging_dir() {
+  candidate="$1"
+  [ -d "$candidate" ] || return 1
+  tmp="$(mktemp -d "$candidate/shprd-install.XXXXXX")" || {
+    tmp=""
+    return 1
+  }
+}
+
+use_home_staging_dir() {
+  if [ "$staging_dir" = "$home_staging_dir" ]; then
+    fail "cannot create temporary download directory: $home_staging_dir"
+  fi
+  mkdir -p "$home_staging_dir" ||
+    fail "cannot create temporary download directory: $home_staging_dir"
+  tmp=""
+  create_staging_dir "$home_staging_dir" ||
+    fail "cannot create temporary download directory: $home_staging_dir"
+  staging_dir="$home_staging_dir"
+  printf 'Custom temporary directory unavailable; using %s for installation downloads.\n' \
+    "$home_staging_dir" >&2
+}
+
+if [ "$staging_dir" = "$home_staging_dir" ]; then
+  mkdir -p "$home_staging_dir" ||
+    fail "cannot create temporary download directory: $home_staging_dir"
+  create_staging_dir "$home_staging_dir" ||
+    fail "cannot create temporary download directory: $home_staging_dir"
+elif ! create_staging_dir "$staging_dir"; then
+  use_home_staging_dir
+fi
+
+download_release_assets() {
+  archive="$tmp/$archive_name"
+  checksum="$archive.sha256"
+  curl --proto "$curl_protocol" --proto-redir "$curl_protocol" \
+    -fsSL "$release_base/$archive_name" -o "$archive" &&
+    curl --proto "$curl_protocol" --proto-redir "$curl_protocol" \
+      --max-filesize 4096 -fsSL \
+      "$release_base/$archive_name.sha256" -o "$checksum"
+}
+
 printf 'Downloading SHPRD for %s...\n' "$platform"
-curl --proto "$curl_protocol" --proto-redir "$curl_protocol" \
-  -fsSL "$release_base/$archive_name" -o "$archive"
-curl --proto "$curl_protocol" --proto-redir "$curl_protocol" \
-  --max-filesize 4096 -fsSL \
-  "$release_base/$archive_name.sha256" -o "$checksum"
+if ! download_release_assets; then
+  command -p rm -rf "$tmp"
+  tmp=""
+  use_home_staging_dir
+  download_release_assets || fail "release download failed"
+fi
 checksum_line="$(cat "$checksum")" || fail "unable to read package checksum"
 case "$checksum_line" in
   *"  "*)
@@ -181,12 +226,14 @@ if { [ -e "$target" ] || [ -L "$target" ]; } &&
   { [ ! -f "$target" ] || [ -L "$target" ]; }; then
   fail "install target changed during installation"
 fi
-target_tmp="$(mktemp "$install_dir/.shprd.new.XXXXXX")"
+target_tmp="$(mktemp "$install_dir/.shprd.new.XXXXXX")" ||
+  fail "cannot create temporary installed binary"
 install -m 0755 "$binary" "$target_tmp"
 backup=""
 if [ -f "$target" ] && [ ! -L "$target" ]; then
   backup="$target.previous"
-  backup_tmp="$(mktemp "$install_dir/.shprd.previous.XXXXXX")"
+  backup_tmp="$(mktemp "$install_dir/.shprd.previous.XXXXXX")" ||
+    fail "cannot create temporary backup binary"
   install -m 0755 "$target" "$backup_tmp"
   mv -f "$backup_tmp" "$backup"
   backup_tmp=""
@@ -194,7 +241,15 @@ fi
 mv -f "$target_tmp" "$target"
 target_tmp=""
 
-printf 'Installed SHPRD %s to %s\n' "$package_version" "$target"
+if [ "$(id -u)" -eq 0 ]; then
+  printf 'Installed SHPRD %s to %s\n' "$package_version" "$target"
+  printf 'Run %s service install as the target user to create their persistent service.\n' \
+    "$target"
+else
+  "$target" service install
+  printf 'Installed SHPRD %s to %s and started its user service.\n' \
+    "$package_version" "$target"
+fi
 if [ -n "$backup" ]; then
   printf 'Previous binary saved to %s\n' "$backup"
 fi

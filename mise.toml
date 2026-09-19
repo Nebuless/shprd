@@ -44,10 +44,10 @@ description = "Build SHPRD Dioxus Web shell"
 run = "dx build --package shprd-shell --platform web --no-default-features --features web"
 
 [tasks."shell:android"]
-description = "Build SHPRD Dioxus Android shell"
+description = "Build SHPRD Dioxus Android release shell"
 run = """
 . crates/shprd-shell/android-env.sh
-dx build --package shprd-shell --platform android --no-default-features --features mobile
+dx build --package shprd-shell --platform android --release --no-default-features --features mobile
 """
 
 [tasks.format]

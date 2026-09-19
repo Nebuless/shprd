@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-// Prepare a release PR by bumping the package.json and herdr-plugin.toml
-// versions and moving
-// the CHANGELOG "Unreleased" entries under the new version. This script only
+// Prepare a release PR by synchronizing package, plugin, and Android shell
+// versions, then moving the CHANGELOG "Unreleased" entries under the new
+// version. This script only
 // updates the working tree; it does not commit, merge, tag, or push anything.
 //
 // Usage:
@@ -22,7 +22,13 @@ const PACKAGE_FILES = [
 ];
 const CHANGELOG_FILE = "CHANGELOG.md";
 const PLUGIN_MANIFEST_FILE = "herdr-plugin.toml";
-const RELEASE_FILES = [...PACKAGE_FILES, CHANGELOG_FILE, PLUGIN_MANIFEST_FILE];
+const WORKSPACE_CARGO_FILE = "Cargo.toml";
+const RELEASE_FILES = [
+  ...PACKAGE_FILES,
+  CHANGELOG_FILE,
+  PLUGIN_MANIFEST_FILE,
+  WORKSPACE_CARGO_FILE,
+];
 
 const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 
@@ -51,6 +57,39 @@ export function replacePackageVersion(
   return `${packageJsonText.slice(0, match.index)}${match[1]}"version": "${next}"${packageJsonText.slice(
     match.index + match[0].length,
   )}`;
+}
+
+export function parseCargoPackageVersion(cargoTomlText: string): string {
+  const packageMatch = /^\[workspace\.package\]\s*$/m.exec(cargoTomlText);
+  if (!packageMatch || packageMatch.index === undefined) {
+    throw new Error("Cargo.toml has no [workspace.package] section");
+  }
+  const nextSection = cargoTomlText.indexOf("\n[", packageMatch.index + 1);
+  const packageText = cargoTomlText.slice(
+    packageMatch.index,
+    nextSection === -1 ? undefined : nextSection,
+  );
+  const versionMatch = /^(\s*)version = "([^"]+)"$/m.exec(packageText);
+  if (!versionMatch) {
+    throw new Error(
+      "Cargo.toml [workspace.package] section has no version field",
+    );
+  }
+  return versionMatch[2];
+}
+
+export function replaceCargoPackageVersion(
+  cargoTomlText: string,
+  expectedCurrent: string,
+  next: string,
+): string {
+  const current = parseCargoPackageVersion(cargoTomlText);
+  if (current !== expectedCurrent) {
+    throw new Error(
+      `Cargo.toml version is ${current}, expected ${expectedCurrent}`,
+    );
+  }
+  return cargoTomlText.replace(/^version = "[^"]+"$/m, `version = "${next}"`);
 }
 
 export function parseManifestVersion(manifestText: string): string {
@@ -209,6 +248,13 @@ function main() {
       `${PLUGIN_MANIFEST_FILE} version is ${parseManifestVersion(manifestText)}, expected ${current}`,
     );
   }
+  const workspaceCargoPath = join(REPO_ROOT, WORKSPACE_CARGO_FILE);
+  const workspaceCargoText = readFileSync(workspaceCargoPath, "utf8");
+  if (parseCargoPackageVersion(workspaceCargoText) !== current) {
+    abort(
+      `${WORKSPACE_CARGO_FILE} version is ${parseCargoPackageVersion(workspaceCargoText)}, expected ${current}`,
+    );
+  }
 
   const version = resolveNextVersion(current, input);
   const tag = `v${version}`;
@@ -230,11 +276,17 @@ function main() {
     date,
   );
   const manifestWrite = replaceManifestVersion(manifestText, current, version);
+  const workspaceCargoWrite = replaceCargoPackageVersion(
+    workspaceCargoText,
+    current,
+    version,
+  );
   for (const { path, text } of packageWrites) {
     writeFileSync(path, text);
   }
   writeFileSync(changelogPath, changelogWrite);
   writeFileSync(manifestPath, manifestWrite);
+  writeFileSync(workspaceCargoPath, workspaceCargoWrite);
 
   console.log(
     `Prepared release ${version}. Review the changes and submit them as a release PR.`,

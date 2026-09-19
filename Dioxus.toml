@@ -8,5 +8,5 @@ asset_dir = "crates/shprd-shell/assets"
 title = "SHPRD"
 
 [bundle]
-identifier = "dev.nebulous.shprd"
-publisher = "Nebulous"
+identifier = "dev.nebuless.shprd"
+publisher = "Nebuless"

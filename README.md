@@ -101,6 +101,11 @@ curl -fsSL \
   | SHPRD_VERSION= sh
 ```
 
+The installer stages downloads in `~/.local/share/shprd/tmp`, then removes
+staged files after installation. Set `SHPRD_TEMP_DIR` to use another temporary
+staging root; if it is full or unavailable, the installer falls back to the
+home-owned default. Installed binaries live at `~/.local/bin/shprd`.
+
 Make sure `~/.local/bin` is in `PATH`, then start the application:
 
 ```bash
@@ -126,6 +131,14 @@ and authenticating with `shprd`:
 
 The installed app still requires the `shprd` process to be running and
 reachable; PWA mode does not provide offline access.
+
+## Android
+
+Download the signed `shprd-vX.Y.Z-android.apk` and matching `.sha256` file
+from the [latest release](https://github.com/Nebuless/shprd/releases/latest).
+The APK is a remote client: after installation, enter the HTTP(S) origin of a
+running SHPRD bridge reachable from the device. It does not start a local
+bridge or connect to a bridge bound only to the phone's loopback address.
 
 ## Development
 

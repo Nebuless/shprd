@@ -4911,7 +4911,7 @@ dependencies = [
 
 [[package]]
 name = "shprd-host"
-version = "0.6.2"
+version = "0.8.0"
 dependencies = [
  "axum",
  "base64",
@@ -4958,7 +4958,7 @@ dependencies = [
 
 [[package]]
 name = "shprd-shell"
-version = "0.1.0"
+version = "0.8.0"
 dependencies = [
  "dioxus",
  "serde",

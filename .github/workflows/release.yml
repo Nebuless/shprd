@@ -144,9 +144,98 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  android:
+    name: Package Android APK
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # stable
+        with:
+          toolchain: "1.98.1"
+          targets: aarch64-linux-android,x86_64-linux-android
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "ndk;29.0.14206865"
+          yes | sdkmanager --licenses
+      - name: Install Dioxus CLI
+        run: cargo install dioxus-cli --version 0.7.10 --locked
+      - name: Build Android APK
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/shprd-release.jks"
+          export ANDROID_HOME="${ANDROID_SDK_ROOT:?}"
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+          export ANDROID_NDK_ROOT="$ANDROID_NDK_HOME"
+          export PATH="$ANDROID_HOME/build-tools/35.0.0:$PATH"
+          dx build --package shprd-shell --platform android --release --no-default-features --features mobile
+          android_project="target/dx/shprd-shell/release/android/app"
+          (
+            cd "$android_project"
+            ./gradlew --no-daemon \
+              -Djava.io.tmpdir="$RUNNER_TEMP" \
+              -Dorg.gradle.internal.http.connectionTimeout=120000 \
+              -Dorg.gradle.internal.http.socketTimeout=120000 \
+              :app:packageRelease
+          )
+          unsigned_apk="$android_project/app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -s "$unsigned_apk"
+          apk="$RUNNER_TEMP/shprd-v$version-android.apk"
+          rm -f "$apk"
+          apksigner sign \
+            --ks "$RUNNER_TEMP/shprd-release.jks" \
+            --ks-key-alias "$ANDROID_KEY_ALIAS" \
+            --ks-pass "pass:$ANDROID_KEYSTORE_PASSWORD" \
+            --key-pass "pass:$ANDROID_KEY_PASSWORD" \
+            --out "$apk" \
+            "$unsigned_apk"
+          mkdir -p dist
+          cp "$apk" "dist/shprd-v$version-android.apk"
+          sha256sum "dist/shprd-v$version-android.apk" > "dist/shprd-v$version-android.apk.sha256"
+      - name: Verify Android APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          export PATH="${ANDROID_SDK_ROOT:?}/build-tools/35.0.0:$PATH"
+          apk="dist/shprd-v$version-android.apk"
+          sha256sum -c "$apk.sha256"
+          unzip -t "$apk"
+          apksigner verify --verbose --print-certs "$apk"
+          aapt dump badging "$apk" | grep -F "package: name='dev.nebuless.shprd' versionCode=\"1\" versionName=\"$version\""
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: shprd-android
+          path: dist/shprd-v*-android.apk*
+          if-no-files-found: error
+          retention-days: 7
+
   publish:
     name: Publish GitHub Release
-    needs: package
+    needs: [package, android]
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -113,6 +113,25 @@ shprd
 
 Open the URL printed by the process. Run the installer again to update.
 
+Downloads stage in `~/.local/share/shprd/tmp`. The installer only uses that
+directory for verified archive staging and removes staged files when the
+install ends. The executable and any service definition always use the
+persistent install path, never the staging directory. Set `SHPRD_TEMP_DIR` to
+choose another temporary staging root; if it is full or unavailable, the
+installer falls back to the home-owned default.
+
+For normal user installs, the installer runs `shprd service install` after
+installing the binary. It creates and starts the platform user service from the
+persistent binary; see [Run as a user service](#run-as-a-user-service) for
+service settings. A `sudo SHPRD_INSTALL_DIR=...` install only places the
+binary; run `shprd service install` later as the user who will own the service.
+
+### Android
+
+Download `shprd-vX.Y.Z-android.apk` and its `.sha256` file from the [latest release](https://github.com/Nebuless/shprd/releases/latest). Verify the download on a host with `sha256sum -c shprd-vX.Y.Z-android.apk.sha256`, then install the APK. Android may require permission to install apps from the selected file manager or browser.
+
+The APK is a remote client, not a local Herdr bridge. After installation, enter the HTTP(S) origin of a running SHPRD bridge reachable from the device. Use HTTPS outside a trusted local network. A bridge bound only to `127.0.0.1` is not reachable from an Android phone.
+
 Windows releases provide x64 and ARM64 archives containing `shprd.exe`.
 Download the matching `shprd-windows-<arch>.tar.xz` and `.sha256` files from
 the [latest release](https://github.com/Nebuless/shprd/releases/latest),

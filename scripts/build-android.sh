@@ -10,7 +10,7 @@ dx build --package shprd-shell --platform android --release --no-default-feature
 android_project="target/dx/shprd-shell/release/android/app"
 android_assets="$android_project/app/src/main/assets"
 test -d "$android_project/app/src/main"
-rm -f "$android_assets"
+rm -rf "$android_assets"
 ln -s "$(pwd)/server/public" "$android_assets"
 
 (

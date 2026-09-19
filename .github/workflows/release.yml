@@ -191,16 +191,8 @@ jobs:
           export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
           export ANDROID_NDK_ROOT="$ANDROID_NDK_HOME"
           export PATH="$ANDROID_HOME/build-tools/35.0.0:$PATH"
-          dx build --package shprd-shell --platform android --release --no-default-features --features mobile
+          scripts/build-android.sh
           android_project="target/dx/shprd-shell/release/android/app"
-          (
-            cd "$android_project"
-            ./gradlew --no-daemon \
-              -Djava.io.tmpdir="$RUNNER_TEMP" \
-              -Dorg.gradle.internal.http.connectionTimeout=120000 \
-              -Dorg.gradle.internal.http.socketTimeout=120000 \
-              :app:packageRelease
-          )
           unsigned_apk="$android_project/app/build/outputs/apk/release/app-release-unsigned.apk"
           test -s "$unsigned_apk"
           apk="$RUNNER_TEMP/shprd-v$version-android.apk"

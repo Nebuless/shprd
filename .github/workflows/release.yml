@@ -237,7 +237,7 @@ jobs:
           SHPRD_ANDROID_APK="$apk" bun test scripts/android-package.test.ts
           unzip -t "$apk"
           apksigner verify --verbose --print-certs "$apk"
-          aapt dump badging "$apk" | grep -F "package: name='dev.nebuless.shprd' versionCode=\"1\" versionName=\"$version\""
+          aapt dump badging "$apk" | grep -F "package: name='dev.nebuless.shprd' versionCode='1' versionName='$version'"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: shprd-android

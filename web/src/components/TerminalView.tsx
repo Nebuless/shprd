@@ -10,6 +10,7 @@ import {
   Columns2,
   ImagePlus,
   Keyboard,
+  Link,
   Maximize2,
   Rows2,
   X,
@@ -75,6 +76,7 @@ import {
   terminalTouchShouldFocusInput,
 } from "../terminalFocus";
 import {
+  imageUploadUrl,
   uploadTerminalImage,
   uploadTerminalImageToPane,
 } from "../terminalImageUpload";
@@ -101,7 +103,6 @@ import {
   type TerminalPasteTextareaSnapshot,
   terminalPasteInputText,
   terminalPasteRequest,
-  terminalPasteTargetsTerminal,
 } from "../terminalPaste";
 import {
   readTerminalRecoveryReloadAt,
@@ -113,7 +114,6 @@ import {
   rememberTerminalRelayViewport,
   TerminalAttachFrameWatchdog,
   TerminalResizeSync,
-  terminalAttachRequest,
   terminalAttachWatchdogMs,
   terminalEndpointViewportSize,
   terminalRelayViewportSize,
@@ -122,7 +122,7 @@ import { terminalPageScroll, terminalWheelScroll } from "../terminalScroll";
 import { TerminalSelectionDragGuard } from "../terminalSelectionGuard";
 import { applyTerminalTheme } from "../terminalThemes";
 import { paneHasAgentHistory } from "./agentSession";
-import { ConfirmDialog, MessageDialog } from "./ModalDialogs";
+import { ConfirmDialog, MessageDialog, TextInputDialog } from "./ModalDialogs";
 import { TerminalComposer } from "./TerminalComposer";
 
 const SYSTEM_CLIPBOARD = "c" as ClipboardSelectionType;
@@ -512,6 +512,7 @@ export function TerminalView({
   );
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [uploadError, setUploadError] = useState("");
+  const [imageUrlDialogOpen, setImageUrlDialogOpen] = useState(false);
   const [terminalLoading, setTerminalLoading] = useState(
     s.status === "connected" && !s.connectionPaused,
   );
@@ -990,7 +991,7 @@ export function TerminalView({
         setTerminalAttachError(
           typeof closed.reason === "string" &&
             closed.reason.includes("taken over")
-            ? "Terminal stream was taken over by another SHPRD client"
+            ? "Terminal stream was taken over by another Herdr Studio client"
             : "Terminal stream closed by the server",
         );
         return;
@@ -1125,6 +1126,13 @@ export function TerminalView({
       const path = await uploadTerminalImage(connectionClient, file);
       await pasteText(path, destinationPaneId);
     };
+    const pasteImageUrl = async (
+      imageUrl: string,
+      destinationPaneId: string | null,
+    ) => {
+      const path = await uploadTerminalImage(connectionClient, imageUrl);
+      await pasteText(path, destinationPaneId);
+    };
     desktopImageUploadRef.current = (file) =>
       runPasteOperation(async () => {
         const destinationPaneId = paneIdRef.current;
@@ -1180,7 +1188,12 @@ export function TerminalView({
                   CLIPBOARD_READ_TIMEOUT_MS,
                   "Clipboard text read timed out",
                 );
-                await pasteText(text, destinationPaneId);
+                const imageUrl = imageUploadUrl(text);
+                if (imageUrl) {
+                  await pasteImageUrl(imageUrl, destinationPaneId);
+                } else {
+                  await pasteText(text, destinationPaneId);
+                }
                 return;
               }
             }
@@ -1191,7 +1204,12 @@ export function TerminalView({
             CLIPBOARD_READ_TIMEOUT_MS,
             "Clipboard text read timed out",
           );
-          await pasteText(text, destinationPaneId);
+          const imageUrl = imageUploadUrl(text);
+          if (imageUrl) {
+            await pasteImageUrl(imageUrl, destinationPaneId);
+          } else {
+            await pasteText(text, destinationPaneId);
+          }
         });
       } finally {
         clipboardPasteInFlight = false;
@@ -1548,13 +1566,14 @@ export function TerminalView({
       const items = Array.from(e.clipboardData?.items ?? []);
       const img = items.find((it) => it.type.startsWith("image/"))?.getAsFile();
       const text = img ? "" : (e.clipboardData?.getData("text/plain") ?? "");
+      const imageUrl = img ? null : imageUploadUrl(text);
       const active = document.activeElement;
       const target = e.target;
-      const isTerminalPaste = terminalPasteTargetsTerminal(
-        container.contains(target as Node | null),
-        active ? container.contains(active) : false,
-      );
-      if (!isTerminalPaste) return;
+      const isTerminalPaste =
+        target === document ||
+        container.contains(target as Node | null) ||
+        (active ? container.contains(active) : false);
+      if (!isTerminalPaste && isEditableElement(target)) return;
       imeCommitGuard.beginIndependentInput();
       const destinationPaneId = paneIdRef.current ?? null;
       if (!img && appleTouchPlatform && isTerminalPaste) {
@@ -1577,7 +1596,9 @@ export function TerminalView({
             pasteTextareaBeforeInput = null;
             pastePaneIdBeforeInput = null;
             void runPasteOperation(() =>
-              pasteText(text, destinationPaneId),
+              imageUrl
+                ? pasteImageUrl(imageUrl, destinationPaneId)
+                : pasteText(text, destinationPaneId),
             ).catch((error) => {
               setUploadError(`Text paste failed: ${(error as Error).message}`);
             });
@@ -1597,11 +1618,13 @@ export function TerminalView({
         await runPasteOperation(() =>
           img
             ? pasteImage(img, destinationPaneId)
-            : pasteText(text, destinationPaneId),
+            : imageUrl
+              ? pasteImageUrl(imageUrl, destinationPaneId)
+              : pasteText(text, destinationPaneId),
         );
       } catch (err) {
         setUploadError(
-          `${img ? "Image upload" : "Text paste"} failed: ${(err as Error).message}`,
+          `${img || imageUrl ? "Image upload" : "Text paste"} failed: ${(err as Error).message}`,
         );
       }
     };
@@ -2104,7 +2127,6 @@ export function TerminalView({
     if (!connectionClient.isCurrent()) return;
     const term = termInstance;
     const paneTerminalId = pane?.terminal_id ?? null;
-    const paneId = pane?.pane_id ?? null;
     if (
       desiredTerminalRef.current !== paneTerminalId ||
       s.status !== "connected"
@@ -2120,7 +2142,7 @@ export function TerminalView({
       attachTimeoutTerminalRef.current = null;
       attachWatchdogRef.current?.cancel();
     }
-    if (!paneTerminalId || !paneId) {
+    if (!paneTerminalId) {
       desiredTerminalRef.current = null;
       attachWatchdogRef.current?.cancel();
       setTerminalLoading(false);
@@ -2184,16 +2206,18 @@ export function TerminalView({
     store.setTerminalEndpoint(connectionClient, terminalId, null);
     const attachStartedAt = performance.now();
     connectionClient
-      .call(
-        "terminal.attach",
-        terminalAttachRequest(
-          terminalId,
-          paneId,
-          { cols, rows },
-          surfaceSize,
-          relaySize,
-        ),
-      )
+      .call("terminal.attach", {
+        terminal_id: terminalId,
+        cols,
+        rows,
+        ...(surfaceSize
+          ? { surface_cols: surfaceSize.cols, surface_rows: surfaceSize.rows }
+          : {}),
+        relay_active: relaySize !== null,
+        ...(relaySize
+          ? { relay_cols: relaySize.cols, relay_rows: relaySize.rows }
+          : {}),
+      })
       .then(
         (result) => {
           if (!connectionClient.isCurrent()) return;
@@ -2348,6 +2372,25 @@ export function TerminalView({
   };
   const uploadComposerImage = (file: File) =>
     uploadTerminalImage(connectionClient, file);
+  const uploadImageUrl = async (value: string) => {
+    const imageUrl = imageUploadUrl(value);
+    if (!imageUrl) {
+      setUploadError("Image URL must use HTTP or HTTPS");
+      return;
+    }
+    setImageUrlDialogOpen(false);
+    try {
+      const targetPaneId = paneIdRef.current;
+      if (!targetPaneId) throw new Error("No active pane");
+      await uploadTerminalImageToPane(connectionClient, imageUrl, targetPaneId);
+    } catch (error) {
+      setUploadError(
+        `Image upload failed: ${
+          error instanceof Error ? error.message : "unknown error"
+        }`,
+      );
+    }
+  };
   const notifyComposerError = (message: string) => {
     store.notify({
       kind: "error",
@@ -2600,6 +2643,16 @@ export function TerminalView({
           <button
             type="button"
             className="terminal-pane-action"
+            title="Upload image from URL"
+            aria-label="Upload image from URL"
+            onPointerDown={preventPaneActionFocus}
+            onClick={() => setImageUrlDialogOpen(true)}
+          >
+            <Link size={14} />
+          </button>
+          <button
+            type="button"
+            className="terminal-pane-action"
             title="Split pane right"
             aria-label="Split pane right"
             onPointerDown={preventPaneActionFocus}
@@ -2675,6 +2728,15 @@ export function TerminalView({
           );
           store.closePane(pane.pane_id);
         }}
+      />
+      <TextInputDialog
+        open={imageUrlDialogOpen}
+        title="Upload image from URL"
+        label="Image URL"
+        placeholder="https://example.com/image.png"
+        submitLabel="Upload"
+        onSubmit={(value) => void uploadImageUrl(value)}
+        onClose={() => setImageUrlDialogOpen(false)}
       />
       <MessageDialog
         open={!!uploadError}

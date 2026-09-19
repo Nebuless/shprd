@@ -2,6 +2,15 @@ import type { ConnectionClient } from "./api";
 import { connectionHttpPath } from "./connectionHttp";
 import { terminalPasteRequest } from "./terminalPaste";
 
+export function imageUploadUrl(value: string): string | null {
+  try {
+    const url = new URL(value.trim());
+    return ["http:", "https:"].includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Uploads an image through the connection's HTTP endpoint and returns the
  * server-side path. Callers decide when (or whether) that path reaches a
@@ -9,10 +18,15 @@ import { terminalPasteRequest } from "./terminalPaste";
  */
 export async function uploadTerminalImage(
   client: ConnectionClient,
-  file: File,
+  image: File | string,
 ): Promise<string> {
   if (!client.isCurrent()) throw new Error("connection changed during upload");
-  const ext = (file.type.split("/")[1] || "png").toLowerCase();
+  const imageUrl = typeof image === "string" ? imageUploadUrl(image) : null;
+  if (typeof image === "string" && !imageUrl) {
+    throw new Error("image URL must use HTTP or HTTPS");
+  }
+  const file = typeof image === "string" ? null : image;
+  const ext = file ? (file.type.split("/")[1] || "png").toLowerCase() : "png";
   const uploadUrl = new URL(
     connectionHttpPath(
       client.connectionId,
@@ -26,10 +40,12 @@ export async function uploadTerminalImage(
   }
   const res = await fetch(uploadUrl, {
     method: "POST",
-    headers: {
-      "x-image-ext": ext,
-      "content-type": file.type || "image/png",
-    },
+    headers: file
+      ? {
+          "x-image-ext": ext,
+          "content-type": file.type || "image/png",
+        }
+      : { "x-image-url": imageUrl ?? "" },
     body: file,
   });
   if (!res.ok) {
@@ -67,13 +83,12 @@ export async function uploadTerminalImage(
   return payload.path;
 }
 
-/** Uploads an image then sends returned host path to one pane. */
 export async function uploadTerminalImageToPane(
   client: ConnectionClient,
-  file: File,
+  image: File | string,
   paneId: string,
 ): Promise<void> {
-  const path = await uploadTerminalImage(client, file);
+  const path = await uploadTerminalImage(client, image);
   const request = terminalPasteRequest(paneId, path);
   await client.call(request.method, request.params);
 }

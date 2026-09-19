@@ -181,7 +181,7 @@ jobs:
             "platforms;android-35" \
             "build-tools;35.0.0" \
             "ndk;29.0.14206865"
-          yes | sdkmanager --licenses
+          sdkmanager --licenses <<<"$(printf 'y\n%.0s' {1..100})"
       - name: Install Dioxus CLI
         run: cargo install dioxus-cli --version 0.7.10 --locked
       - name: Build Android APK

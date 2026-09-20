@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dioxuslabs.github.io/dioxus-skills/schemas/report-v1.schema.json",
+  "title": "Dioxus Skills provenance report v1",
+  "type": "object",
+  "required": ["schemaVersion", "reportId", "createdAt", "sourceState", "sourcePrecedence", "operations", "conflicts", "validation"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "reportId": {"type": "string", "minLength": 1},
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "sourceState": {"$ref": "#/$defs/sourceState"},
+    "sourcePrecedence": {"const": ["local-source", "local-tests-examples", "local-agents", "local-architecture", "upstream-source", "public-docs"]},
+    "operations": {"type": "array", "items": {"$ref": "#/$defs/operation"}},
+    "conflicts": {"type": "array", "items": {"$ref": "#/$defs/conflict"}},
+    "validation": {"$ref": "#/$defs/validation"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+    "safePath": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"},
+    "artifactClass": {"enum": ["dioxus-authored", "repository-config", "report", "fixture", "generated", "vendor-guidance", "vendor-provenance"]},
+    "sourceKind": {"enum": ["local-source", "local-tests-examples", "local-agents", "local-architecture", "upstream-source", "public-docs"]},
+    "sourceState": {
+      "type": "object",
+      "required": ["repository", "ref", "sha", "dirty"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "ref": {"type": "string", "minLength": 1},
+        "sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "dirty": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "blocker": {
+      "type": "object",
+      "required": ["code", "detail"],
+      "properties": {
+        "code": {"enum": ["ambiguous-mapping", "source-deleted", "source-conflict", "stale-source", "stale-target", "unapproved-class", "unsafe-path", "hash-mismatch"]},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "operation": {
+      "type": "object",
+      "required": ["operation", "artifactPath", "artifactClass", "beforeSha256", "afterSha256", "provenanceRevisionId", "verdict", "blockers"],
+      "properties": {
+        "operation": {"enum": ["add", "update", "noop"]},
+        "artifactPath": {"$ref": "#/$defs/safePath"},
+        "artifactClass": {"$ref": "#/$defs/artifactClass"},
+        "beforeSha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "afterSha256": {"$ref": "#/$defs/sha256"},
+        "provenanceRevisionId": {"type": "string", "minLength": 1},
+        "verdict": {"enum": ["approved", "blocked"]},
+        "blockers": {"type": "array", "items": {"$ref": "#/$defs/blocker"}}
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["sourceKind", "reference", "contentSha256", "claim"],
+      "properties": {
+        "sourceKind": {"$ref": "#/$defs/sourceKind"},
+        "reference": {"type": "string", "minLength": 1},
+        "contentSha256": {"$ref": "#/$defs/sha256"},
+        "claim": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "conflict": {
+      "type": "object",
+      "required": ["conflictId", "topic", "status", "candidates"],
+      "properties": {
+        "conflictId": {"type": "string", "minLength": 1},
+        "topic": {"type": "string", "minLength": 1},
+        "status": {"enum": ["ambiguous", "resolved-by-precedence"]},
+        "candidates": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/candidate"}},
+        "selectedReference": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "check": {
+      "type": "object",
+      "required": ["name", "verdict", "detail"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "verdict": {"enum": ["pass", "fail", "blocked"]},
+        "detail": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "required": ["verdict", "checks"],
+      "properties": {
+        "verdict": {"enum": ["approved", "failed", "blocked"]},
+        "checks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/check"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

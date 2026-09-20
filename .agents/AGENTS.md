@@ -10,7 +10,7 @@ Track agent skill sources approved for this repository.
 
 - Preserve imported skill content, metadata, and licenses. Repository hooks may normalize trailing whitespace and final newlines.
 - Do not commit generated outputs, credentials, or local agent state here.
-- `.hermes/` is separate local integration material and remains untracked.
+- `.hermes/skills/` contains tracked aliases to approved packages here; other `.hermes/` integration material remains untracked.
 
 # Work Guidance
 
@@ -22,4 +22,5 @@ Run the repository validation required by root `AGENTS.md` after changing tracke
 
 # Child DOX Index
 
+- `skills/dioxus-skills/` — imported Dioxus framework guidance router and focused leaves.
 - `skills/rust-skills/` — imported Rust guidance corpus. Its own `AGENTS.md` defines package-local rules.

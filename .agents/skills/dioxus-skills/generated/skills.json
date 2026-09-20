@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "dioxus-core",
+      "path": "skills/dioxus-core/SKILL.md",
+      "description": "Builds and repairs Dioxus application foundations. Use when working on cross-platform launch, component boundaries, props or children, context, hooks and cleanup, error boundaries, component tests, assets, or conflicts between Dioxus docs and source.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-desktop",
+      "path": "skills/dioxus-desktop/SKILL.md",
+      "description": "Use when building or diagnosing Dioxus desktop launch, event loops, Wry or Tao integration, windows, menus, tray icons, events, Rust-JavaScript IPC, assets, native permissions, packaging, or tests.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-fullstack",
+      "path": "skills/dioxus-fullstack/SKILL.md",
+      "description": "Builds and repairs Dioxus 0.7 fullstack apps: server functions, typed RPC, Axum routing, SSR and hydration, payloads, streams, middleware, security, and deployment. Use when code contains `#[server]`, `#[get]`/`#[post]`, `dioxus::serve`, `ServeConfig`, `FullstackContext`, `Streaming`, `ServerEvents`, or `Websocket`.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-mobile",
+      "path": "skills/dioxus-mobile/SKILL.md",
+      "description": "Builds and diagnoses Dioxus Android and iOS apps. Use when working on mobile launch, lifecycle, permissions, native Kotlin or Swift plugins, assets, dx packaging, WebView behavior, or mobile graphics questions.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-platform-interop",
+      "path": "skills/dioxus-platform-interop/SKILL.md",
+      "description": "Guides Dioxus platform escape hatches and foreign boundaries. Use when bridging Rust with JavaScript, DOM or Web Components, desktop webview IPC, native windows, Android activities, Swift or Kotlin through Manganis, WASM or TypeScript, React migrations, CSS tooling, or bundled assets.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-routing",
+      "path": "skills/dioxus-routing/SKILL.md",
+      "description": "Builds and diagnoses Dioxus 0.7 routing. Use when working with Routable enums, route parameters, nested layouts, Router, Link, Outlet, navigation history, redirects, guards, not-found routes, SSR, fullstack, or router tests.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-signals",
+      "path": "skills/dioxus-signals/SKILL.md",
+      "description": "Builds and diagnoses Dioxus 0.7 reactive state. Use when working with Signal, ReadSignal, WriteSignal, Memo, GlobalMemo, Resource, dependency tracking, borrow failures, ownership, batching, async state, or cross-thread SyncSignal work.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-skills",
+      "path": "SKILL.md",
+      "description": "Routes Dioxus framework work to focused, source-grounded skills. Use when implementing, reviewing, or maintaining Dioxus applications and libraries.",
+      "invocation": "model"
+    },
+    {
+      "name": "dioxus-web",
+      "path": "skills/dioxus-web/SKILL.md",
+      "description": "Builds and diagnoses Dioxus Web apps. Use when working on WASM launch and tooling, DOM mutations and browser events, hydration or streaming hydration, browser history and document APIs, JavaScript eval, web assets, router integration, SSR boundaries, browser testing, deployment, or web-only failures.",
+      "invocation": "model"
+    }
+  ]
+}

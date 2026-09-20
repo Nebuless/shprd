@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "dioxus-skills": {
+      "source": "Nebuless/dioxus-skills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "87a3737a60f4772dd0143380febb056df4064ebb016f5c75ec757bc538f8c3ba"
+    },
     "rust-skills": {
       "source": "leonardomso/rust-skills",
       "sourceType": "github",

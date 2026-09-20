@@ -1,0 +1,42 @@
+[changelog]
+header = "# Changelog\n\nAll notable changes to this project are documented here.\n"
+body = """
+{% if version %}\
+## {{ version | trim_start_matches(pat="v") }}
+{% else %}\
+## Unreleased
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+{% for commit in commits %}\
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | upper_first }}
+{% endfor %}\
+{% endfor %}\
+"""
+trim = true
+render_always = true
+format = false
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+require_conventional = true
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+fail_on_unmatched_commit = true
+tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+topo_order = false
+topo_order_commits = false
+sort_commits = "oldest"
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug Fixes" },
+  { message = "^perf", group = "Performance" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^refactor", group = "Refactoring" },
+  { message = "^test", group = "Testing" },
+  { message = "^(build|ci)", group = "Build and CI" },
+  { message = "^(chore|style)", group = "Maintenance" },
+  { message = "^revert", group = "Reverts" },
+]

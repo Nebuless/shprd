@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "artifactPath": "skills/dioxus-core/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "core-1",
+          "status": "current",
+          "artifactSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "capturedAt": "2026-09-17T12:00:00Z",
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "main",
+            "locator": {"symbol": "VirtualDom"},
+            "capture": {
+              "capturedAt": "2026-09-17T12:00:00Z",
+              "tool": "git-show",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          },
+          "docs": []
+        }
+      ]
+    }
+  ]
+}

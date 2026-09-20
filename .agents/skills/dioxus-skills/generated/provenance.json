@@ -1,0 +1,1898 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "artifactPath": "SKILL.md",
+      "artifactClass": "repository-config",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "router-v1",
+          "status": "superseded",
+          "artifactSha256": "8b0ae2654f27b97fea76e0028e74e6a0f2c8996b740979d075aa79e1c87df7a9",
+          "capturedAt": "2026-09-17T00:00:00Z",
+          "docs": [],
+          "exception": {
+            "kind": "repository-config",
+            "reason": "Routing and package policy only; no Dioxus implementation claims."
+          },
+          "supersededBy": "router-eight-leaves-v2"
+        },
+        {
+          "revisionId": "router-eight-leaves-v2",
+          "status": "current",
+          "artifactSha256": "bb9e71361e8bf7f19f1a58f959d199d98ec736551de1bfb5c60926936d58ed19",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [],
+          "exception": {
+            "kind": "repository-config",
+            "reason": "Routing and package policy only; no Dioxus implementation claims."
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-core/references/components.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-core-references-components-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "709e5a395e068b579fcbdc23f0fbebe6fb139b277c867ac0e1b099bceed9c7a2",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/properties.rs",
+            "locator": {
+              "symbol": "Properties"
+            },
+            "contentSha256": "49cedf4d3a6c7e638b0750b0b7597496d2ae4fb218bb04578b7f97c388743d11",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-core/references/context-and-lifecycle.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-core-references-context-and-lifecycle-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "128ce3f3819eaa742a96ff2928975f071bc433fbc616aca541314778363d732c",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/scope_context.rs",
+            "locator": {
+              "symbol": "use_hook"
+            },
+            "contentSha256": "8d64ae53254b1e62e4298323a36033099c7c85e9fdde616d697c7918dfda1e4e",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-core/references/errors-and-testing.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-core-references-errors-and-testing-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "1d55be606844187bd3c76b90ca87e377afcbcf0de2556a493b1f9a3b16829cbb",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/error_boundary.rs",
+            "locator": {
+              "symbol": "ErrorBoundary"
+            },
+            "contentSha256": "9fc840dfde41fe7d858b8fbc4673c5fd007c84569598b3d5e416401b88a7882f",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-core/references/launch-and-assets.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-core-references-launch-and-assets-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "1993529641e13bd5d3678026f506e4fa0b9816df21d010b2425566d353517480",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/dioxus/src/launch.rs",
+            "locator": {
+              "symbol": "LaunchBuilder"
+            },
+            "contentSha256": "d057289b897918bdb2d56429e5e33aedb1209a2ccc175599390de0799d80cf0f",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-core/references/source-authority.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "hooks-fda3dc9-v1",
+          "status": "superseded",
+          "supersededBy": "hooks-fda3dc9-v2",
+          "artifactSha256": "6bb7943fc555d46aec23bb5f2b7de34ad33098d0440d735c301aa9c4c3173dc1",
+          "capturedAt": "2026-09-17T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/hooks/docs/rules_of_hooks.md",
+              "retrievedAt": "2026-09-17T00:00:00Z",
+              "contentSha256": "ad2d0479ec9d8a8fa47f4c11b6605e5a3e0777583d9f33b89c7af8910f8845cc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/scope_context.rs",
+            "locator": {
+              "lines": {
+                "start": 370,
+                "end": 434
+              }
+            },
+            "contentSha256": "8d64ae53254b1e62e4298323a36033099c7c85e9fdde616d697c7918dfda1e4e",
+            "capture": {
+              "capturedAt": "2026-09-17T00:00:00Z",
+              "tool": "read-only Git HEAD and local blob inspection",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        },
+        {
+          "revisionId": "hooks-fda3dc9-v2",
+          "status": "superseded",
+          "artifactSha256": "ad32fe6d401638c296da023191ff5c167e76780380f857e435209c4cb7b6b382",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/hooks/docs/rules_of_hooks.md",
+              "retrievedAt": "2026-09-17T00:00:00Z",
+              "contentSha256": "ad2d0479ec9d8a8fa47f4c11b6605e5a3e0777583d9f33b89c7af8910f8845cc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/scope_context.rs",
+            "locator": {
+              "lines": {
+                "start": 370,
+                "end": 434
+              }
+            },
+            "contentSha256": "8d64ae53254b1e62e4298323a36033099c7c85e9fdde616d697c7918dfda1e4e",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git HEAD and local blob inspection",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          },
+          "supersededBy": "dioxus-core-references-source-authority-fda3dc9-v3"
+        },
+        {
+          "revisionId": "dioxus-core-references-source-authority-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "e4a216f694300854ee5662e36ae991a03e4cd453f994b3f321651b49cbc9b7ff",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/dioxus/src/launch.rs",
+            "locator": {
+              "symbol": "LaunchBuilder"
+            },
+            "contentSha256": "d057289b897918bdb2d56429e5e33aedb1209a2ccc175599390de0799d80cf0f",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-core/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "hooks-fda3dc9-v1",
+          "status": "superseded",
+          "artifactSha256": "a2aa773513cd0c2427a0263480b89b390ddc442647a31fc8442219f8a634312f",
+          "capturedAt": "2026-09-17T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/hooks/docs/rules_of_hooks.md",
+              "retrievedAt": "2026-09-17T00:00:00Z",
+              "contentSha256": "ad2d0479ec9d8a8fa47f4c11b6605e5a3e0777583d9f33b89c7af8910f8845cc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/scope_context.rs",
+            "locator": {
+              "lines": {
+                "start": 370,
+                "end": 434
+              }
+            },
+            "contentSha256": "8d64ae53254b1e62e4298323a36033099c7c85e9fdde616d697c7918dfda1e4e",
+            "capture": {
+              "capturedAt": "2026-09-17T00:00:00Z",
+              "tool": "read-only Git HEAD and local blob inspection",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          },
+          "supersededBy": "dioxus-core-SKILL-fda3dc9-v3"
+        },
+        {
+          "revisionId": "dioxus-core-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "32c6e316b89e5f360e5253ab471116851370baa3a6c3a67664c6863d0ad02471",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/virtual_dom.rs",
+            "locator": {
+              "symbol": "VirtualDom"
+            },
+            "contentSha256": "d5d6d56a67445fde87873e3de32f26fb945d1b8129ab453553dc857dcc81fbd4",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-desktop/references/ipc-assets.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-desktop-references-ipc-assets-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "b9a75af1733fe6f8a3e2ce6d0213f8b265dd87ce8d4e524c39e65aab463b78dd",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/protocol.rs",
+            "locator": {
+              "symbol": "desktop_handler"
+            },
+            "contentSha256": "58f90ac8f5842d6738b79edd702766ddddbebead7e4282d98b1463df9c73c621",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-desktop/references/packaging-testing.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-desktop-references-packaging-testing-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "5e41f5666fd3ace69f1a5b4ccfabbaf16f143d5da45cad8562f7795f2d081880",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/cli/src/cli/bundle.rs",
+            "locator": {
+              "symbol": "Bundle"
+            },
+            "contentSha256": "8f4a29e6384e90b96d186411fc0af1f88d3b5b6d6e0e62d3341ba87ebdb850da",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-desktop/references/runtime.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-desktop-references-runtime-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "9c95925a50c56ee23b794e9286076897f070be49ea072e9c53e74132b7150f01",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/app.rs",
+            "locator": {
+              "symbol": "App"
+            },
+            "contentSha256": "0ff1d3adec1ab3efa6337dcfd37f15988fcae112d89bf6e72500558532dc4faf",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-desktop/references/source-map.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-desktop-references-source-map-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "64fd5092095d8b6116c863133619e1dede881072ba0aeb5a1f5ddef37c17a5f1",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/launch.rs",
+            "locator": {
+              "symbol": "launch"
+            },
+            "contentSha256": "1d0eae6fbced7aff4c5fc77484cc6a1820827030c1a65db82a338e23f0db5dca",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-desktop/references/windows-native.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-desktop-references-windows-native-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "9ce251121d6566c9c49f9dcc78cad078d92d9246ed86b143d78b0d42a4f41556",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/desktop_context.rs",
+            "locator": {
+              "symbol": "DesktopService"
+            },
+            "contentSha256": "fc87be261612451fd006e34039d2f9927d432ca1b7aed383358cb78b2cc92ac0",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-desktop/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-desktop-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "4bad72c3eb822ae09cdb3a992ac7e39690f2a3913209fc02fd984dc4b9309238",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/launch.rs",
+            "locator": {
+              "symbol": "launch"
+            },
+            "contentSha256": "1d0eae6fbced7aff4c5fc77484cc6a1820827030c1a65db82a338e23f0db5dca",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-fullstack/references/deployment-security.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-fullstack-references-deployment-security-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "addf00f9ee853b48a30fd70d33c716b7fe2c849835b3d686689946dbf4e49132",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/fullstack-server/src/server.rs",
+            "locator": {
+              "symbol": "DioxusRouterExt"
+            },
+            "contentSha256": "f9f65f8079bc7e498e47a8c48c3ddaf486a4a3a3d56b318599c9883997dc1263",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-fullstack/references/payloads-realtime.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-fullstack-references-payloads-realtime-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "09bdcb4c6de9e1f173d90094ada1d087e9c5596e2a4a0beb7c03e90e9e5976b7",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/fullstack/src/request.rs",
+            "locator": {
+              "symbol": "IntoRequest"
+            },
+            "contentSha256": "17390819c376f625a946121949463007007d03290b42154f1adf9e0b29150211",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-fullstack/references/server-functions.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-fullstack-references-server-functions-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "24a20bb6aa667004d9755901f62c10e22021a8a0b8ce8ec41083ebfe532d046f",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/fullstack-macro/src/lib.rs",
+            "locator": {
+              "symbol": "server"
+            },
+            "contentSha256": "c5bde2a3966cd8741b1721ac855ad193d674cc3f52f80be1d81b661b19c42937",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-fullstack/references/source-map.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-fullstack-references-source-map-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "97e963da1a18f20d08ef208918cb83a8b218393a3bcc7e5d9fc07bf4b2a629e7",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/fullstack-macro/src/lib.rs",
+            "locator": {
+              "symbol": "server"
+            },
+            "contentSha256": "c5bde2a3966cd8741b1721ac855ad193d674cc3f52f80be1d81b661b19c42937",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-fullstack/references/ssr-axum-hydration.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-fullstack-references-ssr-axum-hydration-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "84b75b8434735cf264ce5da50cd0470abc18d33a41a64bb5bb6eea701b75e9ec",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/fullstack-server/src/ssr.rs",
+            "locator": {
+              "symbol": "SSR"
+            },
+            "contentSha256": "2ae7a136c36f2e8e4faf248f3f605478fcc4fc5de60e7d539ac7f236327d7905",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-fullstack/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-fullstack-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "672c9c3a13232643b392dff6e089a2ace1da3cd67dae1a66c11adca73cce07e1",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/fullstack-macro/src/lib.rs",
+            "locator": {
+              "symbol": "server"
+            },
+            "contentSha256": "c5bde2a3966cd8741b1721ac855ad193d674cc3f52f80be1d81b661b19c42937",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-mobile/references/architecture.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-mobile-references-architecture-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "96ca207b9c4263b9e9dd2724d516457586995583db2b6e9f2c913009dd737f1d",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/dioxus/src/lib.rs",
+            "locator": {
+              "symbol": "dioxus_desktop as mobile"
+            },
+            "contentSha256": "0d0637bb67a43f545cd1fdd6cd6c60f9ff5fe08d0d7e656e7515ca26e493f1d1",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-mobile/references/build-and-assets.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-mobile-references-build-and-assets-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "8236343a17cc3be147a708431d66e121affac408c9253ff2872439008bc0b768",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/cli/src/build/android.rs",
+            "locator": {
+              "symbol": "assembleDebug"
+            },
+            "contentSha256": "09b01069e7f2b62c272e108f54746bf4df88fbd84aa35f5c9757a45a8a43e36b",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-mobile/references/debugging.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-mobile-references-debugging-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "41d146126f4ea49a22857bc72d429dee0e0ded4f6c055229d0ea6febe881738f",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/mobile.rs",
+            "locator": {
+              "symbol": "start_app"
+            },
+            "contentSha256": "90428b2ef8cde53928aa319995a2beee4b5fd9c9e90337c14dab63b55e158c39",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-mobile/references/platform-integration.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-mobile-references-platform-integration-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "89e627195a2b32cfe1b69accd00f6cb4d829ef1ce19ce48c1042016874896805",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/manganis/manganis-macro/src/ffi.rs",
+            "locator": {
+              "symbol": "Swift"
+            },
+            "contentSha256": "cb21c7a7d6e498c47d28d273cf3f515fe99f12549f57cb9e1203874a7eb1eb58",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-mobile/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-mobile-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "66191e1c05947792ab03396eddf4c4644aea2737eab535a81c43071335833b9c",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/mobile.rs",
+            "locator": {
+              "symbol": "start_app"
+            },
+            "contentSha256": "90428b2ef8cde53928aa319995a2beee4b5fd9c9e90337c14dab63b55e158c39",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/references/desktop-native.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-references-desktop-native-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "02e8055e309c19b0742b7763e051a384085cb7f851ac438f09a81bf983175847",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/desktop/src/desktop_context.rs",
+            "locator": {
+              "symbol": "DesktopService"
+            },
+            "contentSha256": "fc87be261612451fd006e34039d2f9927d432ca1b7aed383358cb78b2cc92ac0",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/references/document-dom.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-references-document-dom-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "8841b11932b7655531c63bb68dcbbddb526e7e5c2ff4aea1875868d22c033d2c",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/document/src/eval.rs",
+            "locator": {
+              "symbol": "recv"
+            },
+            "contentSha256": "1c21d68787f45ba137362401ff568618f82f77455c35ecba8e1236b1e6db0fe7",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/references/manganis-ffi.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-references-manganis-ffi-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "e5f3a913ef2453dcbbd313fe94eeee18a7027edeff399c33ee075cb14b83e2c3",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/manganis/manganis-macro/src/ffi.rs",
+            "locator": {
+              "symbol": "Swift"
+            },
+            "contentSha256": "cb21c7a7d6e498c47d28d273cf3f515fe99f12549f57cb9e1203874a7eb1eb58",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/references/react-css-assets.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-references-react-css-assets-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "11bc8e92b2075ec6c2fe02af4d782477877113ab7e1962b5bae0d1246df43ab7",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/manganis/manganis-core/src/asset.rs",
+            "locator": {
+              "symbol": "Asset"
+            },
+            "contentSha256": "6ad3e52761d803b335c13ab3385a8e7eedf56e36aa89e1d2ef22850689fe70fc",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/references/source-map.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-references-source-map-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "81f9b469c9a820f8d751fc0f4a6e5283b41e7b501b4bc139033b376f179e0959",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/document/src/eval.rs",
+            "locator": {
+              "symbol": "Eval"
+            },
+            "contentSha256": "1c21d68787f45ba137362401ff568618f82f77455c35ecba8e1236b1e6db0fe7",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/references/web-wasm.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-references-web-wasm-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "87786ce7ce649889c31b18c416b94880a9c23d55ade59a58ec29db065b0bb610",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/web/src/document.rs",
+            "locator": {
+              "symbol": "WebEvaluator"
+            },
+            "contentSha256": "25a3acacba1b16898bca82cc5c6ca9f1b0409a56c8eefaec747bb21ee79764c7",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-platform-interop/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-platform-interop-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "b3de2ad7a48b3c9ffe7d514370f0c4b5acb6782ee086a1742ca31180fc917b0e",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/document/src/eval.rs",
+            "locator": {
+              "symbol": "Eval"
+            },
+            "contentSha256": "1c21d68787f45ba137362401ff568618f82f77455c35ecba8e1236b1e6db0fe7",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-routing/references/fullstack-and-security.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-routing-references-fullstack-and-security-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "c0ef70f89858e39ba308085c3090ff0f3b4cd6229d3416755a72af7dc8805b75",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/router/src/components/router.rs",
+            "locator": {
+              "symbol": "Router"
+            },
+            "contentSha256": "1588352b5632129aeff2d6d9a00ffe9cd83ca248256e254565609493c6f3a013",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-routing/references/rendering-and-navigation.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-routing-references-rendering-and-navigation-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "8509b4950d1e016ae62e7ba3d1e6a173dbded0d9a6b1308d6e5c173ec95c012b",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/router/src/contexts/router.rs",
+            "locator": {
+              "symbol": "RouterContext"
+            },
+            "contentSha256": "1e1139b7c82b7d2d05effca1d748dd27ecc04384bce90ce0342006522054bffe",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-routing/references/routes.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-routing-references-routes-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "acf0224696bf2f7b1588504971f4cea7b6e6c4500f319e8de9c9adbb0cfb9742",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/router-macro/src/route_tree.rs",
+            "locator": {
+              "symbol": "ParseRouteTree"
+            },
+            "contentSha256": "dfe843a1a689384c9edd02fd4fce0d4ba30f31db0d3915bad3b4a322c685f62d",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-routing/references/source-map.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-routing-references-source-map-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "603d22043f0424592f92449155836b33221bad40f74e90030174cd048d1e8a1e",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/router/src/routable.rs",
+            "locator": {
+              "symbol": "Routable"
+            },
+            "contentSha256": "46d279a00cb76504c39d6ac3fc1ba46e717557e3a741657d07353bd1195d4d96",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-routing/references/testing.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-routing-references-testing-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "52fbbceb7c13563c28db081516d1bde0dbfe226c11c92076d4cce0e17e394f92",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/history/src/memory.rs",
+            "locator": {
+              "symbol": "MemoryHistory"
+            },
+            "contentSha256": "0e720f70ab31de4d2234ad8d1f8c8b65283ee227a15e753b92b6c735519586e2",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-routing/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-routing-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "baa996cc3f23b339b2ccce6df327a8ec07871164453cdb65aa29528435477245",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/router/src/routable.rs",
+            "locator": {
+              "symbol": "Routable"
+            },
+            "contentSha256": "46d279a00cb76504c39d6ac3fc1ba46e717557e3a741657d07353bd1195d4d96",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/references/async-and-derived.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-references-async-and-derived-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "4499debdaf414094b7842cd18bece71642a8c133c5ba1337f9820c6bad877e90",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/signals/src/memo.rs",
+            "locator": {
+              "symbol": "Memo"
+            },
+            "contentSha256": "187fb0ced340cbddb220889a91e36aee0aaca8d962dd40308283804419f905e5",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/references/handles.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-references-handles-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "c17bee9acf46f0350caefe945840f6dcafbe92487a91dc46a4a55ec26b2948c5",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/signals/src/boxed.rs",
+            "locator": {
+              "symbol": "WriteSignal"
+            },
+            "contentSha256": "860ea123f27a60c135b0fb76abebaf2327f6a3753329f10d8ac89d38693c1a5f",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/references/ownership-and-storage.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-references-ownership-and-storage-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "bfe77f2eb02e783177794b03cc34bc296b35a5c4c925bf188ac9564e2b4e149c",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/signals/src/signal.rs",
+            "locator": {
+              "symbol": "new_in_scope"
+            },
+            "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/references/source-map.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-references-source-map-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "c1c56661d0e6491f138491f648a1fcbc1616bc1053bef1a135f4ccb5b92787ab",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/signals/src/signal.rs",
+            "locator": {
+              "symbol": "Signal"
+            },
+            "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/references/testing-and-performance.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-references-testing-and-performance-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "62cbfdd9379de86c4c6541de90ce5dad0742b0749821452015b1937fe42b3ee1",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/signals/src/signal.rs",
+            "locator": {
+              "symbol": "Signal"
+            },
+            "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/references/tracking.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-references-tracking-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "fb78ccdbdea66cd2bd5f3beb48e3aafb363fdf94b8c571f3b225e8e5d2558261",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/core/src/reactive_context.rs",
+            "locator": {
+              "symbol": "ReactiveContext"
+            },
+            "contentSha256": "e3cb8ff9a776d9ed773af0b09d9aa1a4d5854433aeac2c6f07f2fdce85e1ffc4",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-signals/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-signals-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "0f98b4dda7f765e0315a4d48db6f3d5541c17a18bdf0bb755d1405d99611b9a3",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/signals/src/signal.rs",
+            "locator": {
+              "symbol": "Signal"
+            },
+            "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-web/references/assets-toolchain-deployment.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-web-references-assets-toolchain-deployment-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "3109f0e253039e3a15ab678808474f2631a78603023cfd122d336431b49b6b48",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/cli/src/build/web.rs",
+            "locator": {
+              "symbol": "bundle_web"
+            },
+            "contentSha256": "120f0042a5a4b665d80f756e2fce9235071d1fc96d9126981eb9ca345a509236",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-web/references/browser-integration.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-web-references-browser-integration-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "f9c5a054d40e674f225172b12ee1e8eb8dcbc7bdc195d1c50131dceebe3a5431",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/web/src/document.rs",
+            "locator": {
+              "symbol": "WebDocument"
+            },
+            "contentSha256": "25a3acacba1b16898bca82cc5c6ca9f1b0409a56c8eefaec747bb21ee79764c7",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-web/references/hydration-ssr.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-web-references-hydration-ssr-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "5fb82aeb382d9833504d1962442fb3910e31ef739c608069ddf609c736ef64d5",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/web/src/hydration/walk.rs",
+            "locator": {
+              "symbol": "emit_scope"
+            },
+            "contentSha256": "42f3279f57ba8b0608c6a2905d28d956f046d104499e6556d85bcce5b4f13d07",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-web/references/launch-renderer.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-web-references-launch-renderer-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "3540a1a8b5628b02f131480332fd62a8befdb15dae503a48208f6b1261134e1b",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/web/src/lib.rs",
+            "locator": {
+              "symbol": "run"
+            },
+            "contentSha256": "415d73a77069d35a3ca14a138a6048bbf471f7a89db370fdf6036d10e4485dcb",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "skills/dioxus-web/SKILL.md",
+      "artifactClass": "dioxus-authored",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "dioxus-web-SKILL-fda3dc9-v3",
+          "status": "current",
+          "artifactSha256": "9342d75937dff89f81a8853e9bb1828d4ebb88912596ba7d2ebd45af41ae5e2f",
+          "capturedAt": "2026-09-18T00:00:00Z",
+          "docs": [
+            {
+              "url": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+              "retrievedAt": "2026-09-18T00:00:00Z",
+              "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b"
+            }
+          ],
+          "sourcePin": {
+            "repository": "https://github.com/DioxusLabs/dioxus.git",
+            "ref": "HEAD",
+            "sha": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "packages/web/src/lib.rs",
+            "locator": {
+              "symbol": "run"
+            },
+            "contentSha256": "415d73a77069d35a3ca14a138a6048bbf471f7a89db370fdf6036d10e4485dcb",
+            "capture": {
+              "capturedAt": "2026-09-18T00:00:00Z",
+              "tool": "read-only Git blob inspection at local HEAD",
+              "trust": "untrusted",
+              "instructionsExecuted": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "templates/model-invoked-SKILL.md",
+      "artifactClass": "repository-config",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "template-v1",
+          "status": "current",
+          "artifactSha256": "44cb3fb864254dae948e884c67c3f720c9f7ed4984d76bb0a6ea86c43bf3df0a",
+          "capturedAt": "2026-09-17T00:00:00Z",
+          "docs": [],
+          "exception": {
+            "kind": "repository-config",
+            "reason": "Generic package template; no Dioxus behavior."
+          }
+        }
+      ]
+    },
+    {
+      "artifactPath": "templates/user-invoked-SKILL.md",
+      "artifactClass": "repository-config",
+      "authorship": "hand-authored",
+      "revisions": [
+        {
+          "revisionId": "template-v1",
+          "status": "current",
+          "artifactSha256": "950cbedeafd0ff34e28c1367d1267e2c40655bed8ecaec8acfb221b04af0d22d",
+          "capturedAt": "2026-09-17T00:00:00Z",
+          "docs": [],
+          "exception": {
+            "kind": "repository-config",
+            "reason": "Generic package template; no Dioxus behavior."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,965 @@
+{
+  "schemaVersion": 1,
+  "conflicts": [
+    {
+      "conflictId": "skills/dioxus-core/references/components.md",
+      "topic": "skills/dioxus-core/references/components.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/properties.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/properties.rs",
+          "contentSha256": "49cedf4d3a6c7e638b0750b0b7597496d2ae4fb218bb04578b7f97c388743d11",
+          "claim": "packages/core/src/properties.rs (Properties) is the implementation anchor for references/components.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+          "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a",
+          "claim": "Core README explains VirtualDom, components, hooks and async; renderer breadth is descriptive, not a launch-priority contract."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-core/references/context-and-lifecycle.md",
+      "topic": "skills/dioxus-core/references/context-and-lifecycle.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/scope_context.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/scope_context.rs",
+          "contentSha256": "8d64ae53254b1e62e4298323a36033099c7c85e9fdde616d697c7918dfda1e4e",
+          "claim": "packages/core/src/scope_context.rs (use_hook) is the implementation anchor for references/context-and-lifecycle.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+          "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a",
+          "claim": "Core README explains VirtualDom, components, hooks and async; renderer breadth is descriptive, not a launch-priority contract."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-core/references/errors-and-testing.md",
+      "topic": "skills/dioxus-core/references/errors-and-testing.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/error_boundary.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/error_boundary.rs",
+          "contentSha256": "9fc840dfde41fe7d858b8fbc4673c5fd007c84569598b3d5e416401b88a7882f",
+          "claim": "packages/core/src/error_boundary.rs (ErrorBoundary) is the implementation anchor for references/errors-and-testing.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+          "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a",
+          "claim": "Core README explains VirtualDom, components, hooks and async; renderer breadth is descriptive, not a launch-priority contract."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-core/references/launch-and-assets.md",
+      "topic": "skills/dioxus-core/references/launch-and-assets.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/dioxus/src/launch.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/dioxus/src/launch.rs",
+          "contentSha256": "d057289b897918bdb2d56429e5e33aedb1209a2ccc175599390de0799d80cf0f",
+          "claim": "packages/dioxus/src/launch.rs (LaunchBuilder) is the implementation anchor for references/launch-and-assets.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+          "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a",
+          "claim": "Core README explains VirtualDom, components, hooks and async; renderer breadth is descriptive, not a launch-priority contract."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-core/references/source-authority.md",
+      "topic": "skills/dioxus-core/references/source-authority.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/dioxus/src/launch.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/dioxus/src/launch.rs",
+          "contentSha256": "d057289b897918bdb2d56429e5e33aedb1209a2ccc175599390de0799d80cf0f",
+          "claim": "packages/dioxus/src/launch.rs (LaunchBuilder) is the implementation anchor for references/source-authority.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+          "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a",
+          "claim": "Core README explains VirtualDom, components, hooks and async; renderer breadth is descriptive, not a launch-priority contract."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-core/SKILL.md",
+      "topic": "skills/dioxus-core/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/virtual_dom.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/virtual_dom.rs",
+          "contentSha256": "d5d6d56a67445fde87873e3de32f26fb945d1b8129ab453553dc857dcc81fbd4",
+          "claim": "packages/core/src/virtual_dom.rs (VirtualDom) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/core/README.md",
+          "contentSha256": "6589b7eb64ef29655a2ae68ba061d65d85a2625f46c812082019df449ac9784a",
+          "claim": "Core README explains VirtualDom, components, hooks and async; renderer breadth is descriptive, not a launch-priority contract."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-desktop/references/ipc-assets.md",
+      "topic": "skills/dioxus-desktop/references/ipc-assets.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/protocol.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/protocol.rs",
+          "contentSha256": "58f90ac8f5842d6738b79edd702766ddddbebead7e4282d98b1463df9c73c621",
+          "claim": "packages/desktop/src/protocol.rs (desktop_handler) is the implementation anchor for references/ipc-assets.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README explains native VirtualDom and system WebView integration; one-line launch and window hooks omit current window ownership, event dispatch and packaging details."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-desktop/references/packaging-testing.md",
+      "topic": "skills/dioxus-desktop/references/packaging-testing.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/cli/src/cli/bundle.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/cli/src/cli/bundle.rs",
+          "contentSha256": "8f4a29e6384e90b96d186411fc0af1f88d3b5b6d6e0e62d3341ba87ebdb850da",
+          "claim": "packages/cli/src/cli/bundle.rs (Bundle) is the implementation anchor for references/packaging-testing.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README explains native VirtualDom and system WebView integration; one-line launch and window hooks omit current window ownership, event dispatch and packaging details."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-desktop/references/runtime.md",
+      "topic": "skills/dioxus-desktop/references/runtime.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/app.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/app.rs",
+          "contentSha256": "0ff1d3adec1ab3efa6337dcfd37f15988fcae112d89bf6e72500558532dc4faf",
+          "claim": "packages/desktop/src/app.rs (App) is the implementation anchor for references/runtime.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README explains native VirtualDom and system WebView integration; one-line launch and window hooks omit current window ownership, event dispatch and packaging details."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-desktop/references/source-map.md",
+      "topic": "skills/dioxus-desktop/references/source-map.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/launch.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/launch.rs",
+          "contentSha256": "1d0eae6fbced7aff4c5fc77484cc6a1820827030c1a65db82a338e23f0db5dca",
+          "claim": "packages/desktop/src/launch.rs (launch) is the implementation anchor for references/source-map.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README explains native VirtualDom and system WebView integration; one-line launch and window hooks omit current window ownership, event dispatch and packaging details."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-desktop/references/windows-native.md",
+      "topic": "skills/dioxus-desktop/references/windows-native.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/desktop_context.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/desktop_context.rs",
+          "contentSha256": "fc87be261612451fd006e34039d2f9927d432ca1b7aed383358cb78b2cc92ac0",
+          "claim": "packages/desktop/src/desktop_context.rs (DesktopService) is the implementation anchor for references/windows-native.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README explains native VirtualDom and system WebView integration; one-line launch and window hooks omit current window ownership, event dispatch and packaging details."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-desktop/SKILL.md",
+      "topic": "skills/dioxus-desktop/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/launch.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/launch.rs",
+          "contentSha256": "1d0eae6fbced7aff4c5fc77484cc6a1820827030c1a65db82a338e23f0db5dca",
+          "claim": "packages/desktop/src/launch.rs (launch) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README explains native VirtualDom and system WebView integration; one-line launch and window hooks omit current window ownership, event dispatch and packaging details."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-fullstack/references/deployment-security.md",
+      "topic": "skills/dioxus-fullstack/references/deployment-security.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-server/src/server.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-server/src/server.rs",
+          "contentSha256": "f9f65f8079bc7e498e47a8c48c3ddaf486a4a3a3d56b318599c9883997dc1263",
+          "claim": "packages/fullstack-server/src/server.rs (DioxusRouterExt) is the implementation anchor for references/deployment-security.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+          "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06",
+          "claim": "Fullstack README only says it wraps dioxus-server and exposes RPC. Current code separates fullstack-server and macro-generated endpoints; the summary establishes no authentication, serialization or streaming guarantees."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-fullstack/references/payloads-realtime.md",
+      "topic": "skills/dioxus-fullstack/references/payloads-realtime.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack/src/request.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack/src/request.rs",
+          "contentSha256": "17390819c376f625a946121949463007007d03290b42154f1adf9e0b29150211",
+          "claim": "packages/fullstack/src/request.rs (IntoRequest) is the implementation anchor for references/payloads-realtime.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+          "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06",
+          "claim": "Fullstack README only says it wraps dioxus-server and exposes RPC. Current code separates fullstack-server and macro-generated endpoints; the summary establishes no authentication, serialization or streaming guarantees."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-fullstack/references/server-functions.md",
+      "topic": "skills/dioxus-fullstack/references/server-functions.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-macro/src/lib.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-macro/src/lib.rs",
+          "contentSha256": "c5bde2a3966cd8741b1721ac855ad193d674cc3f52f80be1d81b661b19c42937",
+          "claim": "packages/fullstack-macro/src/lib.rs (server) is the implementation anchor for references/server-functions.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+          "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06",
+          "claim": "Fullstack README only says it wraps dioxus-server and exposes RPC. Current code separates fullstack-server and macro-generated endpoints; the summary establishes no authentication, serialization or streaming guarantees."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-fullstack/references/source-map.md",
+      "topic": "skills/dioxus-fullstack/references/source-map.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-macro/src/lib.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-macro/src/lib.rs",
+          "contentSha256": "c5bde2a3966cd8741b1721ac855ad193d674cc3f52f80be1d81b661b19c42937",
+          "claim": "packages/fullstack-macro/src/lib.rs (server) is the implementation anchor for references/source-map.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+          "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06",
+          "claim": "Fullstack README only says it wraps dioxus-server and exposes RPC. Current code separates fullstack-server and macro-generated endpoints; the summary establishes no authentication, serialization or streaming guarantees."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-fullstack/references/ssr-axum-hydration.md",
+      "topic": "skills/dioxus-fullstack/references/ssr-axum-hydration.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-server/src/ssr.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-server/src/ssr.rs",
+          "contentSha256": "2ae7a136c36f2e8e4faf248f3f605478fcc4fc5de60e7d539ac7f236327d7905",
+          "claim": "packages/fullstack-server/src/ssr.rs (SSR) is the implementation anchor for references/ssr-axum-hydration.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+          "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06",
+          "claim": "Fullstack README only says it wraps dioxus-server and exposes RPC. Current code separates fullstack-server and macro-generated endpoints; the summary establishes no authentication, serialization or streaming guarantees."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-fullstack/SKILL.md",
+      "topic": "skills/dioxus-fullstack/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-macro/src/lib.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/fullstack-macro/src/lib.rs",
+          "contentSha256": "c5bde2a3966cd8741b1721ac855ad193d674cc3f52f80be1d81b661b19c42937",
+          "claim": "packages/fullstack-macro/src/lib.rs (server) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/fullstack/README.md",
+          "contentSha256": "6ebcd53bc1279680ed4683d2318b3ea3969a23f3f6201c36a5f8c76b850d7f06",
+          "claim": "Fullstack README only says it wraps dioxus-server and exposes RPC. Current code separates fullstack-server and macro-generated endpoints; the summary establishes no authentication, serialization or streaming guarantees."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-mobile/references/architecture.md",
+      "topic": "skills/dioxus-mobile/references/architecture.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/dioxus/src/lib.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/dioxus/src/lib.rs",
+          "contentSha256": "0d0637bb67a43f545cd1fdd6cd6c60f9ff5fe08d0d7e656e7515ca26e493f1d1",
+          "claim": "packages/dioxus/src/lib.rs (dioxus_desktop as mobile) is the implementation anchor for references/architecture.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README includes iOS system WebView availability but does not specify Android initialization, lifecycle recreation, FFI signatures or mobile packaging. Those claims require target-specific implementation."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-mobile/references/build-and-assets.md",
+      "topic": "skills/dioxus-mobile/references/build-and-assets.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/cli/src/build/android.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/cli/src/build/android.rs",
+          "contentSha256": "09b01069e7f2b62c272e108f54746bf4df88fbd84aa35f5c9757a45a8a43e36b",
+          "claim": "packages/cli/src/build/android.rs (assembleDebug) is the implementation anchor for references/build-and-assets.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README includes iOS system WebView availability but does not specify Android initialization, lifecycle recreation, FFI signatures or mobile packaging. Those claims require target-specific implementation."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-mobile/references/debugging.md",
+      "topic": "skills/dioxus-mobile/references/debugging.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/mobile.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/mobile.rs",
+          "contentSha256": "90428b2ef8cde53928aa319995a2beee4b5fd9c9e90337c14dab63b55e158c39",
+          "claim": "packages/desktop/src/mobile.rs (start_app) is the implementation anchor for references/debugging.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README includes iOS system WebView availability but does not specify Android initialization, lifecycle recreation, FFI signatures or mobile packaging. Those claims require target-specific implementation."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-mobile/references/platform-integration.md",
+      "topic": "skills/dioxus-mobile/references/platform-integration.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/manganis/manganis-macro/src/ffi.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/manganis/manganis-macro/src/ffi.rs",
+          "contentSha256": "cb21c7a7d6e498c47d28d273cf3f515fe99f12549f57cb9e1203874a7eb1eb58",
+          "claim": "packages/manganis/manganis-macro/src/ffi.rs (Swift) is the implementation anchor for references/platform-integration.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README includes iOS system WebView availability but does not specify Android initialization, lifecycle recreation, FFI signatures or mobile packaging. Those claims require target-specific implementation."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-mobile/SKILL.md",
+      "topic": "skills/dioxus-mobile/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/mobile.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/mobile.rs",
+          "contentSha256": "90428b2ef8cde53928aa319995a2beee4b5fd9c9e90337c14dab63b55e158c39",
+          "claim": "packages/desktop/src/mobile.rs (start_app) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/desktop/README.md",
+          "contentSha256": "f58eb72f2371c8edd947cb7d1037a777cb427d16048330afb2153aa0bb8afd24",
+          "claim": "Desktop README includes iOS system WebView availability but does not specify Android initialization, lifecycle recreation, FFI signatures or mobile packaging. Those claims require target-specific implementation."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/references/desktop-native.md",
+      "topic": "skills/dioxus-platform-interop/references/desktop-native.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/desktop_context.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/desktop/src/desktop_context.rs",
+          "contentSha256": "fc87be261612451fd006e34039d2f9927d432ca1b7aed383358cb78b2cc92ac0",
+          "claim": "packages/desktop/src/desktop_context.rs (DesktopService) is the implementation anchor for references/desktop-native.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/references/document-dom.md",
+      "topic": "skills/dioxus-platform-interop/references/document-dom.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/document/src/eval.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/document/src/eval.rs",
+          "contentSha256": "1c21d68787f45ba137362401ff568618f82f77455c35ecba8e1236b1e6db0fe7",
+          "claim": "packages/document/src/eval.rs (recv) is the implementation anchor for references/document-dom.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/references/manganis-ffi.md",
+      "topic": "skills/dioxus-platform-interop/references/manganis-ffi.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/manganis/manganis-macro/src/ffi.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/manganis/manganis-macro/src/ffi.rs",
+          "contentSha256": "cb21c7a7d6e498c47d28d273cf3f515fe99f12549f57cb9e1203874a7eb1eb58",
+          "claim": "packages/manganis/manganis-macro/src/ffi.rs (Swift) is the implementation anchor for references/manganis-ffi.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/references/react-css-assets.md",
+      "topic": "skills/dioxus-platform-interop/references/react-css-assets.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/manganis/manganis-core/src/asset.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/manganis/manganis-core/src/asset.rs",
+          "contentSha256": "6ad3e52761d803b335c13ab3385a8e7eedf56e36aa89e1d2ef22850689fe70fc",
+          "claim": "packages/manganis/manganis-core/src/asset.rs (Asset) is the implementation anchor for references/react-css-assets.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/references/source-map.md",
+      "topic": "skills/dioxus-platform-interop/references/source-map.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/document/src/eval.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/document/src/eval.rs",
+          "contentSha256": "1c21d68787f45ba137362401ff568618f82f77455c35ecba8e1236b1e6db0fe7",
+          "claim": "packages/document/src/eval.rs (Eval) is the implementation anchor for references/source-map.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/references/web-wasm.md",
+      "topic": "skills/dioxus-platform-interop/references/web-wasm.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/document.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/document.rs",
+          "contentSha256": "25a3acacba1b16898bca82cc5c6ca9f1b0409a56c8eefaec747bb21ee79764c7",
+          "claim": "packages/web/src/document.rs (WebEvaluator) is the implementation anchor for references/web-wasm.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-platform-interop/SKILL.md",
+      "topic": "skills/dioxus-platform-interop/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/document/src/eval.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/document/src/eval.rs",
+          "contentSha256": "1c21d68787f45ba137362401ff568618f82f77455c35ecba8e1236b1e6db0fe7",
+          "claim": "packages/document/src/eval.rs (Eval) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/document/docs/eval.md",
+          "contentSha256": "2d9395bc249c186f98647dac06355eb603e46a464a35887fac9c17502af71180",
+          "claim": "Eval docs explain trusted JavaScript, JSON channels and mounted DOM use. The send-direction sentence is imprecise; implementation decides direction and renderer support. Eval examples do not establish native FFI or React adapter support."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-routing/references/fullstack-and-security.md",
+      "topic": "skills/dioxus-routing/references/fullstack-and-security.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/components/router.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/components/router.rs",
+          "contentSha256": "1588352b5632129aeff2d6d9a00ffe9cd83ca248256e254565609493c6f3a013",
+          "claim": "packages/router/src/components/router.rs (Router) is the implementation anchor for references/fullstack-and-security.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+          "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2",
+          "claim": "Router README demonstrates typed Link.to, nested layouts and opt-in splitting. Examples explain composition; parser, context and feature-gated implementation decide matching, navigation and suspension behavior."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-routing/references/rendering-and-navigation.md",
+      "topic": "skills/dioxus-routing/references/rendering-and-navigation.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/contexts/router.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/contexts/router.rs",
+          "contentSha256": "1e1139b7c82b7d2d05effca1d748dd27ecc04384bce90ce0342006522054bffe",
+          "claim": "packages/router/src/contexts/router.rs (RouterContext) is the implementation anchor for references/rendering-and-navigation.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+          "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2",
+          "claim": "Router README demonstrates typed Link.to, nested layouts and opt-in splitting. Examples explain composition; parser, context and feature-gated implementation decide matching, navigation and suspension behavior."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-routing/references/routes.md",
+      "topic": "skills/dioxus-routing/references/routes.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router-macro/src/route_tree.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router-macro/src/route_tree.rs",
+          "contentSha256": "dfe843a1a689384c9edd02fd4fce0d4ba30f31db0d3915bad3b4a322c685f62d",
+          "claim": "packages/router-macro/src/route_tree.rs (ParseRouteTree) is the implementation anchor for references/routes.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+          "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2",
+          "claim": "Router README demonstrates typed Link.to, nested layouts and opt-in splitting. Examples explain composition; parser, context and feature-gated implementation decide matching, navigation and suspension behavior."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-routing/references/source-map.md",
+      "topic": "skills/dioxus-routing/references/source-map.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/routable.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/routable.rs",
+          "contentSha256": "46d279a00cb76504c39d6ac3fc1ba46e717557e3a741657d07353bd1195d4d96",
+          "claim": "packages/router/src/routable.rs (Routable) is the implementation anchor for references/source-map.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+          "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2",
+          "claim": "Router README demonstrates typed Link.to, nested layouts and opt-in splitting. Examples explain composition; parser, context and feature-gated implementation decide matching, navigation and suspension behavior."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-routing/references/testing.md",
+      "topic": "skills/dioxus-routing/references/testing.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/history/src/memory.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/history/src/memory.rs",
+          "contentSha256": "0e720f70ab31de4d2234ad8d1f8c8b65283ee227a15e753b92b6c735519586e2",
+          "claim": "packages/history/src/memory.rs (MemoryHistory) is the implementation anchor for references/testing.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+          "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2",
+          "claim": "Router README demonstrates typed Link.to, nested layouts and opt-in splitting. Examples explain composition; parser, context and feature-gated implementation decide matching, navigation and suspension behavior."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-routing/SKILL.md",
+      "topic": "skills/dioxus-routing/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/routable.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/router/src/routable.rs",
+          "contentSha256": "46d279a00cb76504c39d6ac3fc1ba46e717557e3a741657d07353bd1195d4d96",
+          "claim": "packages/router/src/routable.rs (Routable) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/router/README.md",
+          "contentSha256": "7c29853a28f09cf05a9e425401c2f36557c37ff53ab94c5798e91d341f07d4b2",
+          "claim": "Router README demonstrates typed Link.to, nested layouts and opt-in splitting. Examples explain composition; parser, context and feature-gated implementation decide matching, navigation and suspension behavior."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/references/async-and-derived.md",
+      "topic": "skills/dioxus-signals/references/async-and-derived.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/memo.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/memo.rs",
+          "contentSha256": "187fb0ced340cbddb220889a91e36aee0aaca8d962dd40308283804419f905e5",
+          "claim": "packages/signals/src/memo.rs (Memo) is the implementation anchor for references/async-and-derived.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/references/handles.md",
+      "topic": "skills/dioxus-signals/references/handles.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/boxed.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/boxed.rs",
+          "contentSha256": "860ea123f27a60c135b0fb76abebaf2327f6a3753329f10d8ac89d38693c1a5f",
+          "claim": "packages/signals/src/boxed.rs (WriteSignal) is the implementation anchor for references/handles.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/references/ownership-and-storage.md",
+      "topic": "skills/dioxus-signals/references/ownership-and-storage.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+          "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+          "claim": "packages/signals/src/signal.rs (new_in_scope) is the implementation anchor for references/ownership-and-storage.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/references/source-map.md",
+      "topic": "skills/dioxus-signals/references/source-map.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+          "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+          "claim": "packages/signals/src/signal.rs (Signal) is the implementation anchor for references/source-map.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/references/testing-and-performance.md",
+      "topic": "skills/dioxus-signals/references/testing-and-performance.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+          "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+          "claim": "packages/signals/src/signal.rs (Signal) is the implementation anchor for references/testing-and-performance.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/references/tracking.md",
+      "topic": "skills/dioxus-signals/references/tracking.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/reactive_context.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/core/src/reactive_context.rs",
+          "contentSha256": "e3cb8ff9a776d9ed773af0b09d9aa1a4d5854433aeac2c6f07f2fdce85e1ffc4",
+          "claim": "packages/core/src/reactive_context.rs (ReactiveContext) is the implementation anchor for references/tracking.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-signals/SKILL.md",
+      "topic": "skills/dioxus-signals/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/signals/src/signal.rs",
+          "contentSha256": "c7491a64cf502548bb8664ff3811a314f412d008ef926fc397f806652c0ad4cc",
+          "claim": "packages/signals/src/signal.rs (Signal) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/signals/docs/signals.md",
+          "contentSha256": "f5a01a8c7b50e717c80f713546570787f0517d18b25b06feeca6fb7480a33dfc",
+          "claim": "Signals docs explain Copy handles, runtime borrows, async guard hazards and component lifetime. Owner selection and storage implementation refine the component-lifetime shorthand; examples establish no atomic batching guarantee."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-web/references/assets-toolchain-deployment.md",
+      "topic": "skills/dioxus-web/references/assets-toolchain-deployment.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/cli/src/build/web.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/cli/src/build/web.rs",
+          "contentSha256": "120f0042a5a4b665d80f756e2fce9235071d1fc96d9126981eb9ca345a509236",
+          "claim": "packages/cli/src/build/web.rs (bundle_web) is the implementation anchor for references/assets-toolchain-deployment.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+          "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b",
+          "claim": "Web README explains the WebAssembly renderer and DOM backend; its bundle-size estimate is not a guarantee for hydration, feature combinations or application assets."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-web/references/browser-integration.md",
+      "topic": "skills/dioxus-web/references/browser-integration.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/document.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/document.rs",
+          "contentSha256": "25a3acacba1b16898bca82cc5c6ca9f1b0409a56c8eefaec747bb21ee79764c7",
+          "claim": "packages/web/src/document.rs (WebDocument) is the implementation anchor for references/browser-integration.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+          "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b",
+          "claim": "Web README explains the WebAssembly renderer and DOM backend; its bundle-size estimate is not a guarantee for hydration, feature combinations or application assets."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-web/references/hydration-ssr.md",
+      "topic": "skills/dioxus-web/references/hydration-ssr.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/hydration/walk.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/hydration/walk.rs",
+          "contentSha256": "42f3279f57ba8b0608c6a2905d28d956f046d104499e6556d85bcce5b4f13d07",
+          "claim": "packages/web/src/hydration/walk.rs (emit_scope) is the implementation anchor for references/hydration-ssr.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+          "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b",
+          "claim": "Web README explains the WebAssembly renderer and DOM backend; its bundle-size estimate is not a guarantee for hydration, feature combinations or application assets."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-web/references/launch-renderer.md",
+      "topic": "skills/dioxus-web/references/launch-renderer.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/lib.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/lib.rs",
+          "contentSha256": "415d73a77069d35a3ca14a138a6048bbf471f7a89db370fdf6036d10e4485dcb",
+          "claim": "packages/web/src/lib.rs (run) is the implementation anchor for references/launch-renderer.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+          "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b",
+          "claim": "Web README explains the WebAssembly renderer and DOM backend; its bundle-size estimate is not a guarantee for hydration, feature combinations or application assets."
+        }
+      ]
+    },
+    {
+      "conflictId": "skills/dioxus-web/SKILL.md",
+      "topic": "skills/dioxus-web/SKILL.md",
+      "status": "resolved-by-precedence",
+      "selectedReference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/lib.rs",
+      "candidates": [
+        {
+          "sourceKind": "local-source",
+          "reference": "https://github.com/DioxusLabs/dioxus.git@fda3dc9c2b10ddf4417edcbb98caa9613ac92d26:packages/web/src/lib.rs",
+          "contentSha256": "415d73a77069d35a3ca14a138a6048bbf471f7a89db370fdf6036d10e4485dcb",
+          "claim": "packages/web/src/lib.rs (run) is the implementation anchor for SKILL.md. Local implementation wins over explanatory omissions or conflicting API wording; additional topic anchors remain in the artifact's source map."
+        },
+        {
+          "sourceKind": "public-docs",
+          "reference": "https://github.com/DioxusLabs/dioxus/blob/fda3dc9c2b10ddf4417edcbb98caa9613ac92d26/packages/web/README.md",
+          "contentSha256": "e4eb7215aa5ac2c96f3e9fd4fe6eeb53cc2bfedd3db8eaa0e1c16de927e7af7b",
+          "claim": "Web README explains the WebAssembly renderer and DOM backend; its bundle-size estimate is not a guarantee for hydration, feature combinations or application assets."
+        }
+      ]
+    }
+  ]
+}

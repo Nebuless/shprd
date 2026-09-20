@@ -1,0 +1,64 @@
+version = 1
+
+[[rules]]
+name = "vendored-writing-guidance"
+owner = "mattpocock/skills via skills-lock.json"
+kind = "vendored"
+paths = [".agents/skills/writing-for-agents/"]
+
+[[rules]]
+name = "vendor-provenance"
+owner = "repository maintainers"
+kind = "vendor-provenance"
+paths = ["skills-lock.json"]
+
+[[rules]]
+name = "local-cache"
+owner = "local tooling"
+kind = "cache"
+paths = [".codegraph/", ".ruff_cache/", "**/__pycache__/*", "*.pyc", "*.pyo", ".qlty/logs/", ".qlty/out/", ".qlty/plugin_cachedir/", ".qlty/results/", ".qlty/sources/"]
+
+[[rules]]
+name = "workflow-state"
+owner = "local workflow tooling"
+kind = "workflow-state"
+paths = [".omo/"]
+exclude = [".omo/evidence/"]
+
+[[rules]]
+name = "reports"
+owner = "repository tooling"
+kind = "report"
+paths = [".omo/evidence/", "reports/"]
+
+[[rules]]
+name = "generated"
+owner = "repository generators"
+kind = "generated"
+paths = ["generated/"]
+
+[[rules]]
+name = "fixtures"
+owner = "repository tests"
+kind = "fixture"
+paths = ["fixtures/", "tests/fixtures/"]
+
+[[rules]]
+name = "authored-tests"
+owner = "repository maintainers"
+kind = "authored"
+paths = ["tests/"]
+exclude = ["tests/fixtures/", "**/__pycache__/*", "*.pyc", "*.pyo"]
+
+[[rules]]
+name = "authored-tooling"
+owner = "repository maintainers"
+kind = "authored"
+paths = ["scripts/", ".mise/", ".qlty/qlty.toml", ".qlty/configs/", ".gitignore", "cliff.toml", "commitlint.config.mjs", "mise.lock", "mise.toml", "prek.toml", "inventory.toml"]
+exclude = ["**/__pycache__/*", "*.pyc", "*.pyo"]
+
+[[rules]]
+name = "authored-package"
+owner = "repository maintainers"
+kind = "authored"
+paths = ["skills/", "references/", "assets/", "templates/", "schemas/", "docs/", ".github/", "SKILL.md", "README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE"]

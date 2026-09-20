@@ -1,0 +1,87 @@
+[settings]
+experimental = true
+lockfile = true
+
+[tools]
+"github:qltysh/qlty" = "0.644.0"
+git-cliff = "2.14.1"
+node = "24.18.0"
+"npm:@commitlint/cli" = "21.2.2"
+"pkgx:gnu.org/bash" = "5.2.37"
+prek = "0.5.3"
+python = "3.12.14"
+uv = "0.12.15"
+
+[env]
+_.path = ["{{config_root}}/scripts"]
+PYTHONDONTWRITEBYTECODE = "1"
+
+[tasks.test]
+description = "Run repository tests"
+run = "/bin/bash scripts/test.sh"
+
+[tasks.format]
+description = "Apply configured QLTY formatters"
+run = "qlty fmt --all --no-progress"
+
+[tasks.lint]
+description = "Run QLTY checks without modifying files"
+run = "qlty check --all --no-fix --no-progress"
+
+[tasks."validate-tooling"]
+description = "Validate tooling configuration and release contracts"
+run = [
+  "prek validate-config prek.toml",
+  "printf 'build(tooling): validate quality contracts\\n' | commitlint",
+  "python tests/test_tooling_contract.py",
+]
+
+[tasks.check]
+description = "Run all implemented repository quality gates"
+run = [
+  "mise run test",
+  "mise run validate-tooling",
+  "mise run lint",
+]
+
+[tasks.changelog]
+description = "Generate deterministic release notes from an explicit Git range"
+run = "git-cliff --config cliff.toml --no-exec"
+
+[tasks.ci]
+description = "Run direct CI gates and offline inspection without installed hooks"
+run = [
+  "mise run check",
+  "mise run validate-skills",
+  'mise run validate -- --all --source "${DIOXUS_SOURCE:-/root/repo/dioxus}"',
+  'mise run report -- --source "${DIOXUS_SOURCE:-/root/repo/dioxus}" --no-upstream --json-out reports/ci-report.json',
+  "mise run validate -- --report reports/ci-report.json",
+]
+
+[tasks."install-hooks"]
+description = "Install Prek-owned pre-commit, commit-msg, and pre-push hooks"
+run = "prek install --hook-type pre-commit --hook-type commit-msg --hook-type pre-push"
+
+[tasks.report]
+description = "Inspect read-only provenance and upstream diffs"
+run = "/bin/bash scripts/report.sh"
+
+[tasks.validate]
+description = "Validate provenance or report offline"
+run = "python scripts/validate_provenance.py"
+
+[tasks.apply]
+description = "Apply approved authored artifacts with confirmation and rollback"
+run = "python scripts/apply.py"
+
+[tasks.validate-skills]
+description = "Validate Agent Skills normative schema and local writing policy"
+run = [
+  "skills-ref validate \"$PWD\"",
+  "skills-ref validate \"$PWD/skills/dioxus-core\"",
+  "node scripts/validate-skills.mjs --root .",
+]
+
+[tasks.generate-index]
+description = "Generate deterministic catalog from Agent Skills metadata"
+run = "node scripts/generate-index.mjs"

@@ -1,0 +1,41 @@
+minimum_prek_version = "0.5.3"
+default_install_hook_types = ["pre-commit", "commit-msg", "pre-push"]
+exclude = { glob = [".agents/**", ".codegraph/**", ".mise/**", ".omo/**", "generated/**", "reports/**", "tests/fixtures/**"] }
+
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "check-added-large-files", stages = ["pre-commit"] },
+  { id = "check-case-conflict", stages = ["pre-commit"] },
+  { id = "check-merge-conflict", stages = ["pre-commit"] },
+  { id = "check-toml", stages = ["pre-commit"] },
+  { id = "end-of-file-fixer", stages = ["pre-commit"] },
+  { id = "trailing-whitespace", stages = ["pre-commit"] },
+]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "commitlint"
+name = "commitlint"
+language = "system"
+entry = "mise exec -- commitlint --edit"
+stages = ["commit-msg"]
+always_run = true
+
+[[repos.hooks]]
+id = "qlty"
+name = "qlty check"
+language = "system"
+entry = "mise exec -- qlty check --no-fix --no-progress"
+stages = ["pre-commit"]
+
+[[repos.hooks]]
+id = "check"
+name = "mise run check"
+language = "system"
+entry = "mise run check"
+stages = ["pre-push"]
+always_run = true
+pass_filenames = false

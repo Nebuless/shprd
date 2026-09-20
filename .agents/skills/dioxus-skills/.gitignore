@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.codegraph/
+.qlty/*
+!.qlty/qlty.toml
+!.qlty/configs/
+.omo/*
+!.omo/plans/
+!.omo/notepads/
+!.omo/evidence/
+reports/ci-report.json

@@ -1,0 +1,52 @@
+{
+  "name": "CI",
+  "on": {"push": {}, "pull_request": {}, "workflow_dispatch": {}},
+  "permissions": {"contents": "read"},
+  "jobs": {
+    "check": {
+      "runs-on": "ubuntu-24.04",
+      "timeout-minutes": 30,
+      "defaults": {"run": {"shell": "bash", "working-directory": "dioxus-skills"}},
+      "env": {"DIOXUS_SOURCE": "${{ github.workspace }}/dioxus-source"},
+      "steps": [
+        {
+          "name": "Checkout skills with commit history",
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {"path": "dioxus-skills", "fetch-depth": 0, "persist-credentials": false}
+        },
+        {
+          "name": "Checkout pinned read-only source",
+          "uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683",
+          "with": {
+            "repository": "DioxusLabs/dioxus",
+            "ref": "fda3dc9c2b10ddf4417edcbb98caa9613ac92d26",
+            "path": "dioxus-source",
+            "persist-credentials": false
+          }
+        },
+        {
+          "name": "Bootstrap Mise only",
+          "uses": "jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db",
+          "with": {"version": "2026.8.6", "working_directory": "dioxus-skills", "install": false, "cache": false, "env": false, "add_shims_to_path": false}
+        },
+        {"name": "Install locked tools", "run": "mise install --locked"},
+        {"name": "Direct quality gates", "run": "mise run ci"},
+        {
+          "name": "Validate every PR commit",
+          "if": "github.event_name == 'pull_request'",
+          "env": {
+            "BASE_SHA": "${{ github.event.pull_request.base.sha }}",
+            "HEAD_SHA": "${{ github.event.pull_request.head.sha }}"
+          },
+          "run": "mise exec -- commitlint --from \"$BASE_SHA\" --to \"$HEAD_SHA\" --verbose"
+        },
+        {
+          "name": "Upload inspection evidence",
+          "if": "always()",
+          "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+          "with": {"name": "inspection-report", "path": "dioxus-skills/reports/ci-report.json", "if-no-files-found": "warn", "retention-days": 14}
+        }
+      ]
+    }
+  }
+}

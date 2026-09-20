@@ -1,0 +1,285 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dioxuslabs.github.io/dioxus-skills/schemas/provenance-v1.schema.json",
+  "title": "Dioxus Skills provenance document v1",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "artifacts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    },
+    "safePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//).+$"
+    },
+    "artifactClass": {
+      "enum": [
+        "dioxus-authored",
+        "repository-config",
+        "report",
+        "fixture",
+        "generated",
+        "vendor-guidance",
+        "vendor-provenance"
+      ]
+    },
+    "capture": {
+      "type": "object",
+      "required": [
+        "capturedAt",
+        "tool",
+        "trust",
+        "instructionsExecuted"
+      ],
+      "properties": {
+        "capturedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "trust": {
+          "const": "untrusted"
+        },
+        "instructionsExecuted": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "locator": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "symbol"
+          ],
+          "properties": {
+            "symbol": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "lines"
+          ],
+          "properties": {
+            "lines": {
+              "type": "object",
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "required": [
+                      "start",
+                      "end"
+                    ]
+                  },
+                  "then": {
+                    "description": "end must be greater than or equal to start"
+                  }
+                }
+              ],
+              "$comment": "The runtime validator enforces end >= start; JSON Schema validates only that both bounds are positive."
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "sourcePin": {
+      "type": "object",
+      "required": [
+        "repository",
+        "ref",
+        "sha",
+        "path",
+        "locator",
+        "contentSha256",
+        "capture"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "path": {
+          "$ref": "#/$defs/safePath"
+        },
+        "locator": {
+          "$ref": "#/$defs/locator"
+        },
+        "contentSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "capture": {
+          "$ref": "#/$defs/capture"
+        }
+      },
+      "additionalProperties": false
+    },
+    "documentation": {
+      "type": "object",
+      "required": [
+        "url",
+        "retrievedAt",
+        "contentSha256"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "retrievedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "contentSha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "exception": {
+      "type": "object",
+      "required": [
+        "kind",
+        "reason"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/artifactClass"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "revision": {
+      "type": "object",
+      "required": [
+        "revisionId",
+        "status",
+        "artifactSha256",
+        "capturedAt",
+        "docs"
+      ],
+      "properties": {
+        "revisionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "current",
+            "superseded"
+          ]
+        },
+        "artifactSha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "capturedAt": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "sourcePin": {
+          "$ref": "#/$defs/sourcePin"
+        },
+        "exception": {
+          "$ref": "#/$defs/exception"
+        },
+        "docs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/documentation"
+          }
+        },
+        "supersededBy": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "artifactPath",
+        "artifactClass",
+        "authorship",
+        "revisions"
+      ],
+      "properties": {
+        "artifactPath": {
+          "$ref": "#/$defs/safePath"
+        },
+        "artifactClass": {
+          "$ref": "#/$defs/artifactClass"
+        },
+        "authorship": {
+          "enum": [
+            "hand-authored",
+            "generated"
+          ]
+        },
+        "revisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/revision"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

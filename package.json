@@ -1,7 +1,7 @@
 {
   "name": "shprd",
   "private": true,
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "SHPRD: a web client for Herdr (local socket bridge + React dashboard).",
   "license": "MIT",
   "author": "Arthur",

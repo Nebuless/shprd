@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-  assertBumpMeetsRecommendation,
+  assertBumpIsIncremental,
   classifyVersionBump,
   parseRecommendedReleaseBump,
 } from "./release-bump";
@@ -21,22 +21,22 @@ describe("release bump validation", () => {
     );
   });
 
-  test("allows maintainers to choose a larger recommended bump", () => {
-    expect(() =>
-      assertBumpMeetsRecommendation("0.6.2", "0.7.0", "patch"),
-    ).not.toThrow();
-    expect(() =>
-      assertBumpMeetsRecommendation("0.6.2", "1.0.0", "minor"),
-    ).not.toThrow();
+  test("allows only the next version for each SemVer release class", () => {
+    expect(() => assertBumpIsIncremental("0.8.0", "0.8.1")).not.toThrow();
+    expect(() => assertBumpIsIncremental("0.8.0", "0.9.0")).not.toThrow();
+    expect(() => assertBumpIsIncremental("0.8.0", "1.0.0")).not.toThrow();
   });
 
-  test("rejects a release version smaller than the recommendation", () => {
-    expect(() =>
-      assertBumpMeetsRecommendation("0.6.2", "0.6.3", "minor"),
-    ).toThrow("requires at least a minor release");
-    expect(() =>
-      assertBumpMeetsRecommendation("0.6.2", "0.7.0", "major"),
-    ).toThrow("requires at least a major release");
+  test("rejects skipped release versions", () => {
+    expect(() => assertBumpIsIncremental("0.8.0", "0.8.2")).toThrow(
+      "next patch version 0.8.1",
+    );
+    expect(() => assertBumpIsIncremental("0.8.0", "0.9.1")).toThrow(
+      "next minor version 0.9.0",
+    );
+    expect(() => assertBumpIsIncremental("0.8.0", "1.0.1")).toThrow(
+      "next major version 1.0.0",
+    );
   });
 
   test("parses Conventional Changelog recommendations", () => {

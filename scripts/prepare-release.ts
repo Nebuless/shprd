@@ -11,6 +11,7 @@
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
+import { assertBumpIsIncremental } from "./release-bump";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -138,22 +139,11 @@ export function resolveNextVersion(current: string, input: string): string {
   if (input === "major") {
     return `${currentTuple[0] + 1}.0.0`;
   }
-  const nextMatch = SEMVER_RE.exec(input);
-  if (!nextMatch) {
+  if (!SEMVER_RE.test(input)) {
     throw new Error(`Version "${input}" must be X.Y.Z or patch|minor|major`);
   }
-  const candidate = [
-    Number(nextMatch[1]),
-    Number(nextMatch[2]),
-    Number(nextMatch[3]),
-  ];
-  for (let index = 0; index < 3; index += 1) {
-    if (candidate[index] > currentTuple[index]) return input;
-    if (candidate[index] < currentTuple[index]) break;
-  }
-  throw new Error(
-    `Version ${input} must be greater than the current ${current}`,
-  );
+  assertBumpIsIncremental(current, input);
+  return input;
 }
 
 export function rotateChangelog(

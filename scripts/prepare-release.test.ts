@@ -141,9 +141,19 @@ describe("resolveNextVersion", () => {
     expect(resolveNextVersion("0.4.1", "major")).toBe("1.0.0");
   });
 
-  test("accepts an explicit version greater than the current one", () => {
-    expect(resolveNextVersion("0.4.1", "0.4.10")).toBe("0.4.10");
+  test("accepts only the next explicit patch, minor, or major version", () => {
+    expect(resolveNextVersion("0.4.1", "0.4.2")).toBe("0.4.2");
     expect(resolveNextVersion("0.4.1", "0.5.0")).toBe("0.5.0");
+    expect(resolveNextVersion("0.4.1", "1.0.0")).toBe("1.0.0");
+  });
+
+  test("rejects skipped explicit versions", () => {
+    expect(() => resolveNextVersion("0.4.1", "0.4.10")).toThrow(
+      "next patch version 0.4.2",
+    );
+    expect(() => resolveNextVersion("0.4.1", "0.5.1")).toThrow(
+      "next minor version 0.5.0",
+    );
   });
 
   test("rejects versions that are not greater than the current one", () => {

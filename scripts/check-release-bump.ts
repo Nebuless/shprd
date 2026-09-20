@@ -3,10 +3,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  assertBumpMeetsRecommendation,
-  recommendedReleaseBump,
-} from "./release-bump";
+import { classifyVersionBump, recommendedReleaseBump } from "./release-bump";
 import { parsePackageVersion, resolveNextVersion } from "./prepare-release";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -29,17 +26,13 @@ function main(): void {
   const packageJson = readFileSync(join(REPO_ROOT, "package.json"), "utf8");
   const current = parsePackageVersion(packageJson);
   const candidate = resolveNextVersion(current, input);
+  const bump = classifyVersionBump(current, candidate);
   const recommendation = recommendedReleaseBump(REPO_ROOT);
-  if (!recommendation) {
-    console.log(
-      `No Conventional Commit release recommendation; ${candidate} is allowed.`,
-    );
-    return;
-  }
-
-  assertBumpMeetsRecommendation(current, candidate, recommendation);
+  const recommendationText = recommendation
+    ? ` Conventional Commits recommends ${recommendation}.`
+    : "";
   console.log(
-    `Conventional Commits recommends ${recommendation}; ${candidate} is allowed.`,
+    `${candidate} is the next ${bump} version after ${current}.${recommendationText}`,
   );
 }
 

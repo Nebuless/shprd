@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#080b12" />
+    <meta name="theme-color" content="#090b0a" />
     <meta
       name="description"
       content="SHPRD is an independent, open-source community project for Herdr. Control terminals, inspect agent sessions, review files and diffs, and manage worktrees from desktop or mobile."
@@ -36,7 +36,7 @@
     />
     <meta name="twitter:image" content="https://Nebuless.github.io/shprd/og.png" />
     <link rel="canonical" href="https://Nebuless.github.io/shprd/" />
-    <link rel="icon" href="./assets/shprd-icon-48.png" />
+    <link rel="icon" type="image/png" href="./assets/favicon_SHPRD.png" />
     <link rel="stylesheet" href="./styles.css" />
     <title>SHPRD - Keep every agent in sight</title>
     <script type="application/ld+json">
@@ -65,13 +65,7 @@
         <a class="brand" href="#top" aria-label="SHPRD home">
           <span class="brand-mark">
             <img
-              src="./assets/shprd-icon-48.png"
-              srcset="
-                ./assets/shprd-icon-48.png 48w,
-                ./assets/shprd-icon-72.png 72w,
-                ./assets/shprd-icon.png    96w
-              "
-              sizes="36px"
+              src="./assets/favicon_SHPRD.png"
               alt=""
               width="36"
               height="36"
@@ -119,8 +113,14 @@
     <main id="main-content">
       <section class="hero shell" id="top">
         <div class="hero-copy reveal">
-          <div class="eyebrow">
-            <span class="status-dot"></span>
+          <img
+            class="hero-logo"
+            src="./assets/Logo_SHPRD.png"
+            alt=""
+            width="1448"
+            height="1086"
+          />
+          <p class="hero-identity">
             Community-built browser client for
             <a
               href="https://herdr.dev"
@@ -128,7 +128,7 @@
               rel="noopener noreferrer"
               >Herdr</a
             >
-          </div>
+          </p>
           <h1>Keep every agent <span>in sight.</span></h1>
           <p class="hero-lede">
             <a
@@ -243,7 +243,7 @@
       <section class="section shell" id="product">
         <div class="section-heading reveal">
           <div>
-            <p class="kicker">A control room, not another dashboard</p>
+            <p class="section-note">A control room, not another dashboard</p>
             <h2>See the work. Steer the work.</h2>
           </div>
           <p>
@@ -255,7 +255,6 @@
         <div class="bento-grid">
           <article class="bento bento-wide reveal" data-spotlight>
             <div class="bento-copy">
-              <span class="feature-number">01</span>
               <h3>The whole herd, one glance.</h3>
               <p>
                 Browse workspaces, tabs, panes, and worktrees in one tree. Agent
@@ -303,7 +302,6 @@
               </div>
             </div>
             <div class="bento-copy">
-              <span class="feature-number">02</span>
               <h3>A real terminal in your browser.</h3>
               <p>
                 Full terminal streaming with split panes, scrollback, multiline
@@ -314,7 +312,6 @@
 
           <article class="bento reveal" data-spotlight>
             <div class="bento-copy">
-              <span class="feature-number">03</span>
               <h3>Review without losing the thread.</h3>
               <p>
                 Inspect changed files, annotate exact lines, preview Markdown,
@@ -336,7 +333,6 @@
 
           <article class="bento reveal reveal-delay" data-spotlight>
             <div class="bento-copy">
-              <span class="feature-number">04</span>
               <h3>Worktrees become a workflow.</h3>
               <p>
                 Create, open, update, and safely remove linked Git worktrees
@@ -367,7 +363,7 @@
         <div class="shell">
           <div class="section-heading showcase-heading reveal">
             <div>
-              <p class="kicker">Everything stays connected</p>
+              <p class="section-note">Everything stays connected</p>
               <h2 id="showcase-title">Context is one click away.</h2>
             </div>
             <p>
@@ -496,7 +492,7 @@
       <section class="section shell workflow-section" id="workflow">
         <div class="section-heading reveal">
           <div>
-            <p class="kicker">From daemon to dashboard</p>
+            <p class="section-note">From daemon to dashboard</p>
             <h2>Running in three steps.</h2>
           </div>
           <p>
@@ -552,7 +548,7 @@
       <section class="section mobile-section" id="mobile">
         <div class="shell mobile-layout">
           <div class="mobile-copy reveal">
-            <p class="kicker">The control room travels</p>
+            <p class="section-note">The control room travels</p>
             <h2>Designed for the screen you have.</h2>
             <p>
               Check a blocked agent from the train. Review a diff from the
@@ -630,7 +626,7 @@
 
       <section class="section shell details-section">
         <div class="details-heading reveal">
-          <p class="kicker">Built for real repositories</p>
+          <p class="section-note">Built for real repositories</p>
           <h2>Deep where it matters.<br />Quiet everywhere else.</h2>
         </div>
         <div class="details-grid">
@@ -680,7 +676,7 @@
       <section class="section shell install-section" id="install">
         <div class="install-card reveal" data-spotlight>
           <div class="install-copy">
-            <p class="kicker">Ready when the next task starts</p>
+            <p class="section-note">Ready when the next task starts</p>
             <h2>Give your agents a window.</h2>
             <p>
               Install the standalone binary on macOS or Linux, start SHPRD,
@@ -736,22 +732,13 @@
     <footer class="site-footer">
       <div class="shell footer-grid">
         <div class="footer-brand">
-          <a class="brand" href="#top">
-            <span class="brand-mark">
-              <img
-                src="./assets/shprd-icon-48.png"
-                srcset="
-                  ./assets/shprd-icon-48.png 48w,
-                  ./assets/shprd-icon-72.png 72w,
-                  ./assets/shprd-icon.png    96w
-                "
-                sizes="36px"
-                alt=""
-                width="36"
-                height="36"
-              />
-            </span>
-            <span>SHPRD</span>
+          <a class="footer-lockup" href="#top" aria-label="SHPRD home">
+            <img
+              src="./assets/Logo_SHPRD.png"
+              alt="SHPRD"
+              width="1448"
+              height="1086"
+            />
           </a>
           <p>
             An independent, open-source community project for

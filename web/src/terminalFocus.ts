@@ -13,20 +13,31 @@ const RADIX_POPPER_CONTENT_WRAPPER = "[data-radix-popper-content-wrapper]";
 type FocusableLike = Pick<Element, "closest">;
 type DocumentLike = Pick<Document, "querySelector">;
 
+export function terminalPointerShouldBlockInput(
+  coarsePointer: boolean,
+): boolean {
+  return coarsePointer;
+}
+
+// Terminal gestures remain scroll and selection gestures on touch screens;
+// desktop pointer input still restores xterm focus for terminal shortcuts.
 export function terminalPointerShouldFocusInput(
   coarsePointer: boolean,
   button: number,
   composerOpen: boolean,
 ): boolean {
-  return coarsePointer && button === 0 && !composerOpen;
+  return !coarsePointer && button === 0 && !composerOpen;
 }
 
 export function terminalTouchShouldFocusInput(
   started: boolean,
   moved: boolean,
   composerOpen: boolean,
-): boolean {
-  return started && !moved && !composerOpen;
+): false {
+  void started;
+  void moved;
+  void composerOpen;
+  return false;
 }
 
 export function terminalPointerShouldBlurInput(

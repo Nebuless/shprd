@@ -59,6 +59,14 @@ import { TerminalThemeDialog } from "./TerminalThemeDialog";
 const APP_VERSION = packageJson.version;
 export const CONFIG_MENU_ID = "herdr-config-menu";
 
+export function absoluteApiUrl(
+  path: string,
+  base = apiUrl("/"),
+  origin = window.location.origin,
+): URL {
+  return new URL(path, base.startsWith("/") ? origin : base);
+}
+
 export function reloadApplicationPage(
   target: Pick<Location, "reload"> = window.location,
 ) {
@@ -163,18 +171,14 @@ export function ConfigMenu({
       });
 
     if (connectionClient.isCurrent()) {
-      const herdrInfoUrl = new URL(
+      const herdrInfoUrl = absoluteApiUrl(
         connectionHttpPath(
           connectionClient.connectionId,
           "/herdr-info",
           connectionClient.serverRuntimeGeneration,
         ),
-        apiUrl("/"),
       );
-      if (
-        herdrInfoUrl.origin ===
-        new URL(apiUrl("/"), window.location.origin).origin
-      ) {
+      if (herdrInfoUrl.origin === absoluteApiUrl("/").origin) {
         fetch(herdrInfoUrl, {
           credentials: "same-origin",
           cache: "no-store",

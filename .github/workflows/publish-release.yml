@@ -77,6 +77,11 @@ jobs:
           test "$(read_version package.json)" = "$VERSION"
           test "$(read_version web/package.json)" = "$VERSION"
           test "$(read_version server/package.json)" = "$VERSION"
+          test "$(git show "$release_sha:Cargo.toml" | awk '
+            /^\[workspace.package\]$/ { inside = 1; next }
+            inside && /^\[/ { exit }
+            inside && /^version = / { gsub(/"/, "", $3); print $3; exit }
+          ')" = "$VERSION"
           escaped_version="${VERSION//./\\.}"
           git show "$release_sha:CHANGELOG.md" \
             | grep -Eq "^## ${escaped_version} - [0-9]{4}-[0-9]{2}-[0-9]{2}$"

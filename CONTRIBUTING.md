@@ -75,9 +75,13 @@ categories from `.github/release.yml` before merging to override the automatic
 choice.
 
 Use `bun run release:check-bump <X.Y.Z|patch|minor|major>` before preparing a
-release. It rejects a version lower than Conventional Changelog recommends; a
-higher version remains allowed. `bun run changelog:preview` previews generated
-notes only. Keep `CHANGELOG.md` concise and maintained by release preparation.
+release. Releases advance one SemVer boundary at a time: from `0.8.0`, only
+`0.8.1`, `0.9.0`, or `1.0.0` are valid. Use `patch` for compatible fixes,
+polish, documentation, and internal work. Use `minor` only for a new,
+backward-compatible public capability. Use `major` only for a breaking public
+contract. Conventional Commit output is advisory; it does not override the
+chosen release class. `bun run changelog:preview` previews generated notes only.
+Keep `CHANGELOG.md` concise and maintained by release preparation.
 
 Worktrunk runs `mise run install` for each new worktree through `.config/wt.toml`.
 

@@ -6,8 +6,9 @@ on:
     workflow_dispatch:
         inputs:
             version:
-                description: Version to release (X.Y.Z, or patch/minor/major)
+                description: "Release type: patch by default; use minor or major only for their SemVer contract changes"
                 required: true
+                default: patch
                 type: string
 
 permissions:
@@ -38,7 +39,7 @@ jobs:
               working-directory: web
             - run: bun install --frozen-lockfile
               working-directory: server
-            - name: Validate release bump recommendation
+            - name: Validate incremental release version
               env:
                   VERSION_INPUT: ${{ inputs.version }}
               run: bun run release:check-bump "$VERSION_INPUT"
@@ -61,7 +62,7 @@ jobs:
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
                   git checkout -b "$branch"
-                  git add package.json web/package.json server/package.json herdr-plugin.toml CHANGELOG.md
+                  git add package.json web/package.json server/package.json Cargo.toml herdr-plugin.toml CHANGELOG.md
                   git commit -m "Release $VERSION"
                   gh auth setup-git
                   git push origin "$branch"

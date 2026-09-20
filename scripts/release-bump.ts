@@ -34,20 +34,22 @@ export function classifyVersionBump(
   throw new Error(`Version ${candidate} must be greater than ${current}`);
 }
 
-export function assertBumpMeetsRecommendation(
+export function assertBumpIsIncremental(
   current: string,
   candidate: string,
-  recommendation: ReleaseBump,
 ): void {
-  const actual = classifyVersionBump(current, candidate);
-  const rank: Record<ReleaseBump, number> = {
-    patch: 1,
-    minor: 2,
-    major: 3,
-  };
-  if (rank[actual] < rank[recommendation]) {
+  const currentVersion = parseVersion(current);
+  const bump = classifyVersionBump(current, candidate);
+  const expected =
+    bump === "patch"
+      ? `${currentVersion[0]}.${currentVersion[1]}.${currentVersion[2] + 1}`
+      : bump === "minor"
+        ? `${currentVersion[0]}.${currentVersion[1] + 1}.0`
+        : `${currentVersion[0] + 1}.0.0`;
+
+  if (candidate !== expected) {
     throw new Error(
-      `Conventional Commits requires at least a ${recommendation} release, but ${candidate} is a ${actual} release from ${current}`,
+      `Version ${candidate} must be the next ${bump} version ${expected} from ${current}`,
     );
   }
 }

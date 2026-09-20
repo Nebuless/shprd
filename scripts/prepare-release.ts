@@ -5,13 +5,16 @@
 // updates the working tree; it does not commit, merge, tag, or push anything.
 //
 // Usage:
-//   bun scripts/prepare-release.ts <X.Y.Z | patch | minor | major>
+//   bun scripts/prepare-release.ts <X.Y.Z | patch | minor | major> [--allow-non-patch]
 //   bun scripts/prepare-release.ts 0.4.6
 //   bun scripts/prepare-release.ts patch
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
-import { assertBumpIsIncremental } from "./release-bump";
+import {
+  assertBumpIsIncremental,
+  assertPatchReleaseOrOverride,
+} from "./release-bump";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -199,14 +202,17 @@ function abort(message: string): never {
 }
 
 function main() {
-  const input = process.argv[2];
+  const [input, override] = process.argv.slice(2);
   if (!input || input === "--help") {
     console.log(
-      "Usage: bun scripts/prepare-release.ts <X.Y.Z | patch | minor | major>",
+      "Usage: bun scripts/prepare-release.ts <X.Y.Z | patch | minor | major> [--allow-non-patch]",
     );
     process.exit(input ? 0 : 1);
   }
-  if (process.argv.length > 3) {
+  if (override && override !== "--allow-non-patch") {
+    abort(`unexpected argument ${override}`);
+  }
+  if (process.argv.length > 4) {
     abort("unexpected extra arguments");
   }
 
@@ -247,6 +253,11 @@ function main() {
   }
 
   const version = resolveNextVersion(current, input);
+  assertPatchReleaseOrOverride(
+    current,
+    version,
+    override === "--allow-non-patch",
+  );
   const tag = `v${version}`;
   if (gitTagExists(tag)) {
     abort(`tag ${tag} already exists; fetch tags before preparing a release`);

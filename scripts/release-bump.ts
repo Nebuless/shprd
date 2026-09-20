@@ -54,6 +54,19 @@ export function assertBumpIsIncremental(
   }
 }
 
+export function assertPatchReleaseOrOverride(
+  current: string,
+  candidate: string,
+  allowNonPatch: boolean,
+): void {
+  const bump = classifyVersionBump(current, candidate);
+  if (bump !== "patch" && !allowNonPatch) {
+    throw new Error(
+      `Version ${candidate} is ${bump}; use patch or pass --allow-non-patch after confirming a ${bump} release is required`,
+    );
+  }
+}
+
 export function parseRecommendedReleaseBump(
   output: string,
 ): ReleaseBump | null {

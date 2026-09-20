@@ -2634,7 +2634,7 @@ export default function App() {
       <header className="topbar">
         <div className="topbar-start">
           <div className="brand">
-            <img className="logo" src="/herdr-icon.png" alt="SHPRD" />
+            <img className="logo" src="/shprd-icon.png" alt="SHPRD" />
             <span className="brand-title">SHPRD</span>
             <span className="brand-version">v{packageJson.version}</span>
           </div>

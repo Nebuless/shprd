@@ -25,9 +25,8 @@ describe("Android release package", () => {
 
       // When: a consumer opens the packaged Vite entry.
       const entries = unzip("-Z1", apk).trim().split("\n");
-      const indexEntry = entries.find((entry) => entry.endsWith("/index.html"));
-      expect(indexEntry).toBeDefined();
-      if (!indexEntry) return;
+      const indexEntry = "assets/index.html";
+      expect(entries).toContain(indexEntry);
       const index = unzip("-p", apk, indexEntry);
       const assetPaths = [...index.matchAll(/(?:src|href)="\.\/([^"]+)"/g)].map(
         (match) => match[1],
@@ -38,7 +37,9 @@ describe("Android release package", () => {
       expect(entries).toContain("lib/arm64-v8a/libmain.so");
       expect(assetPaths.length).toBeGreaterThan(1);
       for (const assetPath of assetPaths) {
-        expect(entries).toContain(join(indexEntry, "..", assetPath));
+        expect(entries).toContain(
+          join("assets", assetPath.replace(/^assets\//, "")),
+        );
       }
     },
   );

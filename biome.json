@@ -6,7 +6,13 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!.omo", "!server/src/public-files.gen.ts"]
+    "includes": [
+      "**",
+      "!.omo",
+      "!.agents/skills/**",
+      "!crates/dioxus-desktop/**",
+      "!server/src/public-files.gen.ts"
+    ]
   },
   "formatter": {
     "enabled": true,

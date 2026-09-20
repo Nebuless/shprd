@@ -130,7 +130,7 @@ binary; run `shprd service install` later as the user who will own the service.
 
 Download `shprd-vX.Y.Z-android.apk` and its `.sha256` file from the [latest release](https://github.com/Nebuless/shprd/releases/latest). Verify the download on a host with `sha256sum -c shprd-vX.Y.Z-android.apk.sha256`, then install the APK. Android may require permission to install apps from the selected file manager or browser.
 
-The APK is a remote client, not a local Herdr bridge. After installation, enter the HTTP(S) origin of a running SHPRD bridge reachable from the device. Use HTTPS outside a trusted local network. A bridge bound only to `127.0.0.1` is not reachable from an Android phone.
+The APK is a remote client, not a local Herdr bridge. After installation, enter the HTTP(S) origin of a running SHPRD bridge reachable from the device; its WebView then navigates to that origin so login, API, and WebSocket traffic remain first-party. Use HTTPS outside a trusted local network. A bridge bound only to `127.0.0.1` is not reachable from an Android phone.
 
 Windows releases provide x64 and ARM64 archives containing `shprd.exe`.
 Download the matching `shprd-windows-<arch>.tar.xz` and `.sha256` files from

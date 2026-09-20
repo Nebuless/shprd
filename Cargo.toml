@@ -21,3 +21,6 @@ expect_used = "deny"
 [profile.release]
 lto = "thin"
 strip = "symbols"
+
+[patch.crates-io]
+dioxus-desktop = { path = "crates/dioxus-desktop" }

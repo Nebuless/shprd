@@ -11,6 +11,7 @@ Track agent skill sources approved for this repository.
 - Preserve imported skill content, metadata, and licenses. Repository hooks may normalize trailing whitespace and final newlines.
 - Do not commit generated outputs, credentials, or local agent state here.
 - `.hermes/skills/` contains tracked aliases to approved packages here; other `.hermes/` integration material remains untracked.
+- Root formatter, linter, and hooks exclude imported skill snapshots; run their package-supplied validation instead.
 
 # Work Guidance
 

@@ -8,6 +8,8 @@ export default tseslint.config(
     ignores: [
       ".omo/**",
       ".pages-dist/**",
+      ".agents/skills/**",
+      "crates/dioxus-desktop/**",
       "dist/**",
       "node_modules/**",
       "server/herdr-gui*",

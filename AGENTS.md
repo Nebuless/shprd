@@ -56,6 +56,10 @@ global or editor fallback formatter. Prefer small, focused components in
 non-ASCII text. Use existing store and bridge helpers before adding new
 abstractions.
 
+Root lint, format, and hook checks exclude imported `.agents/skills/` packages
+and the local `crates/dioxus-desktop/` vendor patch; use each package's owned
+validation instead.
+
 ## Documentation Guidelines
 
 Keep `README.md` concise and English-only. Use it as the project entry point and
@@ -75,7 +79,8 @@ Unit tests live beside their modules as `*.test.ts` and use `bun:test`. Run
 `bun run precommit` before committing. For frontend-facing work, also run
 `bun run build:web`. Release work must package and inspect every supported
 platform archive and checksum. Android releases target `arm64-v8a`; APK
-validation must assert that native library before publishing.
+validation must assert that native library and package Vite assets at the
+Android asset root before publishing.
 
 Pre-commit preserves Git's staged index for prek, then clears repository-local
 Git environment variables before Bun tests so temporary repositories stay isolated.
@@ -218,7 +223,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - `.githooks/` — repository commit and pre-commit hooks. Root owns hook contracts.
 - `.github/` — CI, release, and repository automation. Root owns workflow contracts.
 - `.hermes/` — tracked external-integration aliases. Root owns the compatibility contract; aliases resolve through `.agents/`.
-- `crates/` — experimental Rust host, shell, and shared native libraries. Root owns cross-crate contracts; local crate docs add details where present.
+- `crates/` — experimental Rust host, shell, shared native libraries, and a minimal local Dioxus 0.7.10 patch. Root owns cross-crate contracts; local crate docs add details where present.
 - `deploy/` — service definitions and install defaults. Root owns platform parity.
 - `docs/` — permanent architecture and operator documentation plus tracked implementation plans. `docs/AGENTS.md` owns documentation boundaries.
 - `integrations/` — Pi adapter glue and engine integrations. Root owns extension contracts.

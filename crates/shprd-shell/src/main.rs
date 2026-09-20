@@ -9,7 +9,8 @@ fn main() {
         .with_cfg(
             dioxus::mobile::Config::new()
                 .with_custom_index(mobile_index())
-                .with_root_name("shprd-dioxus-shell"),
+                .with_root_name("shprd-dioxus-shell")
+                .with_navigation_handler(mobile_navigation_url_is_allowed),
         )
         .launch(app);
 
@@ -17,22 +18,21 @@ fn main() {
     dioxus::launch(app);
 }
 
-#[cfg(feature = "mobile")]
+#[cfg(any(feature = "mobile", test))]
 fn mobile_index() -> String {
     let index = include_str!("../../../server/public/index.html");
     let module_marker = "<script type=\"module\" crossorigin src=\"";
     let Some((before_module, module_tail)) = index.split_once(module_marker) else {
         return index.to_owned();
     };
-    let Some((module_path, after_module)) = module_tail.split_once("\"></script>") else {
+    let Some((_, after_module)) = module_tail.split_once("\"></script>") else {
         return index.to_owned();
     };
-    let bootstrap = MOBILE_BOOTSTRAP.replace("__SHPRD_VITE_MODULE__", module_path);
-    format!("{before_module}<script>{bootstrap}</script>{after_module}")
+    format!("{before_module}<script>{MOBILE_BOOTSTRAP}</script>{after_module}")
         .replace("<body>", "<body><div id=\"shprd-dioxus-shell\"></div>")
 }
 
-#[cfg(feature = "mobile")]
+#[cfg(any(feature = "mobile", test))]
 const MOBILE_BOOTSTRAP: &str = r#"
 (() => {
   const storageKey = "shprd-host-url";
@@ -47,12 +47,10 @@ const MOBILE_BOOTSTRAP: &str = r#"
     }
   };
   const start = (host) => {
-    window.__SHPRD_HOST_URL__ = host;
-    document.getElementById("shprd-mobile-connect")?.remove();
-    const module = document.createElement("script");
-    module.type = "module";
-    module.src = "__SHPRD_VITE_MODULE__";
-    document.head.append(module);
+    // Authentication cookies must be first-party to the selected bridge. A
+    // packaged page cannot fetch a remote bridge with its same-origin cookie.
+    // Dioxus otherwise opens every external URL with Android's default browser.
+    window.location.assign(host);
   };
   const savedHost = normalize(localStorage.getItem(storageKey));
   if (savedHost) return start(savedHost);
@@ -74,6 +72,15 @@ const MOBILE_BOOTSTRAP: &str = r#"
   });
 })();
 "#;
+
+#[cfg(any(feature = "mobile", test))]
+fn mobile_navigation_url_is_allowed(url: &str) -> bool {
+    url.starts_with("dioxus://")
+        || url.starts_with("http://dioxus.")
+        || url.starts_with("https://dioxus.")
+        || url.starts_with("http://")
+        || url.starts_with("https://")
+}
 
 fn app() -> Element {
     #[cfg(feature = "mobile")]
@@ -140,20 +147,27 @@ fn app() -> Element {
     }
 }
 
-#[cfg(all(test, feature = "mobile"))]
+#[cfg(test)]
 mod mobile_tests {
-    use super::mobile_index;
+    use super::{mobile_index, mobile_navigation_url_is_allowed};
 
     #[test]
-    fn mobile_index_configures_remote_host_before_react_module() {
+    fn mobile_index_navigates_to_the_remote_bridge_for_authentication() {
         let index = mobile_index();
 
-        assert!(index.contains("window.__SHPRD_HOST_URL__"));
         assert!(index.contains("shprd-mobile-connect"));
         assert!(index.contains("id=\"shprd-dioxus-shell\""));
         assert!(index.contains("id=\"root\""));
-        assert!(index.contains("module.src = \"./assets/"));
+        assert!(index.contains("window.location.assign(host)"));
         assert!(index.contains("DOMContentLoaded"));
         assert!(!index.contains("<script type=\"module\" crossorigin src="));
+        assert!(!index.contains("window.__SHPRD_HOST_URL__"));
+    }
+
+    #[test]
+    fn mobile_navigation_keeps_remote_bridges_in_the_webview() {
+        assert!(mobile_navigation_url_is_allowed("dioxus://index.html/"));
+        assert!(mobile_navigation_url_is_allowed("https://cax.example/"));
+        assert!(!mobile_navigation_url_is_allowed("mailto:help@example.com"));
     }
 }

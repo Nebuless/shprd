@@ -1,6 +1,6 @@
 # SHPRD shell
 
-Dioxus 0.7.10 owns the shell. Web mode retains the configured host origin in an iframe. Android opens the packaged retained React build locally. React alone owns its editor, terminal and composer; engines and Herdr stay on the host.
+Dioxus 0.7.10 owns the shell. Web mode retains the configured host origin in an iframe. Android starts with a packaged bridge picker, then loads the selected bridge in its WebView. React alone owns its editor, terminal and composer; engines and Herdr stay on the host.
 
 ## Build
 
@@ -14,7 +14,7 @@ dx build --platform web --no-default-features --features web
 
 Optional `SHPRD_HOST_URL=https://host.example` at compile time supplies the initial host. Otherwise enter the host through the Rust form. Only an HTTP(S) origin is accepted; credentials, query strings, fragments and application paths are rejected. Host settings are in memory, not persisted. Changing host requires confirmation because navigation discards unsaved React state. Editing settings or checking the bridge leaves the iframe mounted.
 
-The signed Android APK is built from this shell. Its initial UI is the packaged React build, while API and WebSocket operations still require a network-reachable SHPRD bridge. It cannot start a Herdr bridge or reach a loopback-only service on the phone.
+The signed Android APK is built from this shell. Its picker navigates to the selected network-reachable SHPRD bridge so login cookies, API calls, and WebSockets remain first-party to that bridge. It cannot start a Herdr bridge or reach a loopback-only service on the phone.
 
 For a local release build, source the Android setup from this crate, then run:
 

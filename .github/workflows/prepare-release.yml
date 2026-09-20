@@ -6,10 +6,15 @@ on:
     workflow_dispatch:
         inputs:
             version:
-                description: "Release type: patch by default; use minor or major only for their SemVer contract changes"
+                description: "Release type: patch by default"
                 required: true
                 default: patch
                 type: string
+            allow_non_patch:
+                description: "Required confirmation for minor or major releases"
+                required: true
+                default: false
+                type: boolean
 
 permissions:
     actions: write
@@ -42,12 +47,26 @@ jobs:
             - name: Validate incremental release version
               env:
                   VERSION_INPUT: ${{ inputs.version }}
-              run: bun run release:check-bump "$VERSION_INPUT"
+                  ALLOW_NON_PATCH: ${{ inputs.allow_non_patch }}
+              run: |
+                  set -euo pipefail
+                  args=("$VERSION_INPUT")
+                  if [ "$ALLOW_NON_PATCH" = "true" ]; then
+                    args+=(--allow-non-patch)
+                  fi
+                  bun run release:check-bump "${args[@]}"
             - id: release
               name: Prepare release files
               env:
                   VERSION_INPUT: ${{ inputs.version }}
-              run: bun scripts/prepare-release.ts "$VERSION_INPUT"
+                  ALLOW_NON_PATCH: ${{ inputs.allow_non_patch }}
+              run: |
+                  set -euo pipefail
+                  args=("$VERSION_INPUT")
+                  if [ "$ALLOW_NON_PATCH" = "true" ]; then
+                    args+=(--allow-non-patch)
+                  fi
+                  bun scripts/prepare-release.ts "${args[@]}"
             - name: Validate prepared release
               run: bun run precommit
             - name: Create release PR

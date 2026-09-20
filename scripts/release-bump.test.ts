@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   assertBumpIsIncremental,
+  assertPatchReleaseOrOverride,
   classifyVersionBump,
   parseRecommendedReleaseBump,
 } from "./release-bump";
@@ -37,6 +38,21 @@ describe("release bump validation", () => {
     expect(() => assertBumpIsIncremental("0.8.0", "1.0.1")).toThrow(
       "next major version 1.0.0",
     );
+  });
+
+  test("requires an explicit override for non-patch releases", () => {
+    expect(() =>
+      assertPatchReleaseOrOverride("0.8.0", "0.8.1", false),
+    ).not.toThrow();
+    expect(() => {
+      assertPatchReleaseOrOverride("0.8.0", "0.9.0", false);
+    }).toThrow("--allow-non-patch");
+    expect(() => {
+      assertPatchReleaseOrOverride("0.8.0", "1.0.0", false);
+    }).toThrow("--allow-non-patch");
+    expect(() =>
+      assertPatchReleaseOrOverride("0.8.0", "0.9.0", true),
+    ).not.toThrow();
   });
 
   test("parses Conventional Changelog recommendations", () => {

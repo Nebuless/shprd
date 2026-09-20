@@ -35,6 +35,7 @@ describe("Android release package", () => {
 
       // Then: Vite's root and every directly referenced static asset exist in the APK.
       expect(index).toContain('<div id="root"></div>');
+      expect(entries).toContain("lib/arm64-v8a/libmain.so");
       expect(assetPaths.length).toBeGreaterThan(1);
       for (const assetPath of assetPaths) {
         expect(entries).toContain(join(indexEntry, "..", assetPath));

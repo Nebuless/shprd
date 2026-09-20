@@ -5,7 +5,7 @@ set -eu
 . ./crates/shprd-shell/android-env.sh
 
 bun run build:web
-dx build --package shprd-shell --platform android --release --no-default-features --features mobile
+dx build --package shprd-shell --platform android --release --target aarch64-linux-android --no-default-features --features mobile
 
 android_project="target/dx/shprd-shell/release/android/app"
 android_assets="$android_project/app/src/main/assets"

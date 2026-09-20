@@ -74,7 +74,8 @@ work, consolidate or delete stale status documents and repair their links.
 Unit tests live beside their modules as `*.test.ts` and use `bun:test`. Run
 `bun run precommit` before committing. For frontend-facing work, also run
 `bun run build:web`. Release work must package and inspect every supported
-platform archive and checksum.
+platform archive and checksum. Android releases target `arm64-v8a`; APK
+validation must assert that native library before publishing.
 
 Pre-commit preserves Git's staged index for prek, then clears repository-local
 Git environment variables before Bun tests so temporary repositories stay isolated.

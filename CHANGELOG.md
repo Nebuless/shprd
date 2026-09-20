@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.1 - 2026-09-20
+
 - Keep terminal taps and scroll gestures from opening the mobile keyboard; compact composer controls fit narrow phones.
 - Refresh the GitHub Pages site with SHPRD branding and optimized logo assets.
 - Require explicit confirmation before preparing a minor or major release.

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep terminal taps and scroll gestures from opening the mobile keyboard; compact composer controls fit narrow phones.
+- Refresh the GitHub Pages site with SHPRD branding and optimized logo assets.
+- Harden Android release packaging and metadata checks for reliable APK downloads.
+
 ## 0.9.0 - 2026-09-19
 
 - Add Android APK releases with bundled SHPRD UI and remote Herdr host setup.

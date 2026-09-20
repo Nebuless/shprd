@@ -9641,6 +9641,20 @@ textarea:focus {
     border-color: var(--accent);
     background: var(--accent-soft);
   }
+  @media (max-width: 375px) {
+    .terminal-composer-actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .terminal-composer-actions .terminal-composer-hint {
+      display: none;
+    }
+    .terminal-composer-actions .terminal-composer-submit {
+      grid-column: span 2;
+      min-width: 0;
+      padding: 0 6px;
+    }
+  }
   .terminal-composer-actions button:active:not(:disabled) {
     border-color: var(--accent);
     background: var(--accent-soft);

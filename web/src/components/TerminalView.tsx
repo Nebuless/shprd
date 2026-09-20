@@ -71,6 +71,7 @@ import {
 } from "../terminalEndpointPresentation";
 import {
   terminalFocusBlockedByOverlay,
+  terminalPointerShouldBlockInput,
   terminalPointerShouldBlurInput,
   terminalPointerShouldFocusInput,
   terminalTouchShouldFocusInput,
@@ -1704,6 +1705,12 @@ export function TerminalView({
     };
     const onTerminalMouseDown = (e: MouseEvent) => {
       if (replayingSelection) return;
+      if (terminalPointerShouldBlockInput(shouldAvoidVirtualKeyboard())) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        term.textarea?.blur();
+        return;
+      }
       if (
         terminalPointerShouldFocusInput(
           shouldAvoidVirtualKeyboard(),

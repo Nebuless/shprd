@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   terminalFocusBlockedByOverlay,
+  terminalPointerShouldBlockInput,
   terminalPointerShouldBlurInput,
   terminalPointerShouldFocusInput,
   terminalTouchShouldFocusInput,
@@ -61,11 +62,17 @@ describe("terminalFocusBlockedByOverlay", () => {
 });
 
 describe("terminal pointer focus", () => {
-  test("focuses coarse-pointer primary taps unless the composer is open", () => {
-    expect(terminalPointerShouldFocusInput(true, 0, false)).toBe(true);
+  test("blocks coarse terminal pointer events before xterm can focus", () => {
+    expect(terminalPointerShouldBlockInput(true)).toBe(true);
+    expect(terminalPointerShouldBlockInput(false)).toBe(false);
+  });
+
+  test("blocks coarse taps but preserves fine-pointer terminal focus", () => {
+    expect(terminalPointerShouldFocusInput(true, 0, false)).toBe(false);
     expect(terminalPointerShouldFocusInput(true, 0, true)).toBe(false);
     expect(terminalPointerShouldFocusInput(true, 1, false)).toBe(false);
-    expect(terminalPointerShouldFocusInput(false, 0, false)).toBe(false);
+    expect(terminalPointerShouldFocusInput(false, 0, false)).toBe(true);
+    expect(terminalPointerShouldFocusInput(false, 0, true)).toBe(false);
   });
 
   test("blurs coarse-pointer taps only outside terminal and editable input", () => {
@@ -75,8 +82,8 @@ describe("terminal pointer focus", () => {
     expect(terminalPointerShouldBlurInput(false, false, false)).toBe(false);
   });
 
-  test("focuses completed touch taps without treating scroll gestures as input", () => {
-    expect(terminalTouchShouldFocusInput(true, false, false)).toBe(true);
+  test("keeps coarse-pointer terminal touch taps and scroll gestures out of xterm input", () => {
+    expect(terminalTouchShouldFocusInput(true, false, false)).toBe(false);
     expect(terminalTouchShouldFocusInput(true, true, false)).toBe(false);
     expect(terminalTouchShouldFocusInput(true, false, true)).toBe(false);
     expect(terminalTouchShouldFocusInput(false, false, false)).toBe(false);

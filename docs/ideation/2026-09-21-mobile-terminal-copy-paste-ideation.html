@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideation: Mobile terminal copy &amp; paste — SHPRD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1116; --canvas:#161b22; --canvas2:#1c222b; --border:#2a323d;
+  --text:#dbe2ea; --muted:#9aa7b4; --faint:#7d8894;
+  --accent:#58a6ff; --accent-soft:rgba(88,166,255,.12); --accent-text:#79b8ff;
+  --ok:#3fb950; --ok-soft:rgba(63,185,80,.12); --ok-text:#56d364;
+  --warn:#d29922; --warn-soft:rgba(210,153,34,.12); --warn-text:#e3b341;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+.page{max-width:900px;margin:0 auto;padding:32px 24px 80px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-text);margin:0 0 6px}
+h1{font-size:26px;line-height:1.25;margin:0 0 10px;font-weight:700}
+h2{font-size:19px;margin:44px 0 12px;padding-top:14px;border-top:1px solid var(--border);font-weight:700}
+h3{font-size:16px;margin:26px 0 8px;font-weight:600}
+p{max-width:70ch;margin:0 0 12px}
+a{color:var(--accent-text)}
+code{font-family:var(--mono);font-size:.86em;background:var(--canvas2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;color:var(--muted);background:var(--canvas2);border:1px solid var(--border);border-radius:999px;padding:3px 11px}
+.chip.mode{color:var(--accent-text);background:var(--accent-soft);border-color:transparent}
+ul{margin:0 0 12px;padding-left:22px}
+li{margin:4px 0}
+.jump{background:var(--canvas);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin:16px 0}
+.jump ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+.jump a{text-decoration:none;font-weight:600}
+.jump a:hover{text-decoration:underline}
+article.idea{background:var(--canvas);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin:18px 0;scroll-margin-top:16px}
+article.idea h3{margin:0 0 4px;font-size:17px}
+article.idea h3 .rank{color:var(--faint);font-weight:400;margin-right:8px}
+.ideameta{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 12px}
+.pill{display:inline-block;font-size:11px;font-weight:600;border-radius:999px;padding:2px 10px}
+.pill.axis{color:var(--accent-text);background:var(--accent-soft)}
+.pill.hi{color:var(--ok-text);background:var(--ok-soft)}
+.pill.med{color:var(--warn-text);background:var(--warn-soft)}
+.pill.cx{color:var(--muted);background:var(--canvas2);border:1px solid var(--border)}
+article.idea p{margin-bottom:10px}
+.field{margin:0 0 10px}
+.field b{display:inline;font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--faint);text-transform:uppercase;margin-right:8px}
+table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:13.5px}
+th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--border);padding:8px 10px}
+td{border-bottom:1px solid var(--border);padding:9px 10px;vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.id{white-space:nowrap;font-family:var(--mono);font-size:12px;color:var(--muted)}
+footer.composition-signal{margin-top:52px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--faint)}
+figure{margin:14px 0;padding:14px 10px;background:var(--canvas2);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+figcaption{font-size:11.5px;color:var(--muted);margin-top:8px;text-align:center}
+svg text{font-family:Inter,system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="eyebrow">Compound Engineering · Ideation</p>
+<h1>Mobile terminal copy &amp; paste for SHPRD</h1>
+<div class="meta">
+  <span class="chip">Date 2026-09-21</span>
+  <span class="chip">Topic <code>mobile-terminal-copy-paste</code></span>
+  <span class="chip">Focus Copy &amp; paste in the terminal on mobile app / PWA (e.g. a copy mode)</span>
+  <span class="chip mode">Mode: repo-grounded</span>
+</div>
+
+<section id="grounding-context">
+<h2>Codebase Context</h2>
+<ul>
+  <li><strong>Stack:</strong> React web client (<code>web/</code>, xterm.js <code>6.1.0-beta</code> with <code>@xterm/addon-clipboard</code> integrated), Rust server (<code>server/</code>), thin Android WebView wrapper (<code>shprd-shell</code>); PWA served over Tailscale (e.g. <code>https://cax.tailc3b28.ts.net</code>).</li>
+  <li><strong>Copy today is desktop-only:</strong> the xterm <code>onCopy</code> handler (<code>TerminalView.tsx:1635-1646</code>, <code>term.getSelection()</code> → clipboard) never fires from touch gestures; OSC 52 <em>inbound</em> writes work live (<code>TerminalView.tsx:963</code>, <code>writeText</code>), <em>outbound</em> copy relies on programs emitting OSC 52.</li>
+  <li><strong>Clipboard layering exists:</strong> <code>terminalClipboard.ts</code> owns a provider map with a 100k-char write cap, gesture-gated <code>copyTextFromUserGesture()</code>, and <strong>refuses programmatic reads</strong>; <code>terminalPaste.ts</code> runs the rich paste pipeline; <code>TerminalComposer.tsx</code> exposes a paste path.</li>
+  <li><strong>Touch handlers</strong> (<code>TerminalView.tsx:1908-2095</code>) implement scroll + blur <em>only</em> — no long-press, no context menu, no selection UX on touch.</li>
+  <li><strong>Configurable mobile affordances already shipped:</strong> <code>mobileTerminalShortcuts.ts</code> (configurable shortcut rows) and <code>MobileTabSheet</code> (toggle-sheet pattern) are the natural extension points.</li>
+  <li><strong>Endpoint freeze precedent:</strong> presentation freezes repaints during mouse selection — a proven pattern to reuse for touch selection.</li>
+  <li><strong>Prior art (external):</strong> Termux long-press context menu; Mobile SSH / Termius dedicated copy actions; <a href="https://github.com/xtermjs/xterm.js/issues/3727">xterm.js issue #3727</a> documents the touch copy/paste gap; e-reader / PDF text-layer selection as UX analogies.</li>
+  <li><strong>Grounding scope:</strong> orchestrator-run shell probes + three direct web searches; learnings corpus empty (Files Scanned: 0); degraded-but-completed run.</li>
+</ul>
+</section>
+
+<section id="topic-axes">
+<h2>Topic Axes</h2>
+<ol>
+  <li>Activation &amp; entry — how a copy/paste interaction starts on a touchscreen</li>
+  <li>Selection mechanics — how text is marked for copying without a mouse</li>
+  <li>Destination &amp; paste — where copied text goes and how it returns</li>
+  <li>Mode safety &amp; exit — how a selection/copy mode cannot corrupt or trap the terminal session</li>
+  <li>Platform surface — PWA browser vs Android WebView capabilities and constraints</li>
+</ol>
+</section>
+
+<section id="ranked-ideas">
+<h2>Ranked Ideas</h2>
+
+<nav class="jump" aria-label="Ranked ideas jump list">
+  <ol>
+    <li><a href="#idea1">Copy Mode v1 (freeze + select + auto-copy)</a></li>
+    <li><a href="#idea2">Long-press → terminal context menu</a></li>
+    <li><a href="#idea3">One-tap Copy last output</a></li>
+    <li><a href="#idea4">Copy pill on any selection</a></li>
+    <li><a href="#idea5">Terminal block segmentation</a></li>
+    <li><a href="#idea6">Server-side recent-output extraction API</a></li>
+    <li><a href="#idea7">Paste safety chip (surface + preview)</a></li>
+  </ol>
+</nav>
+
+<article class="idea" id="idea1">
+<h3><span class="rank">1.</span>Copy Mode v1 — freeze, tap-select, auto-copy on exit</h3>
+<div class="ideameta"><span class="pill axis">Axes 1 · 2 · 4 · 5</span><span class="pill hi">Confidence High</span><span class="pill cx">Complexity M</span></div>
+<p class="field"><b>Description</b>A terminal-wide toggle (shortcut row or tab-sheet entry, following <code>MobileTabSheet</code>) that freezes presentation — the same mechanism the endpoint already uses during mouse selection — blocks the PTY from receiving taps, lets the user tap/drag to select text, and copies the selection to the clipboard when the mode exits, with the last-selection retained for retries. One toggle, one gesture, one tap on Copy: the whole loop the user named in the request.</p>
+<p class="field"><b>Axis</b>Activation &amp; entry + selection mechanics (composite)</p>
+<p class="field"><b>Basis</b><code>direct:</code> endpoint freeze precedent in <code>TerminalView.tsx</code> (repaint freeze during selection, mouse path); <code>direct:</code> <code>copyTextFromUserGesture()</code> in <code>terminalClipboard.ts</code> is a ready, gesture-safe write primitive; <code>direct:</code> <code>MobileTabSheet</code> is an existing toggle-surface pattern. <code>external:</code> e-reader / PDF text-layer selection mode as UX analogy.</p>
+<p class="field"><b>Rationale</b>The core gap is that <em>no</em> touch path currently selects terminal text — the desktop <code>onCopy</code> handler never fires from touch. A mode that reuses the proven freeze + a gesture-gated clipboard write closes the loop with the smallest set of new behaviors, and it degrades gracefully: a failed copy keeps the selection visible for retry.</p>
+<p class="field"><b>Downsides</b>A mode toggle adds state to get wrong (entry/exit affordances, stale freeze if the app is backgrounded mid-mode); tap-blocking must be airtight or keystrokes leak into the PTY; power users may find mode-switching heavier than gestures.</p>
+<p class="field"><b>Confidence</b>85% — every mechanism has in-repo precedent; the integration order is the open question.</p>
+<p class="field"><b>Complexity</b>Medium</p>
+</article>
+
+<article class="idea" id="idea2">
+<h3><span class="rank">2.</span>Long-press → terminal context menu</h3>
+<div class="ideameta"><span class="pill axis">Axis 1</span><span class="pill hi">Confidence High</span><span class="pill cx">Complexity S</span></div>
+<p class="field"><b>Description</b>A long-press on the terminal surface opens a small context menu — Copy, Paste, Select word — matching Android conventions, with the freeze + tap-block protections applied while the menu is up. This is the platform-convention entry point every Android user already knows from Termux.</p>
+<p class="field"><b>Axis</b>Activation &amp; entry</p>
+<p class="field"><b>Basis</b><code>direct:</code> touch handlers (<code>TerminalView.tsx:1908-2095</code>) have scroll+blur only — zero long-press/contextmenu code, so this is net-new on a clean surface; <code>external:</code> Termux's long-press menu as the Android-terminal convention; <code>direct:</code> <code>copyTextFromUserGesture()</code> available for the menu's copy action.</p>
+<p class="field"><b>Rationale</b>The verifier confirmed the gesture gap and the prior art. Long-press is the entry Android users already know — discoverability without teaching a new mode — and it composes with every selection mechanism in this list rather than competing with them.</p>
+<p class="field"><b>Downsides</b>Long-press conflicts with scroll-hold expectations; menu items are only as good as the selection mechanics behind them (Copy without a selection story is a stub); WebView context-menu interception needs testing.</p>
+<p class="field"><b>Confidence</b>80% — entry point is solid; value depends on the selection mechanic it triggers.</p>
+<p class="field"><b>Complexity</b>Low</p>
+</article>
+
+<article class="idea" id="idea3">
+<h3><span class="rank">3.</span>One-tap Copy last output</h3>
+<div class="ideameta"><span class="pill axis">Axis 2</span><span class="pill hi">Confidence High</span><span class="pill cx">Complexity S</span></div>
+<p class="field"><b>Description</b>A shortcut-row button (extending <code>mobileTerminalShortcuts.ts</code>) that copies the last command's output — from the last prompt to end of screen or scrollback — in a single tap. No selection, no mode: the 80% case ("grab that error / that ID") handled directly.</p>
+<p class="field"><b>Axis</b>Selection mechanics</p>
+<p class="field"><b>Basis</b><code>direct:</code> configurable shortcut-row infrastructure exists (<code>mobileTerminalShortcuts.ts</code>); <code>direct:</code> prompt-to-EOF extraction reuses the same freeze mechanism as selection; <code>reasoned:</code> terminal output is line-structured around prompts, so the dominant copy need has a programmatic boundary that needs no gesture.</p>
+<p class="field"><b>Rationale</b>Sound verdict: the infrastructure and the write primitive are both confirmed in-repo, and the frequency argument is the strongest in the set — most mobile copy wants are "the last thing on screen," not arbitrary ranges. Cheapest path to a working copy feature for the exact scenario the user described.</p>
+<p class="field"><b>Downsides</b>Boundary detection is heuristic (multi-page output, programs that redraw); copies more than the user wants sometimes; doesn't help mid-scrollback selection.</p>
+<p class="field"><b>Confidence</b>78% — extraction heuristics need tuning against real sessions.</p>
+<p class="field"><b>Complexity</b>Low</p>
+</article>
+
+<article class="idea" id="idea4">
+<h3><span class="rank">4.</span>Copy pill on any selection</h3>
+<div class="ideameta"><span class="pill axis">Axis 1</span><span class="pill hi">Confidence High</span><span class="pill cx">Complexity S</span></div>
+<p class="field"><b>Description</b>When a selection exists (however it was made — mode, drag, native delegation), a floating Copy pill appears anchored near the selection, matching the desktop copy affordance on touch. The visible, discoverable commit step for any selection mechanism.</p>
+<p class="field"><b>Axis</b>Activation &amp; entry</p>
+<p class="field"><b>Basis</b><code>direct:</code> the desktop selection → clipboard path exists (<code>onCopy</code> handler, <code>TerminalView.tsx:1635-1646</code>) and only lacks a touch trigger; <code>direct:</code> <code>copyTextFromUserGesture()</code> matches this exact interaction shape; <code>external:</code> mobile OS text-selection toolbar convention (the floating Copy pill is the standard pattern).</p>
+<p class="field"><b>Rationale</b>Sound verdict: it is the smallest discoverable surface that makes any selection mechanic feel complete — and it is the idea to A/B against auto-copy-on-exit (idea 1) rather than a rival: explicit Copy beats implicit copy for long or partial selections the user may want to trim.</p>
+<p class="field"><b>Downsides</b>Requires a selection mechanism to exist first (shipped alone it does nothing); pill positioning over a frozen canvas needs care; doubles the exit affordances with idea 1 unless they're merged.</p>
+<p class="field"><b>Confidence</b>72% — trivial once selection exists; easy to merge into idea 1.</p>
+<p class="field"><b>Complexity</b>Low</p>
+</article>
+
+<article class="idea" id="idea5">
+<h3><span class="rank">5.</span>Terminal block segmentation</h3>
+<div class="ideameta"><span class="pill axis">Axis 2</span><span class="pill med">Confidence Medium</span><span class="pill cx">Complexity M</span></div>
+<p class="field"><b>Description</b>Segment the scrollback into prompt / command / output blocks and make each a tap target — notebook-cell granularity: tap a block to select the whole command or output unit. Finger-sized targets replace character-precision drags; block selection can extend by tapping neighbors.</p>
+<p class="field"><b>Axis</b>Selection mechanics</p>
+<p class="field"><b>Basis</b><code>direct:</code> frame-flow rendering confirmed in <code>TerminalView.tsx</code>; <code>direct:</code> an agent-history block component already exists in the codebase (the verifier confirmed the pattern's presence, while noting the terminal-side detection is a leap); <code>external:</code> notebook-cell interaction as the UX analogy.</p>
+<p class="field"><b>Rationale</b>Weak-basis verdict retained deliberately: segmentation is the strongest <em>mechanic</em> candidate because it converts an impossible gesture (character selection on a phone) into an easy one (tap a block). The prompt/output boundary detection is a real engineering leap — that risk is why confidence is Medium, not why the idea is cut.</p>
+<p class="field"><b>Downsides</b>Boundary detection heuristics will mis-segment (continuations, TUI apps, multi-page output); per-block selection state adds UI complexity; weakest direct evidence of the survivors.</p>
+<p class="field"><b>Confidence</b>55% — high payoff, genuine detection risk.</p>
+<p class="field"><b>Complexity</b>Medium</p>
+</article>
+
+<article class="idea" id="idea6">
+<h3><span class="rank">6.</span>Server-side recent-output extraction API</h3>
+<div class="ideameta"><span class="pill axis">Axis 5 · 2</span><span class="pill med">Confidence Medium</span><span class="pill cx">Complexity M</span></div>
+<p class="field"><b>Description</b>Expose recent terminal output through the server API — e.g. <code>GET /api/terminals/:id/recent-output?lines=N</code> — so a mobile surface can offer "copy last N lines / last command output" or "share output" without fighting touch-geometry selection at all. PWA and Android wrapper get the same endpoint.</p>
+<p class="field"><b>Axis</b>Platform surface + selection mechanics</p>
+<p class="field"><b>Basis</b><code>direct:</code> the app already has server/endpoint API routes with a documented base-URL resolution helper (the <code>absoluteApiUrl</code> fix shipped in 0.9.2); <code>direct:</code> output already streams to the client as structured data the server sees; <code>reasoned:</code> server-side extraction sidesteps WebView clipboard permission walls entirely (the copy surface becomes a plain app view, not the xterm canvas).</p>
+<p class="field"><b>Rationale</b>Sound verdict: it is the only survivor that treats the Android-WebView/PWA split as an <em>asset</em> — the platform axis the user's report actually lives on. It also unlocks share/export flows beyond clipboard that no touch gesture can reach.</p>
+<p class="field"><b>Downsides</b>Touches the server (authz, size caps, redaction questions: secrets routinely appear in terminal output); duplicates client-side scrollback knowledge; API surface needs versioning discipline.</p>
+<p class="field"><b>Confidence</b>58% — architecture fits, but output-redaction policy must be designed first.</p>
+<p class="field"><b>Complexity</b>Medium</p>
+</article>
+
+<article class="idea" id="idea7">
+<h3><span class="rank">7.</span>Paste safety chip (surface + preview)</h3>
+<div class="ideameta"><span class="pill axis">Axis 3</span><span class="pill med">Confidence Medium</span><span class="pill cx">Complexity S</span></div>
+<p class="field"><b>Description</b>Consolidate paste into one mobile surface: a persistent chip above the composer showing clipboard state (content present / read blocked), tapping it opens a multiline preview with an explicit "Insert" confirm — the paste-side complement to the copy ideas, completing the loop the user asked for.</p>
+<p class="field"><b>Axis</b>Destination &amp; paste</p>
+<p class="field"><b>Basis</b><code>direct:</code> <code>terminalPaste.ts</code> rich paste runner and the composer paste path are confirmed; <code>direct:</code> clipboard read refusal is a confirmed behavior (the provider refuses programmatic reads), so a preview surface is the workaround the refusal demands; <code>reasoned:</code> a visible chip + confirm turns the riskiest terminal operation (paste) into a reviewed one.</p>
+<p class="field"><b>Rationale</b>Weak-basis verdict retained on meeting-test strength: the read-refusal fact makes preview/confirm the <em>necessary</em> shape on mobile, and the verifier called the consolidation a sound product move. Copy without a paste story would half-answer the user's request; this completes it.</p>
+<p class="field"><b>Downsides</b>Chip half inherits unresolved read-permission scoping (WebView secure-context walls may block reads app-wide, not just for the terminal provider); extra tap for a frequent action; vertical space above the composer.</p>
+<p class="field"><b>Confidence</b>60% — the preview half is solid; the chip half depends on clipboard read permissions.</p>
+<p class="field"><b>Complexity</b>Low</p>
+</article>
+
+</section>
+
+<section id="rejection-summary">
+<h2>Rejection Summary</h2>
+<table>
+<thead><tr><th>#</th><th>Idea</th><th>Reason rejected</th></tr></thead>
+<tbody>
+<tr><td class="id">F6</td><td>Ship paste-only first (inbound)</td><td>Verifier meeting-fail: premise overstates outbound as solved (only for OSC 52-aware programs) — leaves the core mobile copy gap open.</td></tr>
+<tr><td class="id">A3</td><td>Route copy through agent history surfaces</td><td>Refuted: unverified foundation plus a coverage gap for non-agent terminal output — not a real terminal-copy path.</td></tr>
+<tr><td class="id">L3</td><td>Single clipboard gateway as product idea</td><td>Verifier meeting-fail: largely the current architecture already — an engineering convention, not a standalone product discussion.</td></tr>
+<tr><td class="id">L5</td><td>Accessibility / export payoff as standalone idea</td><td>Verifier meeting-fail: a justification note for L1's investment, not an improvement in its own right.</td></tr>
+<tr><td class="id">X4</td><td>OSC 52 arrival toast / clipboard feedback</td><td>Arbitration: sound basis but feedback polish — better as a variant of ideas 1/2, not a ranked survivor.</td></tr>
+<tr><td class="id">P3</td><td>Composer output-insert (skip-clipboard path)</td><td>Weak basis (usage frequency unevidenced); scope note folded into idea 7's paste surface.</td></tr>
+<tr><td class="id">I4</td><td>Native WebView selection delegation</td><td>Weak basis (renderer-dependent, not app-code-free); baseline role absorbed into idea 4.</td></tr>
+<tr><td class="id">C5</td><td>Flight-recorder tail capture</td><td>Weak basis (metaphor-heavy prior art); overlaps idea 3's territory — value noted inside its family.</td></tr>
+<tr><td class="id">F1</td><td>Zero-UI native-selection baseline</td><td>Weak basis ("platform selection is free" undercut by the payload's own custom-touch-code finding); baseline role absorbed into idea 4.</td></tr>
+<tr><td class="id">F4</td><td>Bounded viewport selection + scrollback jump</td><td>Scope-setting note for selection mechanics, not standalone — absorbed into ideas 1/5 trade-offs.</td></tr>
+<tr><td class="id">P2</td><td>Paste-permission explainer surface</td><td>Weak basis (absence claims not positively verified); folded into idea 7's chip scope.</td></tr>
+<tr><td class="id">P5</td><td>Visible copy entry in mobile surfaces</td><td>Weak basis (unverified shortcut detail); duplicated by idea 2 as the concrete entry point.</td></tr>
+<tr><td class="id">L2</td><td>Store-level selection-mode machinery</td><td>Weak basis (cited ConfigMenu pattern appears nowhere in grounding); implementation concern, better as a brainstorm variant of idea 1.</td></tr>
+<tr><td class="id">F3</td><td>In-app copy round trip (server-mediated)</td><td>Weak basis ("already the OSC 52 fallback domain" unsupported); overlaps idea 6's server path with narrower value.</td></tr>
+<tr><td class="id">I5</td><td>One-tap paste chip</td><td>Weak basis (read-permission scoping optimistic); superseded by idea 7 which adds the preview/confirm half.</td></tr>
+<tr><td class="id">C1–C4</td><td>Copy-mode composites (freeze, tap-block, auto-copy, exit variants)</td><td>Not cut — absorbed as constituent behaviors of ranked idea 1 (Copy Mode v1).</td></tr>
+<tr><td class="id">I1–I3</td><td>Copy last output / auto-copy / selection presets</td><td>Not cut — I1 ranked as idea 3; I2/I3 absorbed into ideas 1 and 4.</td></tr>
+<tr><td class="id">A1, A2, A4</td><td>Block/selection mechanics family</td><td>A2 ranked as idea 5; A1/A4 absorbed as variants of idea 1's selection stage.</td></tr>
+</tbody>
+</table>
+</section>
+
+<footer class="composition-signal">Composed 2026-09-21T16:45Z by ce-ideate (run 5d329a92) from SHPRD repo grounding at <code>github.com/Nebuless/shprd</code> @ 3f323bd · 34 raw candidates → 7 survivors across 5 axes</footer>
+
+</div>
+</body>
+</html>

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.2 - 2026-09-21
+
 - Resolve menu API routes against the page origin on Android remote hosts so the application menu opens instead of crashing with "Invalid base URL".
 - Keep the Android bridge login screen inside the app so the remote host session reconnects correctly.
 

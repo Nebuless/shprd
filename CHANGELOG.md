@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Resolve menu API routes against the page origin on Android remote hosts so the application menu opens instead of crashing with "Invalid base URL".
+- Keep the Android bridge login screen inside the app so the remote host session reconnects correctly.
+
 ## 0.9.1 - 2026-09-20
 
 - Keep terminal taps and scroll gestures from opening the mobile keyboard; compact composer controls fit narrow phones.

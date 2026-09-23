@@ -12,6 +12,22 @@ export function imageUploadUrl(value: string): string | null {
   }
 }
 
+export async function readTerminalClipboardImage(
+  clipboard: Pick<Clipboard, "read"> | undefined,
+): Promise<Blob> {
+  if (!clipboard?.read) {
+    throw new Error(
+      "Clipboard access is unavailable. Paste in the terminal or attach a file.",
+    );
+  }
+  const items = await clipboard.read();
+  for (const item of items) {
+    const imageType = item.types.find((type) => type.startsWith("image/"));
+    if (imageType) return item.getType(imageType);
+  }
+  throw new Error("No image in clipboard. Copy an image or attach a file.");
+}
+
 /**
  * Uploads an image through the connection's HTTP endpoint and returns the
  * server-side path. Callers decide when (or whether) that path reaches a

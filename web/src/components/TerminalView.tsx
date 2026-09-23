@@ -7,6 +7,7 @@ import { UnicodeGraphemesAddon } from "@xterm/addon-unicode-graphemes";
 import type { IBufferLine, ILink, ITheme } from "@xterm/xterm";
 import { Terminal } from "@xterm/xterm";
 import {
+  Clipboard,
   Columns2,
   ImagePlus,
   Keyboard,
@@ -78,6 +79,7 @@ import {
 } from "../terminalFocus";
 import {
   imageUploadUrl,
+  readTerminalClipboardImage,
   uploadTerminalImage,
   uploadTerminalImageToPane,
 } from "../terminalImageUpload";
@@ -164,7 +166,6 @@ const LINK_BLUE = "\x1b[94m";
 const RESET_FOREGROUND = "\x1b[39m";
 const ANSI_SEQUENCE_RE =
   /\x1b\][\s\S]*?(?:\x07|\x1b\\)|\x1b\[[0-?]*[ -/]*[@-~]|\x1b[@-Z\\-_]/g;
-const CLIPBOARD_READ_TIMEOUT_MS = 2000;
 const TERMINAL_EVICTION_WINDOW_MS = 60_000;
 const TERMINAL_EVICTION_MAX_RETRIES = 3;
 const TERMINAL_TOUCH_TAP_SLOP_PX = 8;
@@ -399,29 +400,6 @@ function trimCopiedLinePadding(text: string) {
   return text.replace(/[ \t]+(?=\r?\n|$)/g, "");
 }
 
-function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMessage: string,
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => {
-      reject(new Error(errorMessage));
-    }, timeoutMs);
-
-    promise.then(
-      (value) => {
-        window.clearTimeout(timer);
-        resolve(value);
-      },
-      (err) => {
-        window.clearTimeout(timer);
-        reject(err);
-      },
-    );
-  });
-}
-
 export type TerminalWorkspaceFileRequest = {
   connectionId: string;
   connectionGeneration: number;
@@ -528,6 +506,7 @@ export function TerminalView({
   const desktopImageUploadRef = useRef<((file: File) => Promise<void>) | null>(
     null,
   );
+  const desktopImagePasteRef = useRef<(() => Promise<void>) | null>(null);
   const containerRef = useCallback(
     (el: HTMLDivElement | null) => setContainer(el),
     [],
@@ -1127,13 +1106,6 @@ export function TerminalView({
       const path = await uploadTerminalImage(connectionClient, file);
       await pasteText(path, destinationPaneId);
     };
-    const pasteImageUrl = async (
-      imageUrl: string,
-      destinationPaneId: string | null,
-    ) => {
-      const path = await uploadTerminalImage(connectionClient, imageUrl);
-      await pasteText(path, destinationPaneId);
-    };
     desktopImageUploadRef.current = (file) =>
       runPasteOperation(async () => {
         const destinationPaneId = paneIdRef.current;
@@ -1147,78 +1119,14 @@ export function TerminalView({
         }
         await pasteImage(file, null);
       });
-    let clipboardPasteInFlight = false;
-    const pasteFromBrowserClipboard = async () => {
-      if (composerOpenRef.current || clipboardPasteInFlight) return;
-      clipboardPasteInFlight = true;
-      const destinationPaneId = paneIdRef.current ?? null;
-      try {
-        await runPasteOperation(async () => {
-          if (!navigator.clipboard) {
-            throw new Error("browser clipboard API is unavailable");
-          }
-          if (navigator.clipboard.read) {
-            const items = await withTimeout(
-              navigator.clipboard.read(),
-              CLIPBOARD_READ_TIMEOUT_MS,
-              "Clipboard read timed out",
-            );
-            for (const item of items) {
-              const imageType = item.types.find((type) =>
-                type.startsWith("image/"),
-              );
-              if (imageType) {
-                const blob = await withTimeout(
-                  item.getType(imageType),
-                  CLIPBOARD_READ_TIMEOUT_MS,
-                  "Clipboard image read timed out",
-                );
-                await pasteImage(blob, destinationPaneId);
-                return;
-              }
-            }
-            for (const item of items) {
-              if (item.types.includes("text/plain")) {
-                const blob = await withTimeout(
-                  item.getType("text/plain"),
-                  CLIPBOARD_READ_TIMEOUT_MS,
-                  "Clipboard text read timed out",
-                );
-                const text = await withTimeout(
-                  blob.text(),
-                  CLIPBOARD_READ_TIMEOUT_MS,
-                  "Clipboard text read timed out",
-                );
-                const imageUrl = imageUploadUrl(text);
-                if (imageUrl) {
-                  await pasteImageUrl(imageUrl, destinationPaneId);
-                } else {
-                  await pasteText(text, destinationPaneId);
-                }
-                return;
-              }
-            }
-            return;
-          }
-          const text = await withTimeout(
-            navigator.clipboard.readText(),
-            CLIPBOARD_READ_TIMEOUT_MS,
-            "Clipboard text read timed out",
-          );
-          const imageUrl = imageUploadUrl(text);
-          if (imageUrl) {
-            await pasteImageUrl(imageUrl, destinationPaneId);
-          } else {
-            await pasteText(text, destinationPaneId);
-          }
-        });
-      } finally {
-        clipboardPasteInFlight = false;
-      }
-    };
+    desktopImagePasteRef.current = () =>
+      runPasteOperation(async () => {
+        const destinationPaneId = paneIdRef.current ?? null;
+        const image = await readTerminalClipboardImage(navigator.clipboard);
+        await pasteImage(image, destinationPaneId);
+      });
     const applePlatform = isApplePlatform();
     const appleTouchPlatform = applePlatform && navigator.maxTouchPoints > 0;
-    const shouldHandleCtrlVPaste = !applePlatform;
     const shouldRecoverCommittedImeInput = (input: InputEvent) =>
       applePlatform &&
       !terminalCompositionActive &&
@@ -1264,18 +1172,16 @@ export function TerminalView({
         !e.shiftKey &&
         (e.key.toLowerCase() === "v" || e.code === "KeyV");
       if (isCtrlV) {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!shouldHandleCtrlVPaste) {
+        if (applePlatform) {
+          e.preventDefault();
+          e.stopPropagation();
           store.notify({
             kind: "info",
             message: "Use Cmd+V to paste in the terminal",
           });
-          return false;
         }
-        pasteFromBrowserClipboard().catch((err) => {
-          setUploadError(`Paste failed: ${(err as Error).message}`);
-        });
+        // Skip xterm's Ctrl+V key handling, but let the browser emit a native
+        // paste event with image bytes even when Clipboard.read is unavailable.
         return false;
       }
 
@@ -1567,7 +1473,6 @@ export function TerminalView({
       const items = Array.from(e.clipboardData?.items ?? []);
       const img = items.find((it) => it.type.startsWith("image/"))?.getAsFile();
       const text = img ? "" : (e.clipboardData?.getData("text/plain") ?? "");
-      const imageUrl = img ? null : imageUploadUrl(text);
       const active = document.activeElement;
       const target = e.target;
       const isTerminalPaste =
@@ -1597,9 +1502,7 @@ export function TerminalView({
             pasteTextareaBeforeInput = null;
             pastePaneIdBeforeInput = null;
             void runPasteOperation(() =>
-              imageUrl
-                ? pasteImageUrl(imageUrl, destinationPaneId)
-                : pasteText(text, destinationPaneId),
+              pasteText(text, destinationPaneId),
             ).catch((error) => {
               setUploadError(`Text paste failed: ${(error as Error).message}`);
             });
@@ -1619,13 +1522,11 @@ export function TerminalView({
         await runPasteOperation(() =>
           img
             ? pasteImage(img, destinationPaneId)
-            : imageUrl
-              ? pasteImageUrl(imageUrl, destinationPaneId)
-              : pasteText(text, destinationPaneId),
+            : pasteText(text, destinationPaneId),
         );
       } catch (err) {
         setUploadError(
-          `${img || imageUrl ? "Image upload" : "Text paste"} failed: ${(err as Error).message}`,
+          `${img ? "Image upload" : "Text paste"} failed: ${(err as Error).message}`,
         );
       }
     };
@@ -2646,6 +2547,28 @@ export function TerminalView({
             onClick={() => desktopImagePickerRef.current?.click()}
           >
             <ImagePlus size={14} />
+          </button>
+          <button
+            type="button"
+            className="terminal-pane-action terminal-pane-paste-image"
+            title="Paste image from clipboard"
+            aria-label="Paste image from clipboard"
+            disabled={pasteLoading}
+            onPointerDown={preventPaneActionFocus}
+            onClick={() =>
+              void desktopImagePasteRef
+                .current?.()
+                .catch((error: unknown) =>
+                  setUploadError(
+                    `Image paste failed: ${
+                      error instanceof Error ? error.message : "unknown error"
+                    }`,
+                  ),
+                )
+            }
+          >
+            <Clipboard size={14} />
+            Paste image
           </button>
           <button
             type="button"

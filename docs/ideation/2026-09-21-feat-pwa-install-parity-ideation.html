@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PWA first-class installability &amp; mobile host-connect — Ideation</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1a1b26; color: #d5dcff; font: 14px/1.65 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 880px; margin: 0 auto; padding: 32px 24px 64px; }
+  a { color: #7aa2f7; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: #11141b; border: 1px solid #2f3549; border-radius: 4px; padding: 1px 5px; color: #d6d9e2; }
+  .eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #737aa2; margin: 0 0 6px; }
+  h1 { font-size: 22px; margin: 0 0 10px; color: #ffffff; }
+  h2 { font-size: 17px; margin: 34px 0 12px; color: #ffffff; border-bottom: 1px solid #2f3549; padding-bottom: 6px; }
+  h3 { font-size: 15px; margin: 22px 0 6px; color: #ffffff; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+  .chip { font-size: 11px; color: #9aa7b4; background: #202331; border: 1px solid #2f3549; border-radius: 999px; padding: 3px 10px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 10px; }
+  .pill.axis { color: #79b8ff; background: rgba(122,162,247,.12); }
+  .pill.hi { color: #56d364; background: rgba(63,185,80,.12); }
+  .pill.med { color: #e3b341; background: rgba(210,153,34,.12); }
+  .pill.cx { color: #9aa7b4; background: rgba(122,162,247,.06); }
+  .jump { display: inline-block; font-size: 12px; margin: 3px 10px 3px 0; color: #7aa2f7; text-decoration: none; border-bottom: 1px dotted rgba(122,162,247,.4); }
+  .jump:hover { border-bottom-style: solid; }
+  .idea { background: #202331; border: 1px solid #2f3549; border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+  .idea .rank { color: #7aa2f7; }
+  .ideameta { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .field { margin: 7px 0; }
+  .field strong { color: #9aa7b4; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid #2f3549; padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: #202331; color: #9aa7b4; font-weight: 600; }
+  td:first-child { color: #737aa2; white-space: nowrap; }
+  .gc { background: #202331; border: 1px solid #2f3549; border-radius: 10px; padding: 14px 18px; }
+  .gc ul { margin: 8px 0; padding-left: 20px; }
+  .gc li { margin: 4px 0; }
+  footer.composition-signal { margin-top: 40px; padding-top: 14px; border-top: 1px solid #2f3549; font-size: 11px; color: #737aa2; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<div class="page">
+    <p class="eyebrow">Compound Engineering · Ideation</p>
+    <h1>PWA first-class installability &amp; mobile host-connect for SHPRD</h1>
+    <div class="meta">
+      <span class="chip">Date 2026-09-21</span>
+      <span class="chip">Topic feat-pwa-install-parity</span>
+      <span class="chip">Focus first-class PWA (installability, offline shell, performance, install UX) + mobile host-entry connect bug</span>
+      <span class="chip mode">Mode: repo-grounded</span>
+    </div>
+
+    <h2 id="grounding-context">Codebase Context</h2>
+    <div class="gc">
+      <ul>
+        <li><strong>Stack:</strong> Bun bridge (server/src) serves the built React/Vite client and embeds every asset (PUBLIC_FILES base64 map) into a single binary; Rust/Dioxus Android shell (crates/shprd-shell) injects a MOBILE_BOOTSTRAP connect form into the built index.html; desktop shell = iframe + postMessage bridge.</li>
+        <li><strong>Zero PWA surface today:</strong> no manifest, no service worker, no beforeinstallprompt, no theme-color anywhere (grep-verified); index.html carries only icon + apple-touch-icon to one 158 KB 512px PNG; FEATURES.md:309-310 nonetheless claims an installable PWA.</li>
+        <li><strong>The mobile bug, structurally:</strong> the bootstrap's only "connect" is <code>window.location.assign(host)</code>; a saved bad host auto-navigates on every launch before the form can render; the same host predicate is hand-copied four times across Rust/JS surfaces.</li>
+        <li><strong>Existing leverage:</strong> /api/health probe + update poll, immutable-hashed Vite builds, lazyWithReload crash guards, refreshOnReturn online/visibility handlers, clipboard + standalone-display primitives, a 200 KiB initial-JS gzip budget the server never actually serves.</li>
+        <li><strong>Reference app:</strong> OpenChamber (clone analyzed as ground truth): server-generated no-store manifest + shortcuts, minimal iOS-safe SW, probe-before-connect with error taxonomy, QR /connect?t= pairing.</li>
+      </ul>
+    </div>
+
+    <h2 id="topic-axes">Topic Axes</h2>
+    <div class="gc">
+      <ol>
+        <li><strong>Installability surface</strong> — manifest, icons, meta tags, install prompts, iOS A2HS affordances.</li>
+        <li><strong>Offline &amp; lifecycle shell</strong> — SW scope, caching strategy per asset class, update/reload UX, bridge-unreachable behavior.</li>
+        <li><strong>Load performance</strong> — bundle weight, code splitting, compression, cache headers, font/asset strategy.</li>
+        <li><strong>Host-entry &amp; first-connect UX</strong> — enter/validate/test/remember/switch host URLs on Android WebView and browser; error surfaces and recovery.</li>
+        <li><strong>Device pairing &amp; continuity</strong> — desktop-to-mobile handoff of the host URL (QR, copy-link, deep links), app identity, session resume after install.</li>
+      </ol>
+      <p style="color:#737aa2;font-size:12px;margin:8px 0 0;">External grounding (PWA 2026 practices, Tailscale/Termux host-entry survey) cached in the run's web-research cache; OpenChamber claims verified against its source.</p>
+    </div>
+
+    <h2 id="ranked-ideas">Ranked Ideas</h2>
+    <nav class="jumpnav" aria-label="Jump to idea">
+      <a class="jump" href="#idea-1">1. Connect contract</a>
+      <a class="jump" href="#idea-2">2. Serve what you verify</a>
+      <a class="jump" href="#idea-3">3. SW update pipeline</a>
+      <a class="jump" href="#idea-4">4. Install identity owned by the bridge</a>
+      <a class="jump" href="#idea-5">5. Earned install CTA</a>
+      <a class="jump" href="#idea-6">6. Pairing QR</a>
+      <a class="jump" href="#idea-7">7. Three-worlds connectivity</a>
+      <a class="jump" href="#idea-8">8. Standalone host switcher</a>
+    </nav>
+
+      <article class="idea" id="idea-1">
+        <h3><span class="rank">1.</span> Connect contract — one host grammar, a reachability preflight, and a first-party probe taxonomy</h3>
+        <div class="ideameta">
+          <span class="pill axis">Host-entry &amp; first-connect UX</span>
+          <span class="pill hi">Confidence 86%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C1 + C2 + C13 (combination X1)</span>
+        </div>
+        <p class="field"><strong>Description:</strong> Fix the mobile host-connect bug as one contract instead of three patches. <strong>(a) One host grammar:</strong> a build-generated validator with golden test vectors replaces the four hand-copied predicates (Rust <code>HostUrl::parse</code>, the MOBILE_BOOTSTRAP <code>normalize</code> string, <code>remoteHost.ts</code> <code>configuredHost</code>, <code>shell-controls.js</code>); input auto-corrects by stripping paths ("Connecting to <code>https://host.example</code> — path removed") while queries stay hard-rejected to preserve the validator's deliberate secret-refusal stance. <strong>(b) Reachability preflight:</strong> the Android bootstrap runs a bounded no-cors fetch (reachable / unreachable / timeout) before <code>window.location.assign</code>, and gates the saved-host auto-start behind it with a visible edit-host escape — killing the boot-loop where a typo'd saved host re-navigates into a WebView error page on every launch. <strong>(c) First-party probe taxonomy:</strong> post-navigation (where cookies work), promote <code>/api/health</code>'s existing <code>{ok, version, socket}</code> shape into a versioned contract (reachable | wrong-service | needs-auth | ok) consumed by the connection banner, the update poll, and diagnostics.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> <code>window.location.assign(host)</code> + <code>savedHost→start(savedHost)</code> auto-start (crates/shprd-shell/src/main.rs:53-60); the same predicate hand-copied in lib.rs:19-38, main.rs:37-47, remoteHost.ts:9-28, shell-controls.js:17-25 (verifier: all four confirmed); <code>/api/health</code> returns <code>{ok, version, socket}</code> (server/src/index.ts:1223-1228). <strong>external:</strong> OpenChamber probe-before-connect with status taxonomy, connect blocked on wrong-service/unreachable (packages/ui/src/lib/desktopHosts.ts).</p>
+        <p class="field"><strong>Rationale:</strong> The verifier confirmed the silent-assign mechanism and the duplication; it also showed the preflight must be reachability-only (&lt;code&gt;/api/health&lt;/code&gt; is auth-gated; no-cors responses are opaque) — hence the deliberate split between the bootstrap's opaque probe and the first-party app's classified taxonomy.</p>
+        <p class="field"><strong>Downsides:</strong> Validator generation adds a build step; preflight adds worst-case ~1s on the happy path; auto-strip must not extend to query strings (privacy stance in the lib.rs:14 comment).</p>
+        <svg viewBox="0 0 720 150" role="img" aria-label="Connect flow: validate, preflight, assign or fail loudly, then first-party verify" style="max-width:720px;width:100%;height:auto;margin:10px 0">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#737aa2"/></marker></defs>
+  <g font-family="Inter,system-ui,sans-serif" font-size="12" fill="#d5dcff"><rect x="6" y="50" width="96" height="44" rx="8" fill="#24283b" stroke="#2f3549"/><text x="54" y="69" text-anchor="middle">QR / typed</text><text x="54" y="84" text-anchor="middle">input</text>
+    <rect x="146" y="50" width="120" height="44" rx="8" fill="#24283b" stroke="#7aa2f7" stroke-opacity=".5"/><text x="206" y="69" text-anchor="middle">one validator</text><text x="206" y="84" text-anchor="middle">+ golden vectors</text>
+    <rect x="310" y="50" width="118" height="44" rx="8" fill="#24283b" stroke="#2f3549"/><text x="369" y="69" text-anchor="middle">reachability</text><text x="369" y="84" text-anchor="middle">preflight (no-cors)</text>
+    <rect x="472" y="22" width="120" height="40" rx="8" fill="rgba(84,209,122,.12)" stroke="#54d17a"/><text x="532" y="46" text-anchor="middle" fill="#54d17a">reachable → assign</text>
+    <rect x="472" y="82" width="120" height="40" rx="8" fill="rgba(255,107,107,.14)" stroke="#ff6b6b"/><text x="532" y="106" text-anchor="middle" fill="#ff9a9a">fail → error + edit host</text>
+    <rect x="622" y="22" width="92" height="40" rx="8" fill="#24283b" stroke="#2f3549"/><text x="668" y="40" text-anchor="middle">first-party</text><text x="668" y="54" text-anchor="middle" font-size="10" fill="#737aa2">probe taxonomy</text>
+    <line x1="102" y1="72" x2="142" y2="72" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="266" y1="72" x2="306" y2="72" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="428" y1="65" x2="468" y2="44" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="428" y1="80" x2="468" y2="100" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="592" y1="42" x2="618" y2="42" stroke="#737aa2" marker-end="url(#arr)"/></g></svg>
+      </article>
+
+      <article class="idea" id="idea-2">
+        <h3><span class="rank">2.</span> Serve what you verify — immutable caching, compression, and the 902 KB font</h3>
+        <div class="ideameta">
+          <span class="pill axis">Load performance</span>
+          <span class="pill hi">Confidence 82%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C6 + C7 (combination X2)</span>
+        </div>
+        <p class="field"><strong>Description:</strong> The build measures a 200 KiB initial-JS gzip budget and a 12 MiB total budget, but the runtime delivers bytes neither compressed nor cache-described: <code>responseHeaders()</code> returns content-type only, with cache-control exclusively on index.html. Close the loop: hashed assets get <code>cache-control: public, max-age=31536000, immutable</code> + ETag; pick baked <code>.br</code> siblings (embedded-binary size delta made explicit in the budget script) or runtime compression — decided deliberately because assets are base64-embedded in the single-file binary. Subset/slice <code>herdr-nerd-symbols.woff2</code> (902,836 bytes) along its already-declared <code>unicode-range</code> so the first terminal render stops paying the whole font; fold font bytes into the budget gate.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> static-files.ts:59-75 (content-type-only headers; index.html no-cache exception with the updater comment); check-web-assets.mjs budgets (12 MiB / 650 KiB / 200 KiB gzip); web/src/assets/herdr-nerd-symbols.woff2 = 902,836 bytes with <code>unicode-range</code> already declared (styles.css:285-290).</p>
+        <p class="field"><strong>Rationale:</strong> Every cold start over Tailscale (or a DERP relay) re-downloads megabytes; the SW precache idea inherits these bytes, so serving compressed + immutable must land before any offline shell locks the cost in. The font is the largest controllable asset and its unicode-range groundwork already exists.</p>
+        <p class="field"><strong>Downsides:</strong> Baked precompressed siblings enlarge the embedded binary (a tension the plan must price); font subsetting adds a build tool and touches terminal glyph coverage; immutable headers are only correct while the updater's atomic index.html swap remains the invalidation mechanism.</p>
+
+      </article>
+
+      <article class="idea" id="idea-3">
+        <h3><span class="rank">3.</span> SW update pipeline — precache from the build manifest, staged swap, one update UX</h3>
+        <div class="ideameta">
+          <span class="pill axis">Offline &amp; lifecycle shell</span>
+          <span class="pill hi">Confidence 80%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C4 + C5 (combination X3)</span>
+        </div>
+        <p class="field"><strong>Description:</strong> Generate a service-worker precache manifest from the Vite build manifest / public-files gen at build time (check-web-assets.mjs already walks exactly these files). Hashed assets cache-first; index.html network-first, honoring the existing <code>no-cache, must-revalidate</code> entry-document contract. The SW doubles as the update bus: it stages the next version's assets in the background, the UI offers one "Restart to apply" (skipWaiting + controllerchange at a navigation boundary, never mid-terminal-session), and the scattered hard-reload call sites (store.ts:642-644/688, lazyWithReload.ts:9-29, ConfigMenu.tsx:534, TerminalView.tsx:2277) converge on one lifecycle owner — lazyWithReload's crash-reload becomes a never-hit safety net. The cached shell is also what renders when the bridge is unreachable, instead of a blank WebView.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> vite.config.ts:23-27 (<code>manifest: true</code>, outDir ../server/public); check-web-assets.mjs walks .vite/manifest.json (lines 14-22); lazyWithReload.ts:1-8 stale-tab 404 crash comment; static-files.ts:63-70 entry-document contract. <strong>external:</strong> PWA 2026 caching matrix (cache-first hashed, network-first HTML); OpenChamber's deliberately minimal classic-IIFE sw.ts as iOS-safe prior art.</p>
+        <p class="field"><strong>Rationale:</strong> The repo already hand-built an update-detection subsystem (health poll + reload guards + lazy-chunk crash guards) that a SW replaces structurally — and the precache list is already computed by the build.</p>
+        <p class="field"><strong>Downsides:</strong> SW code + registration + update interplay is the largest new surface; iOS Safari SW quirks push toward a minimal classic-IIFE SW; double-life risk if the health-poll reload machine is not retired in the same change.</p>
+        <svg viewBox="0 0 720 150" role="img" aria-label="Staged update flow: background stage, explicit restart, single lifecycle owner" style="max-width:720px;width:100%;height:auto;margin:10px 0">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#737aa2"/></marker></defs>
+  <g font-family="Inter,system-ui,sans-serif" font-size="12" fill="#d5dcff"><rect x="6" y="50" width="150" height="48" rx="8" fill="#24283b" stroke="#2f3549"/><text x="81" y="70" text-anchor="middle">SW stages next</text><text x="81" y="86" text-anchor="middle">version (background)</text>
+    <rect x="200" y="50" width="130" height="48" rx="8" fill="#24283b" stroke="#7aa2f7" stroke-opacity=".5"/><text x="265" y="70" text-anchor="middle">"Restart to</text><text x="265" y="86" text-anchor="middle">apply" toast</text>
+    <rect x="374" y="50" width="140" height="48" rx="8" fill="#24283b" stroke="#2f3549"/><text x="444" y="70" text-anchor="middle">skipWaiting +</text><text x="444" y="86" text-anchor="middle">controllerchange</text>
+    <rect x="558" y="50" width="156" height="48" rx="8" fill="rgba(84,209,122,.12)" stroke="#54d17a"/><text x="636" y="70" text-anchor="middle" fill="#54d17a">one lifecycle owner</text><text x="636" y="86" text-anchor="middle" font-size="11" fill="#737aa2">retires 4 reload sites</text>
+    <line x1="156" y1="74" x2="196" y2="74" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="330" y1="74" x2="370" y2="74" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="514" y1="74" x2="554" y2="74" stroke="#737aa2" marker-end="url(#arr)"/>
+    <text x="360" y="128" text-anchor="middle" font-size="11" fill="#737aa2">index.html no-cache revalidation = atomic commit point (static-files.ts contract)</text></g></svg>
+      </article>
+
+      <article class="idea" id="idea-4">
+        <h3><span class="rank">4.</span> Install identity owned by the bridge — generated manifest, icon set, honest head</h3>
+        <div class="ideameta">
+          <span class="pill axis">Installability surface</span>
+          <span class="pill hi">Confidence 84%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C9 + C10</span>
+        </div>
+        <p class="field"><strong>Description:</strong> Ship the missing install surface: a <code>/manifest.webmanifest</code> (name, short_name, start_url, id, scope, display: standalone, theme_color/background_color from the palette, icons 192/512 + maskable + apple-180) plus the head tags SHPRD lacks (theme-color, apple-mobile-web-app-*), closing the gap where FEATURES.md:309-310 claims installability that does not exist. Decide static-vs-generated deliberately: a static manifest fits the existing PUBLIC_FILES embedding pattern; a server-generated no-store manifest (OpenChamber parity) buys per-host naming and dynamic shortcuts to recent connections. Derive the full icon set from the single 512px PNG at build time via gen-public.ts.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> web/index.html:9-10 only icon + apple-touch-icon (single 158,445-byte 512px PNG, no 192/maskable variant); zero manifest/theme-color/apple-mobile-web-app matches repo-wide; FEATURES.md:309-310 claims installable PWA. <strong>external:</strong> OpenChamber server-generated no-store manifest with runtime overrides + recent-session shortcuts, plus its data-URL fallback.</p>
+        <p class="field"><strong>Rationale:</strong> Installability is greenfield and the docs already promise it; the manifest is also the substrate the pairing and install-CTA ideas hang on, so its ownership decision shapes two other ideas.</p>
+        <p class="field"><strong>Downsides:</strong> Generated manifests add a route + cache-policy decisions; shortcuts need a data source; maskable icons need padding-safe artwork, not a raw upscale of the existing PNG.</p>
+
+      </article>
+
+      <article class="idea" id="idea-5">
+        <h3><span class="rank">5.</span> Earned install CTA — prompt at proof, with an iOS coach card</h3>
+        <div class="ideameta">
+          <span class="pill axis">Installability surface</span>
+          <span class="pill hi">Confidence 78%</span>
+          <span class="pill med">Complexity L</span>
+          <span class="pill cx">C11</span>
+        </div>
+        <p class="field"><strong>Description:</strong> Capture <code>beforeinstallprompt</code> at load, suppress the browser default, and release the install CTA only after the first successful bridge connect — the moment the workspace has proven itself — honoring persisted dismissal and never showing in standalone (<code>isStandaloneDisplay</code> already exists in downloadFile.ts). iOS, which never fires the event, gets a static A2HS coach card (Share → Add to Home Screen) in the same slot.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> zero beforeinstallprompt handling repo-wide; isStandaloneDisplay + share-sheet logic (downloadFile.ts:45,84-91). <strong>external:</strong> OpenChamber usePwaInstallPrompt (deferred prompt + persisted dismissal keys).</p>
+        <p class="field"><strong>Rationale:</strong> Answers "when do we ask?" with a product answer instead of a browser default; prevents prompt fatigue before it trains users to dismiss.</p>
+        <p class="field"><strong>Downsides:</strong> Timing policy is a product call with churn cost if wrong; the iOS coach card is manual-flow education that can feel patronizing if shown too early.</p>
+
+      </article>
+
+      <article class="idea" id="idea-6">
+        <h3><span class="rank">6.</span> Pairing QR — the host handoff that is also the first connect test</h3>
+        <div class="ideameta">
+          <span class="pill axis">Device pairing &amp; continuity</span>
+          <span class="pill hi">Confidence 74%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C12 (+C15, C17) (combination X4)</span>
+        </div>
+        <p class="field"><strong>Description:</strong> Desktop ConfigMenu (and/or a bridge-served /connect page) renders a QR + copy-link of the validated origin; the Android bootstrap grows a scan/paste affordance (BarcodeDetector where available, clipboard fallback per the existing writeText precedent). v1 pairs the bare origin — the validator guarantees origins carry no credentials or query, so the QR leaks no secrets; a later step can add a one-time token redeemed by a <em>new</em> endpoint that mints the <code>shprd_auth</code> cookie (OpenChamber's /connect?t= generalized), which also makes the installed PWA same-origin and dissolves the packaged-page cookie constraint. The handoff IS the first-connect test: the scanned URL flows through the validator + preflight before persisting.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> validator rejects credentials/query (lib.rs:29-30, remoteHost.ts:17-18) and the secret-never-echoed comment (lib.rs:14); clipboard.writeText precedent (AgentHistoryCard.tsx:68); /api/login takes {password} only (auth.ts:29) so token redemption is net-new. <strong>external:</strong> OpenChamber /connect?t= pairing links + QRCode.toDataURL, multi-host list, redactSensitiveUrl.</p>
+        <p class="field"><strong>Rationale:</strong> Typing a Tailscale URL on a phone keyboard into a form that silently fails is the #1 onboarding pain; scanning a QR of the origin the desktop is already on removes the failure mode instead of improving its error message.</p>
+        <p class="field"><strong>Downsides:</strong> Token redemption needs a new auth path (no /api/login shape exists); the validator must accept-then-strip the pair parameter (coordinated with the connect-contract idea); camera-permission UX on Android.</p>
+        <svg viewBox="0 0 720 150" role="img" aria-label="QR pairing flow: desktop renders QR, phone scans, validator and preflight test the host, then connect" style="max-width:720px;width:100%;height:auto;margin:10px 0">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#737aa2"/></marker></defs>
+  <g font-family="Inter,system-ui,sans-serif" font-size="12" fill="#d5dcff"><rect x="6" y="50" width="150" height="48" rx="8" fill="#24283b" stroke="#2f3549"/><text x="81" y="70" text-anchor="middle">desktop: QR of</text><text x="81" y="86" text-anchor="middle">validated origin</text>
+    <rect x="200" y="50" width="120" height="48" rx="8" fill="#24283b" stroke="#2f3549"/><text x="260" y="70" text-anchor="middle">phone: scan /</text><text x="260" y="86" text-anchor="middle">paste link</text>
+    <rect x="364" y="50" width="140" height="48" rx="8" fill="#24283b" stroke="#7aa2f7" stroke-opacity=".5"/><text x="434" y="70" text-anchor="middle">validator + preflight</text><text x="434" y="86" text-anchor="middle">(the connect test)</text>
+    <rect x="548" y="50" width="166" height="48" rx="8" fill="rgba(84,209,122,.12)" stroke="#54d17a"/><text x="631" y="70" text-anchor="middle" fill="#54d17a">same-origin install</text><text x="631" y="86" text-anchor="middle" fill="#54d17a">cookies first-party ✓</text>
+    <line x1="156" y1="74" x2="196" y2="74" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="320" y1="74" x2="360" y2="74" stroke="#737aa2" marker-end="url(#arr)"/>
+    <line x1="504" y1="74" x2="544" y2="74" stroke="#737aa2" marker-end="url(#arr)"/></g></svg>
+      </article>
+
+      <article class="idea" id="idea-7">
+        <h3><span class="rank">7.</span> Three-worlds connectivity — device-offline vs bridge-down vs wrong-host</h3>
+        <div class="ideameta">
+          <span class="pill axis">Offline &amp; lifecycle shell</span>
+          <span class="pill hi">Confidence 76%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C3 (revised)</span>
+        </div>
+        <p class="field"><strong>Description:</strong> One connectivity-state module consuming <code>navigator.onLine</code> reads (none exist today), an offline event listener (missing; only refreshOnReturn online/visibility handlers exist at store.ts:2143-2161), and the /api/health probe, driving three honest UI states: device offline (pause retries, cached shell, drafts retained), bridge unreachable/restarting (bounded backoff + last-connected), wrong/changed host (surface the host with the change-host affordance instead of navigating into the void). Distinct copy per state, per DESIGN.md's text-not-color-only rule.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> <code>reconnectDelayMs = 1500</code> blind WS retry (api.ts:342); refreshOnReturn online/visibilitychange handlers exist but no state machine (store.ts:2143-2161); FEATURES.md:308-310 no-offline stance. <strong>reasoned:</strong> a UI that only exists server-fetched cannot distinguish failure causes by construction; the SW-cached shell (update-pipeline idea) is what makes the offline state renderable at all.</p>
+        <p class="field"><strong>Rationale:</strong> The reported Android bug is indistinguishable from a server restart in the current UI; the taxonomy is shared infrastructure for the bootstrap, the connection banner, and diagnostics.</p>
+        <p class="field"><strong>Downsides:</strong> State-machine edges (auth expiry mid-session, version skew during restart) need care; depends on the SW shell for the offline render; must consolidate with — not parallel — the existing reconnect logic.</p>
+
+      </article>
+
+      <article class="idea" id="idea-8">
+        <h3><span class="rank">8.</span> Standalone host switcher — restore the lost UI outside the Dioxus iframe</h3>
+        <div class="ideameta">
+          <span class="pill axis">Host-entry &amp; first-connect UX</span>
+          <span class="pill hi">Confidence 80%</span>
+          <span class="pill med">Complexity M</span>
+          <span class="pill cx">C8</span>
+        </div>
+        <p class="field"><strong>Description:</strong> <code>installShellBridge</code> only wires postMessage when <code>parent !== window</code>, and ConfigMenu's Shell/Host URL section renders only when <code>shellHostUrl()</code> is truthy — in a browser tab or installed PWA the test/switch/confirm UI is dead code, and <code>window.__SHPRD_HOST_URL__</code> is read by remoteHost.ts but injected by nothing. Publish the active origin into the page (bridge-injected global or bootstrap snippet) and render the existing switch/confirm/bridge.check UI in standalone so "fix my host" is an in-app action — the recovery path that pairs with the connect-contract preflight.</p>
+        <p class="field"><strong>Basis:</strong> <strong>direct:</strong> shellBridge.ts:122-127 + ConfigMenu.tsx:564-626 gating; <code>__SHPRD_HOST_URL__</code> read (remoteHost.ts:9-28) with no injector repo-wide; window.confirm at ConfigMenu.tsx:587.</p>
+        <p class="field"><strong>Rationale:</strong> Installability makes the no-host-UI-outside-iframe gap permanent on every phone; the fix is porting existing UI, not inventing new flows.</p>
+        <p class="field"><strong>Downsides:</strong> Decides where host state lives (localStorage vs injected global) and how it reconciles with the desktop iframe path; the current confirm() UX is desktop-flavored and should be restyled mobile-first.</p>
+
+      </article>
+
+    <h2 id="rejection-summary">Rejection Summary</h2>
+    <table>
+      <thead><tr><th>#</th><th>Idea</th><th>Reason Rejected</th></tr></thead>
+      <tbody>
+      <tr><td>1</td><td>Multi-host roster with warm startup probes (C14)</td><td>Depends on the standalone switcher existing and on an external (OpenChamber) pattern with no SHPRD roster state to ground it; single-host users dominate today. Deliberate scope cut — revisit after the standalone switcher ships.</td></tr>
+<tr><td>2</td><td>In-flight action queue while offline (C16)</td><td>Draft retention already covers the common case (agentClient.ts:172-411); queued WS actions across reconnects add protocol surface (idempotency, replay ordering) disproportionate to brief offline windows. Kept as a low-priority note in the connect-contract scope.</td></tr>
+<tr><td>3</td><td>Data-URL manifest fallback inline in index.html (OpenChamber detail)</td><td>SHPRD's bootstrap string-surgery on index.html is already complex; a second manifest injection path multiplies surfaces for a fallback rarely reached when the manifest is served by the same origin. Revisit if a real serving context shows unmanifested loads.</td></tr>
+<tr><td>4</td><td>Runtime per-request compression only (no immutable headers)</td><td>Rejected as an alternative inside the serve-what-you-verify idea: without immutable hashed-asset caching, every cold visit re-validates and the SW precache cannot be byte-consistent. The idea as scoped requires both halves.</td></tr>
+<tr><td>5</td><td>~24 raw duplicates across frames</td><td>Deduped during merge — font subsetting appeared in 4 frames, immutable headers in 4, QR pairing in 5, probe-before-navigate in 5; kept the strongest framing per cluster with the rest folded in.</td></tr>
+      </tbody>
+    </table>
+
+    <footer class="composition-signal">Composed 2026-09-21T04:20Z by ce-ideate (compound engineering loop, repo-grounded) from SHPRD worktree <code>feat-pwa-install-parity</code> grounding + 5 evidence dossiers + 41 raw candidates (5 frames, 9router fleet) + fresh-context verifier.</footer>
+  </div>
+</body>
+</html>

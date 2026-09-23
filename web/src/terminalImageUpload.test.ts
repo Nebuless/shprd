@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import type { ConnectionClient } from "./api";
 import {
   imageUploadUrl,
+  readTerminalClipboardImage,
   uploadTerminalImage,
   uploadTerminalImageToPane,
 } from "./terminalImageUpload";
@@ -35,6 +36,59 @@ afterEach(() => {
 });
 
 describe("terminal image upload responses", () => {
+  test("reads image bytes instead of a clipboard URL", async () => {
+    const imageBlob = new Blob(["pixels"], { type: "image/png" });
+    const clipboard = {
+      read: async () => [
+        {
+          types: ["text/plain", "image/png"],
+          presentationStyle: "unspecified" as const,
+          getType: async (type: string) =>
+            type === "image/png"
+              ? imageBlob
+              : new Blob(["https://private.example/image"], {
+                  type: "text/plain",
+                }),
+        },
+      ],
+    } satisfies Pick<Clipboard, "read">;
+
+    expect(await readTerminalClipboardImage(clipboard)).toBe(imageBlob);
+  });
+
+  test("does not treat a text-only URL as clipboard image data", async () => {
+    const clipboard = {
+      read: async () => [
+        {
+          types: ["text/plain"],
+          presentationStyle: "unspecified" as const,
+          getType: async () =>
+            new Blob(["https://private.example/image"], {
+              type: "text/plain",
+            }),
+        },
+      ],
+    } satisfies Pick<Clipboard, "read">;
+
+    await expect(readTerminalClipboardImage(clipboard)).rejects.toThrow();
+  });
+
+  test("reports when clipboard image reading is unavailable", async () => {
+    await expect(readTerminalClipboardImage(undefined)).rejects.toThrow();
+  });
+
+  test("propagates clipboard permission denial", async () => {
+    const clipboard = {
+      read: async () => {
+        throw new DOMException("Permission denied", "NotAllowedError");
+      },
+    } satisfies Pick<Clipboard, "read">;
+
+    await expect(readTerminalClipboardImage(clipboard)).rejects.toThrow(
+      DOMException,
+    );
+  });
+
   test("recognizes only HTTP(S) image URLs", () => {
     expect(imageUploadUrl(" https://images.example/image.png ")).toBe(
       "https://images.example/image.png",
@@ -43,8 +97,14 @@ describe("terminal image upload responses", () => {
   });
 
   test("returns a validated path", async () => {
-    globalThis.fetch = (async () =>
-      Response.json({ path: "/tmp/image.png" })) as unknown as typeof fetch;
+    globalThis.fetch = (async (
+      _input: RequestInfo | URL,
+      init?: RequestInit,
+    ) => {
+      expect(init?.body).toBe(image);
+      expect(new Headers(init?.headers).has("x-image-url")).toBe(false);
+      return Response.json({ path: "/tmp/image.png" });
+    }) as unknown as typeof fetch;
 
     await expect(uploadTerminalImage(client, image)).resolves.toBe(
       "/tmp/image.png",

@@ -1,5 +1,6 @@
 import {
   CircleHelp,
+  Clipboard,
   CornerDownLeft,
   CornerDownRight,
   ImagePlus,
@@ -29,6 +30,7 @@ import {
   writeTerminalComposerDraft,
   writeTerminalComposerSelection,
 } from "../terminalComposer";
+import { readTerminalClipboardImage } from "../terminalImageUpload";
 import { MessageDialog } from "./ModalDialogs";
 
 const TERMINAL_COMPOSER_HELP =
@@ -410,6 +412,34 @@ export function TerminalComposer({
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus size={15} />
+          </button>
+          <button
+            type="button"
+            className="terminal-composer-paste-image"
+            title="Paste image from clipboard"
+            aria-label="Paste image from clipboard"
+            disabled={busy}
+            onPointerDown={keepTextareaFocus}
+            onClick={() => {
+              void readTerminalClipboardImage(navigator.clipboard)
+                .then((blob) =>
+                  uploadAndInsert([
+                    new File([blob], "clipboard-image.png", {
+                      type: blob.type,
+                    }),
+                  ]),
+                )
+                .catch((error: unknown) =>
+                  onError(
+                    error instanceof Error
+                      ? error.message
+                      : "Clipboard image access failed",
+                  ),
+                );
+            }}
+          >
+            <Clipboard size={15} />
+            Paste image
           </button>
           <button
             type="button"

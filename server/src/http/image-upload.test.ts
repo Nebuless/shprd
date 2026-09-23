@@ -1,7 +1,34 @@
 import { describe, expect, test } from "bun:test";
 import { createImageUploadHandler } from "./image-upload";
 
-describe("image upload URLs", () => {
+describe("image uploads", () => {
+  test("uploads image bytes directly without fetching an image URL", async () => {
+    const bytes = new Uint8Array([137, 80, 78, 71]);
+    const writes: Array<{ path: string; data: Uint8Array }> = [];
+    const handler = createImageUploadHandler({
+      sshHost: () => undefined,
+      fetchImage: async () => {
+        throw new Error("URL fetch should not run for clipboard bytes");
+      },
+      writeFile: async (path, data) => {
+        writes.push({ path, data });
+      },
+    });
+
+    const response = await handler(
+      new Request("http://studio.test/upload-image", {
+        method: "POST",
+        headers: { "x-image-ext": "png", "content-type": "image/png" },
+        body: bytes,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(writes).toHaveLength(1);
+    expect(writes[0]?.path).toEndWith(".png");
+    expect(writes[0]?.data).toEqual(bytes);
+  });
+
   test("rejects image URLs without HTTP or HTTPS", async () => {
     const handler = createImageUploadHandler({ sshHost: () => undefined });
     const response = await handler(

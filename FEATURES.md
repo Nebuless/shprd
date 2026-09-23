@@ -69,7 +69,11 @@ Closed panes are removed from the history automatically.
   repaint. Pixel mouse is not supported.
 - Paste multiline text through terminal paste handling.
 - Paste a clipboard image to upload it on the Herdr host and insert the resulting
-  path into the terminal. This also works through `--ssh-host`.
+  path into the terminal. Use `Cmd/Ctrl+V` in the terminal or **Paste image**
+  in its toolbar; on mobile, paste into the Input Composer or use its clipboard
+  button. Clipboard text, including image URLs, stays text. Use **Upload image
+  from URL** for public image links. Image upload also works through
+  `--ssh-host`.
 - Relay OSC 52 clipboard writes from local or remote terminal applications.
   On Herdr 0.9.0 endpoints, delivery follows the foreground recipient, not
   proven originating-pane ownership; see [clipboard compatibility](docs/DEPLOYMENT.md#herdr-compatibility).
